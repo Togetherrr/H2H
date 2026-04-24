@@ -46,3 +46,10 @@ Source base với:
 - Alias `@/*` trong `tsconfig.json` trỏ tới `src/*`.
 - Cấu hình shadcn nằm ở `components.json`.
 - ESLint đã được cấu hình để chạy không interactive.
+
+## Wiki Sync (Wikidata + ISR)
+
+- App hỗ trợ tự sync release từ Wikidata qua `src/lib/release-catalog.ts`.
+- Set biến môi trường `WIKIDATA_ARTIST_QID` để bật nguồn wiki (ví dụ: `Qxxxxxx`).
+- Nếu không set QID hoặc API lỗi, app tự fallback sang catalog local để không vỡ UI.
+- Revalidate mặc định mỗi `3600s` (1 giờ) cho home và album detail.
