@@ -1,10 +1,11 @@
 import type { Metadata } from "next"
-import { Be_Vietnam_Pro, Playfair_Display } from "next/font/google"
+import { Merriweather, Playfair_Display } from "next/font/google"
+import { ClientProvider } from "@/components/client-provider"
 import "./globals.css"
 
-const bodyFont = Be_Vietnam_Pro({
+const bodyFont = Merriweather({
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "700"],
   variable: "--font-body",
 })
 
@@ -14,8 +15,8 @@ const displayFont = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: "H2H",
-  description: "Landing page nhóm nhạc K-pop với phong cách editorial sân khấu.",
+  title: "H2H Home",
+  description: "Homepage Hearts2Hearts với concept film-strip, logo remove và bảng màu skyblue.",
 }
 
 export default function RootLayout({
@@ -23,7 +24,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="vi">
-      <body className={`${bodyFont.variable} ${displayFont.variable}`}>{children}</body>
+      <body className={`${bodyFont.variable} ${displayFont.variable}`}>
+        <ClientProvider>{children}</ClientProvider>
+      </body>
     </html>
   )
 }
