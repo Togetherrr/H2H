@@ -20,12 +20,20 @@ type OfficialLink = {
   note: string
 }
 
+type HeaderAccount = {
+  avatarUrl: string | null
+  displayName: string
+  href: string
+  isAdmin: boolean
+}
+
 interface HomePageClientProps {
   filmFrames: FilmFrame[]
   timelineEvents: TimelineEvent[]
   memberProfiles: MemberProfile[]
   officialProfile: GroupOfficialProfile
   officialLinks: OfficialLink[]
+  headerAccount: HeaderAccount | null
 }
 
 type HeaderNavLinkProps = {
@@ -81,6 +89,7 @@ export function HomePageClient({
   memberProfiles,
   officialProfile,
   officialLinks,
+  headerAccount,
 }: HomePageClientProps) {
   const { t } = useTranslation()
   const navItems = [
@@ -167,6 +176,36 @@ export function HomePageClient({
 
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
+            <Link
+              href={headerAccount?.href ?? "/login"}
+              aria-label={headerAccount ? `${headerAccount.displayName} account` : "Login"}
+              className="hidden items-center rounded-full border border-white/70 bg-white/70 px-2 py-1.5 shadow-sm transition hover:bg-white/85 md:inline-flex"
+            >
+              {headerAccount ? (
+                <div className="flex items-center gap-2 pr-1">
+                  {headerAccount.avatarUrl ? (
+                    <img
+                      src={headerAccount.avatarUrl}
+                      alt={headerAccount.displayName}
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-[10px] font-semibold uppercase tracking-[0.16em] text-white">
+                      {headerAccount.displayName.slice(0, 2)}
+                    </span>
+                  )}
+                  {headerAccount.isAdmin ? (
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sky-700">
+                      Admin
+                    </span>
+                  ) : null}
+                </div>
+              ) : (
+                <span className="px-3 text-[12px] font-semibold uppercase tracking-[0.28em] text-slate-700">
+                  Login
+                </span>
+              )}
+            </Link>
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/50 md:hidden">
               <div className="relative h-[1px] w-4 bg-sky-800 after:absolute after:left-0 after:top-1.5 after:h-[1px] after:w-4 after:bg-sky-800 after:content-[''] before:absolute before:left-0 before:-top-1.5 before:h-[1px] before:w-4 before:bg-sky-800 before:content-['']" />
             </div>
