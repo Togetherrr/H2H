@@ -105,6 +105,17 @@ function getYearFromDate(date: string) {
   return date.split("/")[2] ?? ""
 }
 
+function parseDateFromDDMMYYYY(date: string) {
+  const [day, month, year] = date.split("/").map(Number)
+
+  if (day && month && year) {
+    return new Date(year, month - 1, day).getTime()
+  }
+
+  const fallback = Date.parse(date)
+  return Number.isNaN(fallback) ? 0 : fallback
+}
+
 function toSlug(title: string) {
   return title
     .toLowerCase()
@@ -227,13 +238,15 @@ export async function getReleaseBySlug(slug: string) {
 
 export async function getTimelineEvents(): Promise<TimelineEvent[]> {
   const catalog = await getReleaseCatalog()
-  return catalog.map(({ slug, date, title, type, cover }) => ({
+  return [...catalog]
+    .sort((a, b) => parseDateFromDDMMYYYY(a.date) - parseDateFromDDMMYYYY(b.date))
+    .map(({ slug, date, title, type, cover }) => ({
     slug,
     date,
     title,
     type,
     cover,
-  }))
+    }))
 }
 
 export async function getFilmFrames(limit = 4): Promise<FilmFrame[]> {

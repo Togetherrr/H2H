@@ -1,3 +1,8 @@
+export const DEFAULT_LANGUAGE = "vi" as const
+export const SUPPORTED_LANGUAGES = ["vi", "en"] as const
+
+export type Language = (typeof SUPPORTED_LANGUAGES)[number]
+
 export const translations = {
   en: {
     // Header
@@ -59,6 +64,29 @@ export const translations = {
 
     "join.email": "Your email",
     "join.subscribe": "Receive updates",
+
+    // Timeline Section
+    "timeline.label": "Timeline",
+    "timeline.title": "Timeline",
+    "timeline.eras": "eras",
+    "timeline.emptyTitle": "Timeline is updating",
+    "timeline.emptyDesc": "Release data will appear here when available.",
+    "timeline.newestDrop": "Newest Drop",
+    "timeline.openAlbum": "Open Album",
+    "timeline.view": "View",
+    "timeline.dragHint": "Drag horizontally to explore",
+    "timeline.showingYears": "Showing",
+    "timeline.latestYears": "latest years",
+    "timeline.showMoreYears": "Show",
+    "timeline.olderYears": "older years",
+    "timeline.type.debut": "Debut",
+    "timeline.type.comeback": "Comeback",
+    "timeline.type.preRelease": "Pre-release",
+    "timeline.type.firstEp": "1st EP",
+    "timeline.type.ep": "EP",
+    "timeline.type.single": "Single",
+    "timeline.type.album": "Album",
+    "timeline.type.release": "Release",
   },
   vi: {
     // Header
@@ -120,19 +148,58 @@ export const translations = {
 
     "join.email": "Email của bạn",
     "join.subscribe": "Nhận cập nhật mới",
+
+    // Timeline Section
+    "timeline.label": "Dòng thời gian",
+    "timeline.title": "Dòng thời gian",
+    "timeline.eras": "giai đoạn",
+    "timeline.emptyTitle": "Dòng thời gian đang được cập nhật",
+    "timeline.emptyDesc": "Dữ liệu phát hành sẽ hiển thị tại đây khi sẵn sàng.",
+    "timeline.newestDrop": "Mới phát hành",
+    "timeline.openAlbum": "Mở Album",
+    "timeline.view": "Xem",
+    "timeline.dragHint": "Kéo ngang để khám phá",
+    "timeline.showingYears": "Hiển thị",
+    "timeline.latestYears": "năm gần nhất",
+    "timeline.showMoreYears": "Hiện thêm",
+    "timeline.olderYears": "năm cũ",
+    "timeline.type.debut": "Debut",
+    "timeline.type.comeback": "Comeback",
+    "timeline.type.preRelease": "Pre-release",
+    "timeline.type.firstEp": "EP đầu tay",
+    "timeline.type.ep": "EP",
+    "timeline.type.single": "Single",
+    "timeline.type.album": "Album",
+    "timeline.type.release": "Phát hành",
   },
 } as const
 
-export type Language = keyof typeof translations
 export type TranslationKey = keyof (typeof translations)["en"]
 type ArrayTranslationKey = {
   [K in TranslationKey]: (typeof translations)["en"][K] extends readonly string[] ? K : never
 }[TranslationKey]
 type TranslationValue<K extends TranslationKey> = K extends ArrayTranslationKey ? readonly string[] : string
 
+export function isLanguage(value: string): value is Language {
+  return SUPPORTED_LANGUAGES.includes(value as Language)
+}
+
+export function normalizeLanguage(value: string | null | undefined): Language {
+  if (!value) {
+    return DEFAULT_LANGUAGE
+  }
+
+  const normalized = value.toLowerCase().trim()
+  return isLanguage(normalized) ? normalized : DEFAULT_LANGUAGE
+}
+
 export function getTranslation<K extends TranslationKey>(
-  lang: Language,
+  lang: Language | string,
   key: K,
 ): TranslationValue<K> {
-  return translations[lang][key] as TranslationValue<K>
+  const safeLang = normalizeLanguage(lang)
+  const localized = translations[safeLang][key]
+  const fallbackVi = translations[DEFAULT_LANGUAGE][key]
+  const fallbackEn = translations.en[key]
+  return (localized ?? fallbackVi ?? fallbackEn) as TranslationValue<K>
 }
