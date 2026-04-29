@@ -4,15 +4,17 @@
 
 import type { ReactNode } from "react"
 import Link from "next/link"
-import { ArrowRight, Play, Sparkles, Waves } from "lucide-react"
+import { ArrowRight, Sparkles, Waves } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { FilmStrip } from "@/components/film-strip"
+import { HomeStatsSection } from "@/components/home-stats-section"
 import { TimelineSection } from "@/components/timeline-section"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { useTranslation } from "@/hooks/useTranslation"
 import type { FilmFrame, TimelineEvent } from "@/lib/release-catalog"
 import type { MemberProfile } from "@/lib/member-profiles"
 import type { GroupOfficialProfile } from "@/lib/group-official-profile"
+import type { HomeStatsSnapshot } from "@/lib/home-stats"
 
 type OfficialLink = {
   name: string
@@ -33,6 +35,7 @@ interface HomePageClientProps {
   memberProfiles: MemberProfile[]
   officialProfile: GroupOfficialProfile
   officialLinks: OfficialLink[]
+  homeStatsSnapshot: HomeStatsSnapshot
   headerAccount: HeaderAccount | null
 }
 
@@ -89,6 +92,7 @@ export function HomePageClient({
   memberProfiles,
   officialProfile,
   officialLinks,
+  homeStatsSnapshot,
   headerAccount,
 }: HomePageClientProps) {
   const { t } = useTranslation()
@@ -141,8 +145,8 @@ export function HomePageClient({
 
   return (
     <main className="sky-page bg-[#f0f9ff]">
-      <section className="hero-shell mx-auto min-h-screen w-full max-w-7xl px-5 pb-12 pt-5 sm:px-8 lg:px-10">
-        <header className="reveal-up sticky top-5 z-50 flex items-center justify-between overflow-hidden rounded-full border border-white/45 bg-white/35 px-6 py-2.5 shadow-[0_10px_36px_rgba(31,38,135,0.09)] backdrop-blur-2xl ring-1 ring-white/25 transition-all duration-500 hover:border-white/75 hover:bg-white/50 hover:shadow-[0_24px_65px_rgba(53,123,191,0.18)]">
+      <section className="hero-shell mx-auto min-h-screen w-full max-w-7xl px-5 pb-12 pt-24 sm:px-8 sm:pt-28 lg:px-10">
+        <header className="reveal-up fixed inset-x-0 top-5 z-50 mx-auto flex w-[calc(100%-2.5rem)] max-w-7xl items-center justify-between overflow-hidden rounded-full border border-white/45 bg-white/35 px-6 py-2.5 shadow-[0_10px_36px_rgba(31,38,135,0.09)] backdrop-blur-2xl ring-1 ring-white/25 transition-all duration-500 hover:border-white/75 hover:bg-white/50 hover:shadow-[0_24px_65px_rgba(53,123,191,0.18)] sm:w-[calc(100%-4rem)] lg:w-[calc(100%-5rem)]">
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-white/35 to-transparent"
@@ -268,23 +272,7 @@ export function HomePageClient({
             ))}
           </div>
 
-          <div className="reveal-up delay-4 mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button
-              size="lg"
-              className="h-12 rounded-full bg-sky-500 px-7 text-sm uppercase tracking-[0.3em] text-white shadow-[0_18px_40px_rgba(72,155,227,0.32)] hover:bg-sky-600"
-            >
-              {t("cta.opening")}
-              <Play className="size-4 fill-current" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-12 rounded-full border-white/70 bg-white/55 px-7 text-sm uppercase tracking-[0.3em] text-slate-700 hover:bg-white/80"
-            >
-              {t("cta.concept")}
-              <ArrowRight className="size-4" />
-            </Button>
-          </div>
+          <HomeStatsSection snapshot={homeStatsSnapshot} />
 
           <TimelineSection events={timelineEvents} />
         </div>
@@ -300,24 +288,25 @@ export function HomePageClient({
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-600">{t("concept.official.desc")}</p>
 
-              <div className="mt-6 grid gap-3">
-                {officialLinks.map((item) => (
-                  <a
-                    key={item.name}
-                    href={item.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="group rounded-[1.1rem] border border-white/80 bg-white/70 px-4 py-3 shadow-[0_8px_20px_rgba(94,140,182,0.06)] transition hover:-translate-y-0.5 hover:border-sky-200"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-sm uppercase tracking-[0.12em] text-slate-900">{item.name}</p>
-                        <p className="mt-1 text-xs text-slate-500">{item.note}</p>
-                      </div>
-                      <ArrowRight className="size-4 text-sky-600 transition group-hover:translate-x-0.5" />
+              <div className="mt-6 rounded-[1.8rem] border border-white/75 bg-white/70 p-5 shadow-[0_18px_40px_rgba(80,135,176,0.1)]">
+                <div className="grid gap-5 md:grid-cols-[1fr_1.1fr] md:items-start">
+                  <div className="overflow-hidden rounded-[1.3rem] border border-sky-100/80 bg-sky-50/70 p-4">
+                    <div className="mx-auto w-full max-w-[180px] rounded-2xl border border-white/75 bg-white/90 p-4 shadow-[0_14px_30px_rgba(80,135,176,0.12)]">
+                      <img
+                        src={officialProfile.logoAsset}
+                        alt={`${officialProfile.groupName} logo`}
+                        className="h-full w-full object-contain"
+                      />
                     </div>
-                  </a>
-                ))}
+                    <p className="mt-3 text-center text-[11px] leading-5 text-slate-500">{officialProfile.logoNote}</p>
+                  </div>
+
+                  <div className="grid gap-2">
+                    {officialFacts.map((fact) => (
+                      <OfficialFactCard key={fact.key} label={fact.label} value={fact.value} />
+                    ))}
+                  </div>
+                </div>
               </div>
             </article>
 
@@ -371,25 +360,24 @@ export function HomePageClient({
 
             <p className="mt-4 text-sm leading-7 text-slate-600">{t("moments.subtitle")}</p>
 
-            <div className="mt-6 rounded-[1.8rem] border border-white/75 bg-white/70 p-5 shadow-[0_18px_40px_rgba(80,135,176,0.1)]">
-              <div className="grid gap-5 md:grid-cols-[1fr_1.1fr] md:items-start">
-                <div className="overflow-hidden rounded-[1.3rem] border border-sky-100/80 bg-sky-50/70 p-4">
-                  <div className="mx-auto w-full max-w-[180px] rounded-2xl border border-white/75 bg-white/90 p-4 shadow-[0_14px_30px_rgba(80,135,176,0.12)]">
-                    <img
-                      src={officialProfile.logoAsset}
-                      alt={`${officialProfile.groupName} logo`}
-                      className="h-full w-full object-contain"
-                    />
+            <div className="mt-6 grid gap-3">
+              {officialLinks.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group rounded-[1.1rem] border border-white/80 bg-white/70 px-4 py-3 shadow-[0_8px_20px_rgba(94,140,182,0.06)] transition hover:-translate-y-0.5 hover:border-sky-200"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm uppercase tracking-[0.12em] text-slate-900">{item.name}</p>
+                      <p className="mt-1 text-xs text-slate-500">{item.note}</p>
+                    </div>
+                    <ArrowRight className="size-4 text-sky-600 transition group-hover:translate-x-0.5" />
                   </div>
-                  <p className="mt-3 text-center text-[11px] leading-5 text-slate-500">{officialProfile.logoNote}</p>
-                </div>
-
-                <div className="grid gap-2">
-                  {officialFacts.map((fact) => (
-                    <OfficialFactCard key={fact.key} label={fact.label} value={fact.value} />
-                  ))}
-                </div>
-              </div>
+                </a>
+              ))}
             </div>
 
             <div className="mt-6 rounded-[1.4rem] border border-white/70 bg-white/65 p-4">
@@ -430,6 +418,7 @@ export function HomePageClient({
                 id="fan-email"
                 type="email"
                 placeholder="skyline@h2h.vn"
+                suppressHydrationWarning
                 className="mt-4 h-12 w-full rounded-full border border-sky-100 bg-white/90 px-5 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-sky-400"
               />
               <Button className="mt-4 h-12 w-full rounded-full bg-slate-950 text-sm uppercase tracking-[0.3em] text-white hover:bg-slate-800">

@@ -44,7 +44,7 @@ const fallbackReleaseCatalog: ReleaseRecord[] = [
     slug: "style",
     date: "18/06/2025",
     title: "Style",
-    type: "Comeback",
+    type: "Single",
     cover: "/style.jpg",
     subtitle: "Summer Comeback",
     summary:
@@ -77,11 +77,11 @@ const fallbackReleaseCatalog: ReleaseRecord[] = [
     slug: "rude",
     date: "20/02/2026",
     title: "RUDE!",
-    type: "Comeback",
+    type: "Single",
     cover: "/group.png",
     subtitle: "2026 Comeback",
     summary:
-      "Comback đầu năm 2026 với hình ảnh sắc nét và năng lượng mạnh mẽ hơn, mở nhịp hoạt động mới của nhóm.",
+      "Comeback đầu năm 2026 với hình ảnh sắc nét và năng lượng mạnh mẽ hơn, mở nhịp hoạt động mới của nhóm.",
     tracks: ["RUDE!"],
   },
 ]
@@ -103,6 +103,17 @@ function formatDateDDMMYYYY(input: string) {
 
 function getYearFromDate(date: string) {
   return date.split("/")[2] ?? ""
+}
+
+function parseDateFromDDMMYYYY(date: string) {
+  const [day, month, year] = date.split("/").map(Number)
+
+  if (day && month && year) {
+    return new Date(year, month - 1, day).getTime()
+  }
+
+  const fallback = Date.parse(date)
+  return Number.isNaN(fallback) ? 0 : fallback
 }
 
 function toSlug(title: string) {
@@ -227,13 +238,15 @@ export async function getReleaseBySlug(slug: string) {
 
 export async function getTimelineEvents(): Promise<TimelineEvent[]> {
   const catalog = await getReleaseCatalog()
-  return catalog.map(({ slug, date, title, type, cover }) => ({
+  return [...catalog]
+    .sort((a, b) => parseDateFromDDMMYYYY(a.date) - parseDateFromDDMMYYYY(b.date))
+    .map(({ slug, date, title, type, cover }) => ({
     slug,
     date,
     title,
     type,
     cover,
-  }))
+    }))
 }
 
 export async function getFilmFrames(limit = 4): Promise<FilmFrame[]> {

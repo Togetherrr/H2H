@@ -4,24 +4,28 @@ import { officialLinks as staticOfficialLinks } from "@/lib/home-content"
 import { getFilmFrames, getTimelineEvents } from "../lib/release-catalog"
 import { memberProfiles as staticMemberProfiles } from "@/lib/member-profiles"
 import { hearts2heartsOfficialProfile } from "@/lib/group-official-profile"
+import { getHomeStatsSnapshot } from "@/lib/home-stats"
 import { hasSupabaseEnv } from "@/lib/supabase/env"
-import { createClient } from "@/lib/supabase/server"
 
 export const revalidate = 3600
 
 export default async function HomePage() {
-  const [timelineEvents, filmFrames] = await Promise.all([getTimelineEvents(), getFilmFrames(4)])
+  const [timelineEvents, filmFrames, homeStatsSnapshot] = await Promise.all([
+    getTimelineEvents(),
+    getFilmFrames(4),
+    getHomeStatsSnapshot(hearts2heartsOfficialProfile.debutDate),
+  ])
   const { user, profile } = hasSupabaseEnv()
     ? await getCurrentProfile()
     : { user: null, profile: null }
-  
+
   const headerAccount = user
     ? {
-        avatarUrl: profile?.avatar_url ?? null,
-        displayName: profile?.full_name ?? user.email ?? "User",
-        href: profile?.role === "admin" ? "/admin" : "/",
-        isAdmin: profile?.role === "admin",
-      }
+      avatarUrl: profile?.avatar_url ?? null,
+      displayName: profile?.full_name ?? user.email ?? "User",
+      href: profile?.role === "admin" ? "/admin" : "/",
+      isAdmin: profile?.role === "admin",
+    }
     : null
 
   let memberProfiles = staticMemberProfiles
@@ -66,6 +70,7 @@ export default async function HomePage() {
       memberProfiles={memberProfiles}
       officialLinks={officialLinks}
       officialProfile={hearts2heartsOfficialProfile}
+      homeStatsSnapshot={homeStatsSnapshot}
       headerAccount={headerAccount}
     />
   )
