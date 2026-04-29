@@ -280,7 +280,7 @@ export function HomePageClient({
 
       <section id="concept" className="mx-auto w-full max-w-7xl px-5 py-4 sm:px-8 lg:px-10">
         <div className="sky-panel reveal-up rounded-[2.4rem] p-6 sm:p-8 lg:p-10">
-          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
             <article className="rounded-[1.9rem] border border-white/70 bg-white/60 p-5 shadow-[0_16px_38px_rgba(94,140,182,0.08)]">
               <p className="text-xs uppercase tracking-[0.45em] text-sky-700/70">{t("concept.official")}</p>
               <h2 className="mt-4 text-3xl uppercase leading-none text-slate-950 sm:text-4xl">
@@ -308,10 +308,8 @@ export function HomePageClient({
                   </div>
                 </div>
               </div>
-            </article>
 
-            <article className="rounded-[1.9rem] border border-white/70 bg-white/60 p-5 shadow-[0_16px_38px_rgba(94,140,182,0.08)]">
-              <div className="flex items-center justify-between gap-3">
+              <div className="mt-8 flex items-center justify-between gap-3">
                 <p className="text-xs uppercase tracking-[0.45em] text-sky-700/70">{t("concept.members")}</p>
                 <p className="text-[11px] uppercase tracking-[0.22em] text-slate-400">
                   {t("concept.members.detail")}
@@ -346,60 +344,63 @@ export function HomePageClient({
                 ))}
               </div>
             </article>
+
+            <article
+              id="moments"
+              className="rounded-[1.9rem] border border-white/70 bg-white/60 p-5 shadow-[0_16px_38px_rgba(94,140,182,0.08)]"
+            >
+              <div className="flex items-center gap-3 text-sky-700">
+                <Sparkles className="size-5" />
+                <p className="text-xs uppercase tracking-[0.45em]">{t("moments.title")}</p>
+              </div>
+
+              <p className="mt-4 text-sm leading-7 text-slate-600">{t("moments.subtitle")}</p>
+
+              <div className="mt-6 grid gap-3">
+                {officialLinks.map((item) => (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group rounded-[1.1rem] border border-white/80 bg-white/70 px-4 py-3 shadow-[0_8px_20px_rgba(94,140,182,0.06)] transition hover:-translate-y-0.5 hover:border-sky-200"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm uppercase tracking-[0.12em] text-slate-900">{item.name}</p>
+                        <p className="mt-1 text-xs text-slate-500">{item.note}</p>
+                      </div>
+                      <ArrowRight className="size-4 text-sky-600 transition group-hover:translate-x-0.5" />
+                    </div>
+                  </a>
+                ))}
+              </div>
+
+              <div className="mt-6 rounded-[1.4rem] border border-white/70 bg-white/65 p-4">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-600">{t("moments.sources")}</p>
+                <div className="mt-3 grid gap-2">
+                  {officialProfile.sources.map((source) => (
+                    <a
+                      key={source.href}
+                      href={source.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-xl border border-white/85 bg-white/75 px-4 py-3 transition hover:border-sky-200"
+                    >
+                      <p className="text-sm uppercase tracking-[0.1em] text-slate-900">{source.label}</p>
+                      <p className="mt-1 text-xs text-slate-500">{source.note}</p>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </article>
           </div>
         </div>
       </section>
 
-      <section id="moments" className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
-        <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-          <article className="sky-panel reveal-up rounded-[2.2rem] p-6 sm:p-8">
-            <div className="flex items-center gap-3 text-sky-700">
-              <Sparkles className="size-5" />
-              <p className="text-xs uppercase tracking-[0.45em]">{t("moments.title")}</p>
-            </div>
-
-            <p className="mt-4 text-sm leading-7 text-slate-600">{t("moments.subtitle")}</p>
-
-            <div className="mt-6 grid gap-3">
-              {officialLinks.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="group rounded-[1.1rem] border border-white/80 bg-white/70 px-4 py-3 shadow-[0_8px_20px_rgba(94,140,182,0.06)] transition hover:-translate-y-0.5 hover:border-sky-200"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm uppercase tracking-[0.12em] text-slate-900">{item.name}</p>
-                      <p className="mt-1 text-xs text-slate-500">{item.note}</p>
-                    </div>
-                    <ArrowRight className="size-4 text-sky-600 transition group-hover:translate-x-0.5" />
-                  </div>
-                </a>
-              ))}
-            </div>
-
-            <div className="mt-6 rounded-[1.4rem] border border-white/70 bg-white/65 p-4">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-600">{t("moments.sources")}</p>
-              <div className="mt-3 grid gap-2">
-                {officialProfile.sources.map((source) => (
-                  <a
-                    key={source.href}
-                    href={source.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-xl border border-white/85 bg-white/75 px-4 py-3 transition hover:border-sky-200"
-                  >
-                    <p className="text-sm uppercase tracking-[0.1em] text-slate-900">{source.label}</p>
-                    <p className="mt-1 text-xs text-slate-500">{source.note}</p>
-                  </a>
-                ))}
-              </div>
-            </div>
-          </article>
-
-          <aside id="join" className="sky-panel reveal-up rounded-[2.2rem] p-6 sm:p-8">
+      <section id="join" className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+        <div className="grid gap-6">
+          <aside className="sky-panel reveal-up rounded-[2.2rem] p-6 sm:p-8">
             <div className="flex items-center gap-3 text-sky-700">
               <Waves className="size-5" />
               <p className="text-xs uppercase tracking-[0.45em]">{t("join.title")}</p>
