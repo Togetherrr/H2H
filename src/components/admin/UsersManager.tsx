@@ -13,10 +13,10 @@ type Profile = {
   id: string
   email: string
   full_name: string | null
-  role: "user" | "admin" | null
+  role: string | null
 }
 
-function PaginatedTable({ data, isUpdating, handleRoleChange }: { data: Profile[], isUpdating: string | null, handleRoleChange: (id: string, role: "user" | "admin") => void }) {
+function PaginatedTable({ data, isUpdating, handleRoleChange }: { data: Profile[], isUpdating: string | null, handleRoleChange: (id: string, role: string) => void }) {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
   
@@ -50,7 +50,7 @@ function PaginatedTable({ data, isUpdating, handleRoleChange }: { data: Profile[
                   <TableCell>
                     <Select
                       defaultValue={profile.role || "user"}
-                      onValueChange={(val) => handleRoleChange(profile.id, val as "user" | "admin")}
+                      onValueChange={(val) => handleRoleChange(profile.id, val)}
                       disabled={isUpdating === profile.id}
                     >
                       <SelectTrigger className="h-8 w-32 bg-white/50 text-xs">
@@ -106,10 +106,10 @@ function PaginatedTable({ data, isUpdating, handleRoleChange }: { data: Profile[
 export function UsersManager({ profiles }: { profiles: Profile[] }) {
   const [isUpdating, setIsUpdating] = useState<string | null>(null)
 
-  const handleRoleChange = async (userId: string, newRole: "user" | "admin") => {
+  const handleRoleChange = async (userId: string, newRole: string) => {
     setIsUpdating(userId)
     try {
-      await updateUserRole(userId, newRole)
+      await updateUserRole(userId, newRole as "user" | "admin")
     } catch (err) {
       alert("Failed to update user role")
     } finally {

@@ -2,8 +2,9 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import type { ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { ArrowRight, Sparkles, Waves } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { FilmStrip } from "@/components/film-strip"
@@ -11,6 +12,7 @@ import { HomeStatsSection } from "@/components/home-stats-section"
 import { TimelineSection } from "@/components/timeline-section"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { useTranslation } from "@/hooks/useTranslation"
+import { createClient } from "@/lib/supabase/client"
 import type { FilmFrame, TimelineEvent } from "@/lib/release-catalog"
 import type { MemberProfile } from "@/lib/member-profiles"
 import type { GroupOfficialProfile } from "@/lib/group-official-profile"
@@ -36,7 +38,6 @@ interface HomePageClientProps {
   officialProfile: GroupOfficialProfile
   officialLinks: OfficialLink[]
   homeStatsSnapshot: HomeStatsSnapshot
-  headerAccount: HeaderAccount | null
 }
 
 type HeaderNavLinkProps = {
@@ -53,6 +54,97 @@ function HeaderNavLink({ href, label }: HeaderNavLinkProps) {
       {label}
       <span className="absolute -bottom-1 left-1/2 h-[1.5px] w-0 bg-gradient-to-r from-sky-500 to-blue-400 opacity-85 transition-all duration-300 group-hover:left-0 group-hover:w-full" />
     </a>
+  )
+}
+
+function HeaderAccountButton() {
+  const router = useRouter()
+  const [headerAccount, setHeaderAccount] = useState<HeaderAccount | null>(null)
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadAccount() {
+      try {
+        const supabase = createClient()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+
+        if (!isMounted || !user) return
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name, avatar_url, role")
+          .eq("id", user.id)
+          .maybeSingle()
+
+        if (!isMounted) return
+
+        const nextHeaderAccount = {
+          avatarUrl: profile?.avatar_url ?? null,
+          displayName: profile?.full_name ?? user.email ?? "User",
+          href: profile?.role === "admin" ? "/admin" : "/account",
+          isAdmin: profile?.role === "admin",
+        }
+
+        setHeaderAccount(nextHeaderAccount)
+
+        if (nextHeaderAccount.isAdmin) {
+          router.prefetch("/admin")
+        }
+      } catch {
+        if (isMounted) {
+          setHeaderAccount(null)
+        }
+      }
+    }
+
+    loadAccount()
+
+    return () => {
+      isMounted = false
+    }
+  }, [router])
+
+  return (
+    <Link
+      href={headerAccount?.href ?? "/login"}
+      prefetch={headerAccount?.isAdmin ? true : undefined}
+      onMouseEnter={() => {
+        if (headerAccount?.isAdmin) {
+          router.prefetch("/admin")
+        }
+      }}
+      onFocus={() => {
+        if (headerAccount?.isAdmin) {
+          router.prefetch("/admin")
+        }
+      }}
+      aria-label={headerAccount ? `${headerAccount.displayName} account` : "Login"}
+      className="hidden items-center rounded-full border border-white/70 bg-white/70 px-2 py-1.5 shadow-sm transition hover:bg-white/85 md:inline-flex"
+    >
+      {headerAccount ? (
+        <div className="flex items-center gap-2 pr-1">
+          {headerAccount.avatarUrl ? (
+            <img
+              src={headerAccount.avatarUrl}
+              alt={headerAccount.displayName}
+              className="h-8 w-8 rounded-full object-cover"
+            />
+          ) : (
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-[10px] font-semibold uppercase tracking-[0.16em] text-white">
+              {headerAccount.displayName.slice(0, 2)}
+            </span>
+          )}
+          {headerAccount.isAdmin ? (
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sky-700">Admin</span>
+          ) : null}
+        </div>
+      ) : (
+        <span className="px-3 text-[12px] font-semibold uppercase tracking-[0.28em] text-slate-700">Login</span>
+      )}
+    </Link>
   )
 }
 
@@ -93,7 +185,6 @@ export function HomePageClient({
   officialProfile,
   officialLinks,
   homeStatsSnapshot,
-  headerAccount,
 }: HomePageClientProps) {
   const { t } = useTranslation()
   const navItems = [
@@ -180,36 +271,7 @@ export function HomePageClient({
 
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
-            <Link
-              href={headerAccount?.href ?? "/login"}
-              aria-label={headerAccount ? `${headerAccount.displayName} account` : "Login"}
-              className="hidden items-center rounded-full border border-white/70 bg-white/70 px-2 py-1.5 shadow-sm transition hover:bg-white/85 md:inline-flex"
-            >
-              {headerAccount ? (
-                <div className="flex items-center gap-2 pr-1">
-                  {headerAccount.avatarUrl ? (
-                    <img
-                      src={headerAccount.avatarUrl}
-                      alt={headerAccount.displayName}
-                      className="h-8 w-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-[10px] font-semibold uppercase tracking-[0.16em] text-white">
-                      {headerAccount.displayName.slice(0, 2)}
-                    </span>
-                  )}
-                  {headerAccount.isAdmin ? (
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sky-700">
-                      Admin
-                    </span>
-                  ) : null}
-                </div>
-              ) : (
-                <span className="px-3 text-[12px] font-semibold uppercase tracking-[0.28em] text-slate-700">
-                  Login
-                </span>
-              )}
-            </Link>
+            <HeaderAccountButton />
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/50 md:hidden">
               <div className="relative h-[1px] w-4 bg-sky-800 after:absolute after:left-0 after:top-1.5 after:h-[1px] after:w-4 after:bg-sky-800 after:content-[''] before:absolute before:left-0 before:-top-1.5 before:h-[1px] before:w-4 before:bg-sky-800 before:content-['']" />
             </div>

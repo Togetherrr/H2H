@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Users, Link as LinkIcon, Disc, ArrowLeft, LogOut, LayoutDashboard, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -10,13 +9,16 @@ const NAV_ITEMS = [
   { name: "Users", value: "users", icon: Users },
   { name: "Members", value: "members", icon: Users },
   { name: "Social Links", value: "socials", icon: LinkIcon },
+  { name: "Site Settings", value: "settings", icon: Settings },
 ]
 
-export function Sidebar() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const currentTab = searchParams.get("tab") || "overview"
-
+export function Sidebar({
+  currentTab,
+  onTabChange,
+}: {
+  currentTab: string
+  onTabChange: (tab: string) => void
+}) {
   return (
     <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-white/80 pb-6 pt-8 backdrop-blur-xl">
       <div className="px-6">
@@ -39,7 +41,8 @@ export function Sidebar() {
           return (
             <button
               key={item.value}
-              onClick={() => router.push(`?tab=${item.value}`)}
+              type="button"
+              onClick={() => onTabChange(item.value)}
               className={cn(
                 "group flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition-all duration-200",
                 isActive

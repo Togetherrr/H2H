@@ -1,9 +1,8 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
-import type { Database } from "@/lib/supabase/database.types"
 import { getSupabaseEnv, hasSupabaseEnv } from "@/lib/supabase/env"
 
-const ADMIN_PATH_PREFIX = "/admin"
+const ACCOUNT_PATH_PREFIX = "/account"
 
 export async function updateSession(request: NextRequest) {
   if (!hasSupabaseEnv()) {
@@ -17,7 +16,7 @@ export async function updateSession(request: NextRequest) {
     return response
   }
 
-  const supabase = createServerClient<Database>(url, anonKey, {
+  const supabase = createServerClient(url, anonKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll()
@@ -37,20 +36,11 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (request.nextUrl.pathname.startsWith(ADMIN_PATH_PREFIX)) {
+  if (request.nextUrl.pathname.startsWith(ACCOUNT_PATH_PREFIX)) {
     if (!user) {
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = "/login"
       redirectUrl.searchParams.set("next", request.nextUrl.pathname)
-      return NextResponse.redirect(redirectUrl)
-    }
-
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle()
-
-    if (profile?.role !== "admin") {
-      const redirectUrl = request.nextUrl.clone()
-      redirectUrl.pathname = "/auth/error"
-      redirectUrl.searchParams.set("reason", "admin-only")
       return NextResponse.redirect(redirectUrl)
     }
   }

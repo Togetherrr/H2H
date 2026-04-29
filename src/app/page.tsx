@@ -1,11 +1,9 @@
 import { HomePageClient } from "@/components/home-page-client"
-import { getCurrentProfile } from "@/lib/auth"
 import { officialLinks as staticOfficialLinks } from "@/lib/home-content"
 import { getFilmFrames, getTimelineEvents } from "../lib/release-catalog"
 import { memberProfiles as staticMemberProfiles } from "@/lib/member-profiles"
 import { hearts2heartsOfficialProfile } from "@/lib/group-official-profile"
 import { getHomeStatsSnapshot } from "@/lib/home-stats"
-import { hasSupabaseEnv } from "@/lib/supabase/env"
 
 export const revalidate = 3600
 
@@ -15,19 +13,6 @@ export default async function HomePage() {
     getFilmFrames(4),
     getHomeStatsSnapshot(hearts2heartsOfficialProfile.debutDate),
   ])
-  const { user, profile } = hasSupabaseEnv()
-    ? await getCurrentProfile()
-    : { user: null, profile: null }
-
-  const headerAccount = user
-    ? {
-      avatarUrl: profile?.avatar_url ?? null,
-      displayName: profile?.full_name ?? user.email ?? "User",
-      href: profile?.role === "admin" ? "/admin" : "/",
-      isAdmin: profile?.role === "admin",
-    }
-    : null
-
   let memberProfiles = staticMemberProfiles
   let officialLinks = staticOfficialLinks
 
@@ -71,7 +56,6 @@ export default async function HomePage() {
       officialLinks={officialLinks}
       officialProfile={hearts2heartsOfficialProfile}
       homeStatsSnapshot={homeStatsSnapshot}
-      headerAccount={headerAccount}
     />
   )
 }
