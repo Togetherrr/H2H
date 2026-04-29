@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Merriweather, Playfair_Display } from "next/font/google"
+import { Toaster } from "@/components/ui/sonner"
 import { ClientProvider } from "@/components/client-provider"
 import "./globals.css"
 
@@ -23,9 +24,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="vi">
-      <body className={`${bodyFont.variable} ${displayFont.variable}`}>
+    <html lang="vi" suppressHydrationWarning>
+      <body className={`${bodyFont.variable} ${displayFont.variable}`} suppressHydrationWarning>
         <ClientProvider>{children}</ClientProvider>
+        <Toaster position="top-right" richColors closeButton />
       </body>
     </html>
   )

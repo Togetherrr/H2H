@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/admin/Sidebar"
 import { UsersManager } from "@/components/admin/UsersManager"
 import { MembersManager } from "@/components/admin/MembersManager"
 import { SocialsManager } from "@/components/admin/SocialsManager"
+import { SiteSettingsManager } from "@/components/admin/SiteSettingsManager"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Sparkles, Users, Disc3, Link as LinkIcon, Database } from "lucide-react"
 
@@ -29,6 +30,9 @@ export default async function AdminPage(props: { searchParams: Promise<{ [key: s
   } else if (tab === "socials") {
     const { data } = await supabase.from("social_links").select("*").order("sort_order", { ascending: true })
     socials = data || []
+  } else if (tab === "settings") {
+    const { data } = await supabase.from("site_settings").select("*").eq("id", 1).maybeSingle()
+    siteSettings = data
   } else if (tab === "overview") {
     const [
       { count: usersCount },
@@ -60,10 +64,12 @@ export default async function AdminPage(props: { searchParams: Promise<{ [key: s
         return <MembersManager initialMembers={members} />
       case "socials":
         return <SocialsManager initialLinks={socials} />
+      case "settings":
+        return <SiteSettingsManager initialSettings={siteSettings} />
       case "overview":
       default:
         return (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="animate-in fade-in duration-300">
             <div className="mb-8 flex items-center gap-3 text-sky-700">
               <Sparkles className="size-6" />
               <p className="text-sm font-semibold uppercase tracking-[0.45em]">Overview</p>
@@ -72,7 +78,7 @@ export default async function AdminPage(props: { searchParams: Promise<{ [key: s
               Welcome back, {profile?.full_name || "Admin"}
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-              Monitor key metrics and manage your group's online presence.
+              Monitor key metrics and manage your group&apos;s online presence.
             </p>
             
             <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -200,7 +206,9 @@ export default async function AdminPage(props: { searchParams: Promise<{ [key: s
       <Sidebar />
       <div className="flex-1 pl-64">
         <div className="mx-auto max-w-6xl px-8 py-12">
-          {renderContent()}
+          <div key={tab} className="animate-in fade-in duration-300">
+            {renderContent()}
+          </div>
         </div>
       </div>
     </main>

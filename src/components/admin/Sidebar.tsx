@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { name: "Users", value: "users", icon: Users },
   { name: "Members", value: "members", icon: Users },
   { name: "Social Links", value: "socials", icon: LinkIcon },
+  { name: "Site Settings", value: "settings", icon: Settings },
 ]
 
 export function Sidebar() {
@@ -37,9 +38,10 @@ export function Sidebar() {
         {NAV_ITEMS.map((item) => {
           const isActive = currentTab === item.value
           return (
-            <button
+            <Link
               key={item.value}
-              onClick={() => router.push(`?tab=${item.value}`)}
+              href={`?tab=${item.value}`}
+              scroll={false}
               className={cn(
                 "group flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition-all duration-200",
                 isActive
@@ -49,7 +51,7 @@ export function Sidebar() {
             >
               <item.icon className={cn("size-5", isActive ? "text-white" : "text-slate-400 group-hover:text-slate-900")} />
               {item.name}
-            </button>
+            </Link>
           )
         })}
       </nav>

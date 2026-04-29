@@ -109,7 +109,7 @@ export function UsersManager({ profiles }: { profiles: Profile[] }) {
   const handleRoleChange = async (userId: string, newRole: string) => {
     setIsUpdating(userId)
     try {
-      await updateUserRole(userId, newRole)
+      await updateUserRole(userId, newRole as "user" | "admin")
     } catch (err) {
       alert("Failed to update user role")
     } finally {
