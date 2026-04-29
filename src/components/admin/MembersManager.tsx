@@ -316,15 +316,31 @@ export function MembersManager({ initialMembers }: { initialMembers: any[] }) {
     }
   }
 
+  const normalizeImageUrl = (url: string) => {
+    const trimmed = url.trim()
+    if (!trimmed) {
+      return ""
+    }
+    if (
+      trimmed.startsWith("http://") ||
+      trimmed.startsWith("https://") ||
+      trimmed.startsWith("/") ||
+      trimmed.startsWith("data:")
+    ) {
+      return trimmed
+    }
+    return `/${trimmed}`
+  }
+
   const convertGDriveLink = (url: string) => {
     if (url.includes("drive.google.com")) {
-      const fileIdMatch = url.match(/\/d\/([^/]+)/) || url.match(/id=([^&]+)/);
+      const fileIdMatch = url.match(/\/d\/([^/]+)/) || url.match(/id=([^&]+)/)
       if (fileIdMatch && fileIdMatch[1]) {
-        return `https://lh3.googleusercontent.com/d/${fileIdMatch[1]}`;
+        return `https://lh3.googleusercontent.com/d/${fileIdMatch[1]}`
       }
     }
-    return url;
-  };
+    return normalizeImageUrl(url)
+  }
 
   return (
     <div className="animate-in fade-in duration-300 relative">
@@ -540,7 +556,11 @@ export function MembersManager({ initialMembers }: { initialMembers: any[] }) {
                   <div className="grid gap-6 p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
                     <div className="flex items-center gap-4 mb-2">
                       <div className="size-16 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200 relative">
-                        {formData.card.avatar ? <Image src={formData.card.avatar} alt="" fill className="object-cover" /> : <ImageIcon className="text-slate-400" />}
+                        {formData.card.avatar ? (
+                          <Image src={normalizeImageUrl(formData.card.avatar)} alt="" fill className="object-cover" />
+                        ) : (
+                          <ImageIcon className="text-slate-400" />
+                        )}
                       </div>
                       <div>
                         <h4 className="font-medium">Card Preview</h4>
