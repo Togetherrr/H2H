@@ -4,15 +4,17 @@
 
 import type { ReactNode } from "react"
 import Link from "next/link"
-import { ArrowRight, Play, Sparkles, Waves } from "lucide-react"
+import { ArrowRight, Sparkles, Waves } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { FilmStrip } from "@/components/film-strip"
+import { HomeStatsSection } from "@/components/home-stats-section"
 import { TimelineSection } from "@/components/timeline-section"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { useTranslation } from "@/hooks/useTranslation"
 import type { FilmFrame, TimelineEvent } from "@/lib/release-catalog"
 import type { MemberProfile } from "@/lib/member-profiles"
 import type { GroupOfficialProfile } from "@/lib/group-official-profile"
+import type { HomeStatsSnapshot } from "@/lib/home-stats"
 
 type OfficialLink = {
   name: string
@@ -33,6 +35,7 @@ interface HomePageClientProps {
   memberProfiles: MemberProfile[]
   officialProfile: GroupOfficialProfile
   officialLinks: OfficialLink[]
+  homeStatsSnapshot: HomeStatsSnapshot
   headerAccount: HeaderAccount | null
 }
 
@@ -89,6 +92,7 @@ export function HomePageClient({
   memberProfiles,
   officialProfile,
   officialLinks,
+  homeStatsSnapshot,
   headerAccount,
 }: HomePageClientProps) {
   const { t } = useTranslation()
@@ -268,23 +272,7 @@ export function HomePageClient({
             ))}
           </div>
 
-          <div className="reveal-up delay-4 mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button
-              size="lg"
-              className="h-12 rounded-full bg-sky-500 px-7 text-sm uppercase tracking-[0.3em] text-white shadow-[0_18px_40px_rgba(72,155,227,0.32)] hover:bg-sky-600"
-            >
-              {t("cta.opening")}
-              <Play className="size-4 fill-current" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-12 rounded-full border-white/70 bg-white/55 px-7 text-sm uppercase tracking-[0.3em] text-slate-700 hover:bg-white/80"
-            >
-              {t("cta.concept")}
-              <ArrowRight className="size-4" />
-            </Button>
-          </div>
+          <HomeStatsSection snapshot={homeStatsSnapshot} />
 
           <TimelineSection events={timelineEvents} />
         </div>
@@ -430,6 +418,7 @@ export function HomePageClient({
                 id="fan-email"
                 type="email"
                 placeholder="skyline@h2h.vn"
+                suppressHydrationWarning
                 className="mt-4 h-12 w-full rounded-full border border-sky-100 bg-white/90 px-5 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-sky-400"
               />
               <Button className="mt-4 h-12 w-full rounded-full bg-slate-950 text-sm uppercase tracking-[0.3em] text-white hover:bg-slate-800">

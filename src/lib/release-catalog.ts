@@ -44,7 +44,7 @@ const fallbackReleaseCatalog: ReleaseRecord[] = [
     slug: "style",
     date: "18/06/2025",
     title: "Style",
-    type: "Comeback",
+    type: "Single",
     cover: "/style.jpg",
     subtitle: "Summer Comeback",
     summary:
@@ -77,11 +77,11 @@ const fallbackReleaseCatalog: ReleaseRecord[] = [
     slug: "rude",
     date: "20/02/2026",
     title: "RUDE!",
-    type: "Comeback",
+    type: "Single",
     cover: "/group.png",
     subtitle: "2026 Comeback",
     summary:
-      "Comback đầu năm 2026 với hình ảnh sắc nét và năng lượng mạnh mẽ hơn, mở nhịp hoạt động mới của nhóm.",
+      "Comeback đầu năm 2026 với hình ảnh sắc nét và năng lượng mạnh mẽ hơn, mở nhịp hoạt động mới của nhóm.",
     tracks: ["RUDE!"],
   },
 ]
