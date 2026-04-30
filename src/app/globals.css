@@ -205,6 +205,65 @@
     backdrop-filter: blur(20px);
   }
 
+  .section-shell {
+    max-width: 88rem;
+    margin: 0 auto;
+    width: 100%;
+    padding: 3rem 1.25rem;
+  }
+
+  .card-equal {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .card-equal-sm {
+    min-height: 160px;
+  }
+
+  .card-equal-md {
+    min-height: 220px;
+  }
+
+  .card-equal-lg {
+    min-height: 260px;
+  }
+
+  .clamp-1,
+  .clamp-2,
+  .clamp-3 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .clamp-1 {
+    -webkit-line-clamp: 1;
+  }
+
+  .clamp-2 {
+    -webkit-line-clamp: 2;
+  }
+
+  .clamp-3 {
+    -webkit-line-clamp: 3;
+  }
+
+  @media (min-width: 640px) {
+    .section-shell {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .section-shell {
+      padding-left: 2.5rem;
+      padding-right: 2.5rem;
+    }
+  }
+
   .hero-headline {
     position: relative;
     z-index: 2;
@@ -291,7 +350,7 @@
     border-radius: 1.8rem;
     border: 1px solid rgba(255, 255, 255, 0.65);
     background: rgba(255, 255, 255, 0.45);
-    padding: 1.25rem;
+    padding: 1.5rem;
     box-shadow: 0 16px 40px rgba(94, 140, 182, 0.08);
     backdrop-filter: blur(18px);
   }

@@ -69,6 +69,24 @@ export const translations = {
     "stats.comeback.date": "Release date:",
     "stats.comeback.realtime": "This countdown updates in real time after the official schedule is added.",
 
+    // Track Performance Section
+    "performance.label": "Track performance",
+    "performance.title": "Track performance",
+    "performance.subtitle": "Spotify Charts daily streams and official MV views in one snapshot.",
+    "performance.updatedAt": "Updated",
+    "performance.spotify": "Spotify",
+    "performance.youtube": "YouTube",
+    "performance.totalStreams": "Total streams",
+    "performance.dailyStreams": "Total daily streams",
+    "performance.totalViews": "Total views",
+    "performance.dailyViews": "Total daily views",
+    "performance.dailyChange": "Daily change",
+    "performance.totalLabel": "Total",
+    "performance.topTracks": "Top 5 tracks",
+    "performance.topVideos": "Top 5 videos",
+    "performance.viewAll": "View all",
+    "performance.empty": "No track data returned from this source yet.",
+
     // Concept Section
     "concept.official": "Official links",
     "concept.official.title": "Official channels to follow Hearts2Hearts",
@@ -188,6 +206,24 @@ export const translations = {
     "stats.comeback.seconds": "Giây",
     "stats.comeback.date": "Ngày phát hành:",
     "stats.comeback.realtime": "Countdown này sẽ cập nhật realtime ngay khi ngày phát hành chính thức được thêm vào.",
+
+    // Track Performance Section
+    "performance.label": "Hiệu suất track",
+    "performance.title": "Hiệu suất track",
+    "performance.subtitle": "Stream theo ngày từ Spotify Charts và lượt xem MV chính thức trong một bảng.",
+    "performance.updatedAt": "Cập nhật",
+    "performance.spotify": "Spotify",
+    "performance.youtube": "YouTube",
+    "performance.totalStreams": "Tổng stream",
+    "performance.dailyStreams": "Stream mỗi ngày",
+    "performance.totalViews": "Tổng views",
+    "performance.dailyViews": "Views mỗi ngày",
+    "performance.dailyChange": "Biến động ngày",
+    "performance.totalLabel": "Tổng",
+    "performance.topTracks": "Top 5 bài hát",
+    "performance.topVideos": "Top 5 video",
+    "performance.viewAll": "Xem tất cả",
+    "performance.empty": "Chưa có dữ liệu track từ nguồn này.",
 
     // Concept Section
     "concept.official": "Kênh chính thức",

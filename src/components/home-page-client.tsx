@@ -9,6 +9,7 @@ import { ArrowRight, Sparkles, Waves } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { FilmStrip } from "@/components/film-strip"
 import { HomeStatsSection } from "@/components/home-stats-section"
+import { TrackPerformanceSection } from "@/components/track-performance-section"
 import { TimelineSection } from "@/components/timeline-section"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { useTranslation } from "@/hooks/useTranslation"
@@ -17,6 +18,7 @@ import type { FilmFrame, TimelineEvent } from "@/lib/release-catalog"
 import type { MemberProfile } from "@/lib/member-profiles"
 import type { GroupOfficialProfile } from "@/lib/group-official-profile"
 import type { HomeStatsSnapshot } from "@/lib/home-stats"
+import type { TrackPerformanceSnapshot } from "@/lib/track-performance"
 
 type OfficialLink = {
   name: string
@@ -38,6 +40,7 @@ interface HomePageClientProps {
   officialProfile: GroupOfficialProfile
   officialLinks: OfficialLink[]
   homeStatsSnapshot: HomeStatsSnapshot
+  trackPerformanceSnapshot: TrackPerformanceSnapshot
 }
 
 type HeaderNavLinkProps = {
@@ -156,10 +159,10 @@ type HeroFeatureCardProps = {
 
 function HeroFeatureCard({ label, title, description }: HeroFeatureCardProps) {
   return (
-    <div className="hero-feature-card">
+    <div className="hero-feature-card card-equal card-equal-md">
       <p className="text-[11px] uppercase tracking-[0.35em] text-sky-700/70">{label}</p>
-      <p className="mt-3 text-2xl uppercase text-slate-900">{title}</p>
-      <p className="mt-3 text-sm leading-7 text-slate-600">{description}</p>
+      <p className="mt-3 text-2xl uppercase text-slate-900 clamp-2">{title}</p>
+      <p className="mt-3 text-sm leading-7 text-slate-600 clamp-3">{description}</p>
     </div>
   )
 }
@@ -185,6 +188,7 @@ export function HomePageClient({
   officialProfile,
   officialLinks,
   homeStatsSnapshot,
+  trackPerformanceSnapshot,
 }: HomePageClientProps) {
   const { t } = useTranslation()
   const navItems = [
@@ -236,8 +240,8 @@ export function HomePageClient({
 
   return (
     <main className="sky-page bg-[#f0f9ff]">
-      <section className="hero-shell mx-auto min-h-screen w-full max-w-7xl px-5 pb-12 pt-24 sm:px-8 sm:pt-28 lg:px-10">
-        <header className="reveal-up fixed inset-x-0 top-5 z-50 mx-auto flex w-[calc(100%-2.5rem)] max-w-7xl items-center justify-between overflow-hidden rounded-full border border-white/45 bg-white/35 px-6 py-2.5 shadow-[0_10px_36px_rgba(31,38,135,0.09)] backdrop-blur-2xl ring-1 ring-white/25 transition-all duration-500 hover:border-white/75 hover:bg-white/50 hover:shadow-[0_24px_65px_rgba(53,123,191,0.18)] sm:w-[calc(100%-4rem)] lg:w-[calc(100%-5rem)]">
+      <section className="hero-shell section-shell min-h-screen pt-24 sm:pt-28">
+        <header className="reveal-up fixed inset-x-0 top-5 z-50 mx-auto flex w-[calc(100%-2.5rem)] max-w-[88rem] items-center justify-between overflow-hidden rounded-full border border-white/45 bg-white/35 px-6 py-2.5 shadow-[0_10px_36px_rgba(31,38,135,0.09)] backdrop-blur-2xl ring-1 ring-white/25 transition-all duration-500 hover:border-white/75 hover:bg-white/50 hover:shadow-[0_24px_65px_rgba(53,123,191,0.18)] sm:w-[calc(100%-4rem)] lg:w-[calc(100%-5rem)]">
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-white/35 to-transparent"
@@ -323,7 +327,7 @@ export function HomePageClient({
             </div>
           </div>
 
-          <div className="reveal-up delay-4 mt-8 grid gap-4 lg:grid-cols-3">
+          <div className="reveal-up delay-4 mt-8 grid gap-6 lg:grid-cols-3">
             {featureCards.map((card) => (
               <HeroFeatureCard
                 key={card.key}
@@ -336,21 +340,23 @@ export function HomePageClient({
 
           <HomeStatsSection snapshot={homeStatsSnapshot} />
 
+          <TrackPerformanceSection snapshot={trackPerformanceSnapshot} />
+
           <TimelineSection events={timelineEvents} />
         </div>
       </section>
 
-      <section id="concept" className="mx-auto w-full max-w-7xl px-5 py-4 sm:px-8 lg:px-10">
-        <div className="sky-panel reveal-up rounded-[2.4rem] p-6 sm:p-8 lg:p-10">
+      <section id="concept" className="section-shell">
+        <div className="sky-panel reveal-up rounded-[2.4rem] p-6">
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <article className="rounded-[1.9rem] border border-white/70 bg-white/60 p-5 shadow-[0_16px_38px_rgba(94,140,182,0.08)]">
+            <article className="rounded-[1.9rem] border border-white/70 bg-white/60 p-6 shadow-[0_16px_38px_rgba(94,140,182,0.08)]">
               <p className="text-xs uppercase tracking-[0.45em] text-sky-700/70">{t("concept.official")}</p>
               <h2 className="mt-4 text-3xl uppercase leading-none text-slate-950 sm:text-4xl">
                 {t("concept.official.title")}
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-600">{t("concept.official.desc")}</p>
 
-              <div className="mt-6 rounded-[1.8rem] border border-white/75 bg-white/70 p-5 shadow-[0_18px_40px_rgba(80,135,176,0.1)]">
+              <div className="mt-6 rounded-[1.8rem] border border-white/75 bg-white/70 p-6 shadow-[0_18px_40px_rgba(80,135,176,0.1)]">
                 <div className="grid gap-5 md:grid-cols-[1fr_1.1fr] md:items-start">
                   <div className="overflow-hidden rounded-[1.3rem] border border-sky-100/80 bg-sky-50/70 p-4">
                     <div className="mx-auto w-full max-w-[180px] rounded-2xl border border-white/75 bg-white/90 p-4 shadow-[0_14px_30px_rgba(80,135,176,0.12)]">
@@ -382,12 +388,12 @@ export function HomePageClient({
               </h3>
               <p className="mt-4 text-sm leading-7 text-slate-600">{t("concept.members.desc")}</p>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
                 {memberProfiles.map((member) => (
                   <Link
                     key={member.slug}
                     href={`/members/${member.slug}`}
-                    className="group overflow-hidden rounded-[1.2rem] border border-white/80 bg-white/70 shadow-[0_10px_24px_rgba(94,140,182,0.08)] transition hover:-translate-y-1 hover:border-sky-200"
+                    className="group card-equal card-equal-sm flex overflow-hidden rounded-[1.2rem] border border-white/80 bg-white/70 shadow-[0_10px_24px_rgba(94,140,182,0.08)] transition hover:-translate-y-1 hover:border-sky-200"
                   >
                     <div className="relative h-28 overflow-hidden border-b border-sky-100/70 bg-sky-50/60">
                       <img
@@ -396,9 +402,9 @@ export function HomePageClient({
                         className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                       />
                     </div>
-                    <div className="p-3">
-                      <p className="text-sm uppercase tracking-[0.08em] text-slate-900">{member.name}</p>
-                      <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-sky-700/80">
+                    <div className="flex-1 p-4">
+                      <p className="text-sm uppercase tracking-[0.08em] text-slate-900 clamp-1">{member.name}</p>
+                      <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-sky-700/80 clamp-1">
                         {member.position}
                       </p>
                     </div>
@@ -409,7 +415,7 @@ export function HomePageClient({
 
             <article
               id="moments"
-              className="rounded-[1.9rem] border border-white/70 bg-white/60 p-5 shadow-[0_16px_38px_rgba(94,140,182,0.08)]"
+              className="rounded-[1.9rem] border border-white/70 bg-white/60 p-6 shadow-[0_16px_38px_rgba(94,140,182,0.08)]"
             >
               <div className="flex items-center gap-3 text-sky-700">
                 <Sparkles className="size-5" />
@@ -418,19 +424,19 @@ export function HomePageClient({
 
               <p className="mt-4 text-sm leading-7 text-slate-600">{t("moments.subtitle")}</p>
 
-              <div className="mt-6 grid gap-3">
+              <div className="mt-6 grid gap-6">
                 {officialLinks.map((item) => (
                   <a
                     key={item.name}
                     href={item.href}
                     target="_blank"
                     rel="noreferrer"
-                    className="group rounded-[1.1rem] border border-white/80 bg-white/70 px-4 py-3 shadow-[0_8px_20px_rgba(94,140,182,0.06)] transition hover:-translate-y-0.5 hover:border-sky-200"
+                    className="group card-equal card-equal-sm rounded-[1.1rem] border border-white/80 bg-white/70 p-4 shadow-[0_8px_20px_rgba(94,140,182,0.06)] transition hover:-translate-y-0.5 hover:border-sky-200"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="text-sm uppercase tracking-[0.12em] text-slate-900">{item.name}</p>
-                        <p className="mt-1 text-xs text-slate-500">{item.note}</p>
+                        <p className="text-sm uppercase tracking-[0.12em] text-slate-900 clamp-1">{item.name}</p>
+                        <p className="mt-1 text-xs text-slate-500 clamp-2">{item.note}</p>
                       </div>
                       <ArrowRight className="size-4 text-sky-600 transition group-hover:translate-x-0.5" />
                     </div>
@@ -438,9 +444,9 @@ export function HomePageClient({
                 ))}
               </div>
 
-              <div className="mt-6 rounded-[1.4rem] border border-white/70 bg-white/65 p-4">
+              <div className="mt-6 rounded-[1.4rem] border border-white/70 bg-white/65 p-6">
                 <p className="text-[11px] uppercase tracking-[0.2em] text-slate-600">{t("moments.sources")}</p>
-                <div className="mt-3 grid gap-2">
+                <div className="mt-3 grid gap-6">
                   {officialProfile.sources.map((source) => (
                     <a
                       key={source.href}
@@ -460,9 +466,9 @@ export function HomePageClient({
         </div>
       </section>
 
-      <section id="join" className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+      <section id="join" className="section-shell">
         <div className="grid gap-6">
-          <aside className="sky-panel reveal-up rounded-[2.2rem] p-6 sm:p-8">
+          <aside className="sky-panel reveal-up rounded-[2.2rem] p-6">
             <div className="flex items-center gap-3 text-sky-700">
               <Waves className="size-5" />
               <p className="text-xs uppercase tracking-[0.45em]">{t("join.title")}</p>
@@ -473,7 +479,7 @@ export function HomePageClient({
             </h2>
             <p className="mt-5 text-sm leading-7 text-slate-600">{t("join.desc")}</p>
 
-            <div className="mt-8 rounded-[1.8rem] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.7),rgba(225,241,255,0.7))] p-5 shadow-[0_16px_40px_rgba(94,140,182,0.08)]">
+            <div className="mt-8 rounded-[1.8rem] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.7),rgba(225,241,255,0.7))] p-6 shadow-[0_16px_40px_rgba(94,140,182,0.08)]">
               <label htmlFor="fan-email" className="text-xs uppercase tracking-[0.35em] text-sky-700/80">
                 {t("join.email")}
               </label>
@@ -492,8 +498,8 @@ export function HomePageClient({
         </div>
       </section>
 
-      <footer className="mx-auto w-full max-w-7xl px-5 pb-10 pt-2 sm:px-8 lg:px-10">
-        <div className="rounded-2xl border border-white/70 bg-white/55 px-6 py-4 shadow-[0_10px_24px_rgba(94,140,182,0.08)] backdrop-blur-sm">
+      <footer className="section-shell">
+        <div className="rounded-2xl border border-white/70 bg-white/55 p-6 shadow-[0_10px_24px_rgba(94,140,182,0.08)] backdrop-blur-sm">
           <div className="flex items-center justify-center gap-2.5">
             <p className="text-[11px] uppercase tracking-[0.18em] text-slate-600/90">
               © {currentYear} H2H Home · Unofficial Fan Project · Non-commercial

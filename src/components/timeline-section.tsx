@@ -398,53 +398,54 @@ export function TimelineSection({ events }: TimelineSectionProps) {
         .tl-year-wm { transition: color 0.5s ease; }
       `}</style>
 
-      <div className="tl-rise sky-panel relative mt-10 overflow-hidden rounded-[1.75rem] border border-white/70 shadow-[0_24px_60px_rgba(84,138,181,0.12)]">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.018]"
-          style={{
-            backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E\")",
-            backgroundSize: "160px",
-          }}
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-16 -top-24 h-80 w-80 rounded-full"
-          style={{ background: "radial-gradient(circle,rgba(125,211,252,0.18) 0%,transparent 70%)" }}
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-16 -left-10 h-64 w-64 rounded-full"
-          style={{ background: "radial-gradient(circle,rgba(186,230,253,0.14) 0%,transparent 70%)" }}
-        />
+      <section className="section-shell">
+        <div className="tl-rise sky-panel relative overflow-hidden rounded-[1.75rem] border border-white/70 shadow-[0_24px_60px_rgba(84,138,181,0.12)]">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-[0.018]"
+            style={{
+              backgroundImage:
+                "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E\")",
+              backgroundSize: "160px",
+            }}
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-16 -top-24 h-80 w-80 rounded-full"
+            style={{ background: "radial-gradient(circle,rgba(125,211,252,0.18) 0%,transparent 70%)" }}
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-16 -left-10 h-64 w-64 rounded-full"
+            style={{ background: "radial-gradient(circle,rgba(186,230,253,0.14) 0%,transparent 70%)" }}
+          />
 
-        <header className="tl-rise relative flex flex-wrap items-center justify-between gap-3 border-b border-white/70 px-5 py-4 sm:px-7 sm:py-5">
-          <div>
-            <p className="text-xs uppercase tracking-[0.45em] text-sky-700/70">{tStr("timeline.label")}</p>
-            <h2 className="tl-display mt-4 text-3xl uppercase leading-none text-slate-950 sm:text-4xl">
-              {tStr("timeline.title")}
-            </h2>
-          </div>
+          <header className="tl-rise relative flex flex-wrap items-center justify-between gap-6 border-b border-white/70 px-6 py-6">
+            <div>
+              <p className="text-xs uppercase tracking-[0.45em] text-sky-700/70">{tStr("timeline.label")}</p>
+              <h2 className="tl-display mt-4 text-3xl uppercase leading-none text-slate-950 sm:text-4xl">
+                {tStr("timeline.title")}
+              </h2>
+            </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="tl-body rounded-full border border-white/80 bg-white/75 px-3 py-1 text-[9px] uppercase tracking-[0.2em] text-slate-600">
-              {events.length} {tStr("timeline.eras")}
-            </span>
-            <span className="tl-body rounded-full border border-white/80 bg-white/75 px-3 py-1 text-[9px] uppercase tracking-[0.2em] text-slate-600">
-              {firstYear || "-"} - {lastYear}
-            </span>
-          </div>
-        </header>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="tl-body rounded-full border border-white/80 bg-white/75 px-3 py-1 text-[9px] uppercase tracking-[0.2em] text-slate-600">
+                {events.length} {tStr("timeline.eras")}
+              </span>
+              <span className="tl-body rounded-full border border-white/80 bg-white/75 px-3 py-1 text-[9px] uppercase tracking-[0.2em] text-slate-600">
+                {firstYear || "-"} - {lastYear}
+              </span>
+            </div>
+          </header>
 
-        {!hasEvents ? (
-          <div className="border-b border-white/70 px-5 py-10 text-center sm:px-7">
-            <p className="tl-display text-2xl italic text-slate-800">{tStr("timeline.emptyTitle")}</p>
-            <p className="tl-body mt-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-              {tStr("timeline.emptyDesc")}
-            </p>
-          </div>
-        ) : null}
+          {!hasEvents ? (
+            <div className="border-b border-white/70 px-6 py-10 text-center">
+              <p className="tl-display text-2xl italic text-slate-800">{tStr("timeline.emptyTitle")}</p>
+              <p className="tl-body mt-2 text-xs uppercase tracking-[0.2em] text-slate-500">
+                {tStr("timeline.emptyDesc")}
+              </p>
+            </div>
+          ) : null}
 
         {latestRelease && hasEvents ? (
           <div className="tl-rise tl-rise-d1 relative overflow-hidden border-b border-white/70">
@@ -455,7 +456,7 @@ export function TimelineSection({ events }: TimelineSectionProps) {
               className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover opacity-[0.06] blur-xl"
             />
 
-            <div className="relative flex flex-wrap items-center justify-between gap-5 px-5 py-5 sm:px-7 sm:py-6">
+            <div className="relative flex flex-wrap items-center justify-between gap-6 px-6 py-6">
               <div className="flex items-stretch gap-4 border-l-[2.5px] border-sky-500 pl-4 sm:gap-5 sm:pl-5">
                 <div className="h-[76px] w-[57px] shrink-0 overflow-hidden rounded-xl border border-sky-200 shadow-[0_8px_28px_rgba(14,165,233,0.18)]">
                   <img src={latestRelease.cover} alt={latestRelease.title} className="h-full w-full object-cover" />
@@ -511,7 +512,7 @@ export function TimelineSection({ events }: TimelineSectionProps) {
         ) : null}
 
         {hiddenYearCount > 0 && hasEvents ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/70 bg-white/55 px-5 py-3 sm:px-7">
+          <div className="flex flex-wrap items-center justify-between gap-6 border-b border-white/70 bg-white/55 px-6 py-4">
             <p className="tl-body text-[9px] uppercase tracking-[0.18em] text-slate-400">
               {tStr("timeline.showingYears")} {visibleGroups.length}/{groups.length} {tStr("timeline.latestYears")}
             </p>
@@ -638,7 +639,7 @@ export function TimelineSection({ events }: TimelineSectionProps) {
           role="region"
           aria-label="Timeline scroll area"
         >
-          <div className="flex min-w-max gap-8 px-5 py-6 sm:gap-10 sm:px-7 sm:py-7">
+          <div className="flex min-w-max gap-6 px-6 py-6">
             {visibleGroups.map((group, groupIndex) => (
               <section
                 key={group.year}
@@ -711,7 +712,8 @@ export function TimelineSection({ events }: TimelineSectionProps) {
         </div>
 
         <div aria-hidden className="h-[2px] w-full bg-[linear-gradient(to_right,transparent_0%,#d2ecff_22%,#7ec6f5_50%,#d2ecff_78%,transparent_100%)]" />
-      </div>
+        </div>
+      </section>
     </>
   )
 }
