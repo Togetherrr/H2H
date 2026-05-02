@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Users, Link as LinkIcon, Disc, ArrowLeft, LogOut, LayoutDashboard, Settings, Sparkles } from "lucide-react"
+import { Users, Link as LinkIcon, Disc, ArrowLeft, LogOut, LayoutDashboard, Settings, Sparkles, Image as ImageIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const NAV_ITEMS = [
@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { name: "Users", value: "users", icon: Users },
   { name: "Members", value: "members", icon: Users },
   { name: "Themes", value: "themes", icon: Sparkles },
+  { name: "Media", value: "media", icon: ImageIcon },
   { name: "Social Links", value: "socials", icon: LinkIcon },
   { name: "Site Settings", value: "settings", icon: Settings },
 ]

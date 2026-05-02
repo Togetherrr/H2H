@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
-import { Palette, Plus, Trash2, Save, Loader2, X, MonitorPlay, Check, Image as ImageIcon } from "lucide-react"
+import { Palette, Plus, Trash2, Save, Loader2, X, MonitorPlay, Check, Image as ImageIcon, Upload } from "lucide-react"
 import { upsertTheme, activateTheme, deleteTheme } from "@/app/admin/actions"
 import { Theme, ThemeConfig } from "@/lib/theme-service"
+import { MediaManager } from "./MediaManager"
 import { cn, hslToHex, hexToHsl } from "@/lib/utils"
 
 interface ThemesManagerProps {
@@ -366,26 +367,46 @@ export function ThemesManager({ initialThemes }: ThemesManagerProps) {
                   </Label>
                   
                   <div className="space-y-4">
-                    <div className="space-y-2">
                       <Label className="text-[12px] font-bold text-slate-200">Đường Dẫn Cover Ảnh Nền</Label>
-                      <Input 
-                        placeholder="Dán link ảnh (Hỗ trợ tự fix link Google Drive, Dropbox, Imgur...)"
-                        className="rounded-lg h-11 border-slate-700 bg-slate-950 text-slate-300 text-sm focus:ring-sky-500"
-                        value={editFormData.config?.assets?.background_image || ""}
-                        onChange={(e) => {
-                          const formatted = formatImageUrl(e.target.value);
-                          setEditFormData({
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder="Dán link hoặc nhấn nút để upload..."
+                          className="rounded-lg h-11 border-slate-700 bg-slate-950 text-slate-300 text-sm focus:ring-sky-500 flex-1"
+                          value={editFormData.config?.assets?.background_image || ""}
+                          onChange={(e) => {
+                            const formatted = formatImageUrl(e.target.value);
+                            setEditFormData({
+                              ...editFormData,
+                              config: {
+                                ...editFormData.config!,
+                                assets: { ...editFormData.config!.assets, background_image: formatted }
+                              }
+                            });
+                          }}
+                        />
+                        <MediaManager 
+                          defaultCategory="Backgrounds"
+                          onSelect={(url) => setEditFormData({
                             ...editFormData,
                             config: {
                               ...editFormData.config!,
-                              assets: { ...editFormData.config!.assets, background_image: formatted }
+                              assets: { ...editFormData.config!.assets, background_image: url }
                             }
-                          });
-                        }}
-                      />
+                          })}
+                          trigger={
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-11 w-11 rounded-lg text-slate-400 bg-slate-950 border border-slate-800 hover:text-sky-400 hover:bg-slate-900"
+                            >
+                              <Upload className="size-4" />
+                            </Button>
+                          }
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
 
                 {/* Color Configuration */}
                 <div className="space-y-5 pt-6 border-t border-slate-800">
