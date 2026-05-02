@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { 
   Search, 
   Filter, 
@@ -257,10 +257,12 @@ export function MediaLibrary({ onSelect, defaultCategory = "Members", isDialog, 
     }
   }
 
-  const filteredAssets = assets.filter((asset: any) => 
-    asset.name.toLowerCase().includes(search.toLowerCase()) ||
-    asset.url.toLowerCase().includes(search.toLowerCase())
-  )
+  const filteredAssets = useMemo(() => {
+    return assets.filter((asset: any) => 
+      asset.name.toLowerCase().includes(search.toLowerCase()) ||
+      asset.url.toLowerCase().includes(search.toLowerCase())
+    )
+  }, [assets, search])
 
   return (
     <div className={cn("flex flex-col h-full", !isDialog ? "bg-slate-950/20 backdrop-blur-md rounded-[2rem] border border-slate-800 overflow-hidden" : "bg-slate-900")}>
@@ -428,6 +430,8 @@ export function MediaLibrary({ onSelect, defaultCategory = "Members", isDialog, 
                       alt={asset.name} 
                       fill 
                       className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+                      quality={60}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4">
                       <p className="text-white text-[10px] font-bold truncate mb-3 mt-auto opacity-80">{asset.name}</p>
@@ -481,7 +485,14 @@ export function MediaLibrary({ onSelect, defaultCategory = "Members", isDialog, 
                     }}
                   >
                     <div className="size-16 rounded-[1.25rem] border border-slate-800 overflow-hidden shrink-0 relative shadow-2xl">
-                      <Image src={asset.url} alt="" fill className="object-cover" />
+                      <Image 
+                        src={asset.url} 
+                        alt="" 
+                        fill 
+                        className="object-cover" 
+                        sizes="64px"
+                        quality={50}
+                      />
                     </div>
                     <div className="flex-1 min-w-0 text-left">
                       <p className="text-base font-bold truncate text-slate-200">{asset.name}</p>
