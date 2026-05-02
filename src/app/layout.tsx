@@ -7,6 +7,7 @@ import "./globals.css"
 const bodyFont = Inter({
   subsets: ["latin", "vietnamese"],
   variable: "--font-body",
+  weight: ["400", "500", "600", "700"],
 })
 
 const displayFont = Montserrat({

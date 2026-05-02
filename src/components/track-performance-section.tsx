@@ -73,12 +73,12 @@ export function PerformanceItemRow({ item, index }: { item: PerformanceItem; ind
         </div>
       </div>
 
-      {/* Total — ẩn dưới lg */}
+      {/* Total */}
       <div className="hidden text-right font-mono text-[13px] font-bold tabular-nums text-slate-950 lg:block">
         {mounted ? (item.total?.toLocaleString() ?? "0") : "—"}
       </div>
 
-      {/* Daily — ẩn dưới md */}
+      {/* Daily */}
       <div className="hidden text-right font-mono text-[13px] font-bold tabular-nums text-emerald-500 md:block">
         {mounted && item.daily !== null ? `+${item.daily.toLocaleString()}` : "—"}
       </div>
@@ -119,17 +119,17 @@ function PlatformTabButton({
 }) {
   const activeStyles =
     variant === "spotify"
-      ? "bg-[#EFF7FF] border-[#A2D2FF] text-[#1a6ea8]"
-      : "bg-[#FFF0F5] border-[#FFC2D1] text-[#cc4d72]"
+      ? "bg-sky-50 border-sky-200 text-sky-700 shadow-sm"
+      : "bg-pink-50 border-pink-200 text-pink-700 shadow-sm"
 
   return (
     <button
       onClick={onClick}
       className={cn(
-        "flex items-center gap-2 rounded-full border px-4 py-2 text-[12px] font-bold uppercase tracking-widest transition-all",
+        "flex items-center gap-2 rounded-2xl border px-6 py-3 text-[11px] font-black uppercase tracking-widest transition-all",
         active
           ? activeStyles
-          : "border-slate-100 bg-white text-slate-400 hover:border-[#FFC2D1] hover:bg-[#FFF8FB] hover:text-slate-600"
+          : "border-white bg-white/40 text-slate-400 hover:bg-white/60"
       )}
     >
       {children}
@@ -139,7 +139,7 @@ function PlatformTabButton({
 
 // ─── Main Section ─────────────────────────────────────────────────────────────
 export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionProps) {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
   const [mounted, setMounted] = useState(false)
   const [activePlatform, setActivePlatform] = useState<PlatformTab>("spotify")
 
@@ -151,7 +151,7 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
   const youtube = snapshot.youtube
 
   const formattedUpdatedAt = mounted
-    ? new Date(snapshot.updatedAt).toLocaleDateString("vi-VN", {
+    ? new Date(snapshot.updatedAt).toLocaleDateString(lang === "vi" ? "vi-VN" : "en-US", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -163,203 +163,188 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
   const activePlatformData = activePlatform === "spotify" ? spotify : youtube
 
   return (
-    <section id="performance" className="reveal-up py-10">
-      <div className="mx-auto max-w-7xl px-4">
-
-        {/* Section header */}
-        <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 rounded-full border border-[#FFC2D1] bg-[#FFF0F5] px-3 py-1">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#FF99AC]" />
-                <Activity className="size-3.5 text-[#FF99AC]" />
-                <p className="text-[10px] font-black uppercase tracking-[0.5em] text-[#FF99AC]">
-                  {t("performance.label")}
-                </p>
-              </div>
-            </div>
-            <h2 className="text-4xl font-black uppercase text-slate-900 sm:text-5xl lg:text-6xl">
-              Live <span className="text-gradient">Analytics</span>
-            </h2>
-          </div>
-
-          <div className="flex items-center gap-2 rounded-full border border-slate-100 bg-white px-4 py-2 text-slate-400 self-start md:self-auto">
-            <Clock className="size-3.5" />
-            <p className="text-[10px] font-black uppercase tracking-widest">
-              Updated: <span className="text-slate-700">{formattedUpdatedAt}</span>
-            </p>
-          </div>
-        </div>
-
-        {/* Platform controls */}
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex gap-2">
-            <PlatformTabButton
-              variant="spotify"
-              active={activePlatform === "spotify"}
-              onClick={() => setActivePlatform("spotify")}
-            >
-              <img src="/spotify.png" alt="Spotify" className="h-4 w-4 object-contain" />
-              Spotify
-            </PlatformTabButton>
-            <PlatformTabButton
-              variant="youtube"
-              active={activePlatform === "youtube"}
-              onClick={() => setActivePlatform("youtube")}
-            >
-              <img src="/Youtube.png" alt="YouTube" className="h-4 w-4 object-contain" />
-              YouTube
-            </PlatformTabButton>
-          </div>
-        </div>
-
-        {/* Main card */}
-        <div
-          className={cn(
-            "rounded-[2.5rem] border bg-white p-6 lg:p-10",
-            activePlatform === "spotify" ? "border-[#A2D2FF]/60" : "border-[#FFC2D1]/60"
-          )}
-        >
-          {/* Card header */}
-          <div className="mb-8 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div
-                className={cn(
-                  "flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm border border-slate-50",
-                  activePlatform === "spotify" ? "text-[#1ed760]" : "text-[#ff0000]"
-                )}
-              >
-                {activePlatform === "spotify" ? (
-                  <img src="/spotify.png" alt="Spotify" className="h-8 w-8 object-contain" />
-                ) : (
-                  <img src="/Youtube.png" alt="YouTube" className="h-8 w-8 object-contain" />
-                )}
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">
-                  {activePlatform === "spotify" ? "Spotify" : "YouTube"}
-                </p>
-                <p className="text-[15px] font-black uppercase tracking-tight text-slate-800">
-                  {activePlatform === "spotify" ? "Spotify Rankings" : "Official MV Rankings"}
-                </p>
-              </div>
-            </div>
-
-            <Link
-              href={activePlatform === "spotify" ? "/charts?platform=spotify" : "/charts?platform=youtube"}
-              className={cn(
-                "flex items-center gap-1.5 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all hover:opacity-80",
-                activePlatform === "spotify"
-                  ? "border-[#A2D2FF] text-[#4A90E2]"
-                  : "border-[#FFC2D1] text-[#FF708A]"
-              )}
-            >
-              {activePlatform === "spotify" ? "Full Charts" : "Video Insights"}
-              <ExternalLink className="size-3" />
-            </Link>
-          </div>
-
-          {/* Stats row */}
-          <div className="mb-8 grid grid-cols-2 gap-4 rounded-2xl border border-slate-50 bg-slate-50/50 p-5 sm:grid-cols-3">
-            <div className="overflow-hidden">
-              <p className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                {activePlatform === "spotify"
-                  ? t("performance.totalStreams")
-                  : t("performance.totalViews")}
+    <section id="performance" className="reveal-up">
+      {/* Section header */}
+      <div className="mb-12 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="pill-base border border-[#FFC2D1] bg-white/40">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#FF99AC]" />
+              <Activity className="size-3.5 text-[#FF99AC]" />
+              <p className="text-[#FF99AC]">
+                {t("performance.label")}
               </p>
-              <div className="flex items-center gap-2">
-                <div className="truncate text-2xl font-black tracking-tighter text-slate-900">
-                  {mounted ? (activePlatformData?.totalValue?.toLocaleString() ?? "0") : "..."}
-                </div>
-                <MetricBadge
-                  value={activePlatformData?.dailyChange ?? null}
-                  format={activePlatformData?.dailyChangeFormat}
-                />
-              </div>
             </div>
+          </div>
+          <h2 className="text-title text-5xl sm:text-6xl lg:text-7xl">
+            {t("home.performance.liveAnalytics").split(" ")[0]} <span className="text-gradient">{t("home.performance.liveAnalytics").split(" ").slice(1).join(" ")}</span>
+          </h2>
+        </div>
 
+        <div className="flex items-center gap-2 rounded-full border border-white/60 bg-white/40 px-5 py-2.5 text-slate-500 backdrop-blur-sm self-start md:self-auto">
+          <Clock className="size-4" />
+          <p className="text-[10px] font-black uppercase tracking-widest">
+            {t("performance.updatedAt")}: <span className="text-slate-900">{formattedUpdatedAt}</span>
+          </p>
+        </div>
+      </div>
+
+      {/* Platform controls */}
+      <div className="mb-8 flex gap-3">
+        <PlatformTabButton
+          variant="spotify"
+          active={activePlatform === "spotify"}
+          onClick={() => setActivePlatform("spotify")}
+        >
+          <img src="/spotify.png" alt="Spotify" className="h-4 w-4 object-contain" />
+          {t("performance.spotify")}
+        </PlatformTabButton>
+        <PlatformTabButton
+          variant="youtube"
+          active={activePlatform === "youtube"}
+          onClick={() => setActivePlatform("youtube")}
+        >
+          <img src="/Youtube.png" alt="YouTube" className="h-4 w-4 object-contain" />
+          {t("performance.youtube")}
+        </PlatformTabButton>
+      </div>
+
+      {/* Main card */}
+      <div className="card-premium p-6 lg:p-10 !rounded-[3rem]">
+        {/* Card header */}
+        <div className="mb-10 flex items-center justify-between">
+          <div className="flex items-center gap-5">
             <div
               className={cn(
-                "overflow-hidden border-l pl-4",
-                activePlatform === "spotify" ? "border-[#A2D2FF]/40" : "border-[#FFC2D1]/40"
+                "flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-xl shadow-slate-200/50 border border-slate-50",
+                activePlatform === "spotify" ? "text-sky-500" : "text-pink-500"
               )}
             >
-              <p className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                {activePlatform === "spotify" ? "Daily Global" : "Daily Views"}
-              </p>
-              <div
-                className={cn(
-                  "truncate text-2xl font-black tracking-tighter",
-                  activePlatform === "spotify" ? "text-sky-500" : "text-pink-500"
-                )}
-              >
-                {mounted
-                  ? activePlatformData?.dailyValue
-                    ? `+${activePlatformData.dailyValue.toLocaleString()}`
-                    : "N/A"
-                  : "..."}
-              </div>
+              {activePlatform === "spotify" ? (
+                <img src="/spotify.png" alt="Spotify" className="h-9 w-9 object-contain" />
+              ) : (
+                <img src="/Youtube.png" alt="YouTube" className="h-9 w-9 object-contain" />
+              )}
             </div>
-
-            <div className="hidden overflow-hidden border-l border-slate-100 pl-4 sm:block">
-              <p className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                Top track
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-400">
+                {activePlatform === "spotify" ? t("performance.spotify") : t("performance.youtube")}
               </p>
-              <div className="truncate text-[15px] font-black text-slate-800">
-                {activePlatformData?.items?.[0]?.title ?? "—"}
-              </div>
+              <p className="text-2xl font-black uppercase tracking-tight text-slate-900">
+                {activePlatform === "spotify" ? t("home.performance.rankings") : t("home.performance.officialMv")}
+              </p>
             </div>
           </div>
 
-          {/* Track table header */}
-          <div
-            className="mb-1 grid items-center px-4 py-2"
-            style={{ gridTemplateColumns: "48px 1fr 140px 120px 100px" }}
+          <Link
+            href={activePlatform === "spotify" ? "/charts?platform=spotify" : "/charts?platform=youtube"}
+            className={cn(
+              "flex items-center gap-2 rounded-xl border px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105",
+              activePlatform === "spotify"
+                ? "border-sky-100 bg-sky-50 text-sky-600"
+                : "border-pink-100 bg-pink-50 text-pink-600"
+            )}
           >
-            <div className="text-center text-[10px] font-black uppercase tracking-widest text-[#FFAAC0]">#</div>
-            <div className="text-[10px] font-black uppercase tracking-widest text-[#FFAAC0]">Track</div>
-            <div className="hidden text-right text-[10px] font-black uppercase tracking-widest text-[#FFAAC0] lg:block">
-              Total
-            </div>
-            <div className="hidden text-right text-[10px] font-black uppercase tracking-widest text-[#FFAAC0] md:block">
-              Daily
-            </div>
-            <div className="text-right text-[10px] font-black uppercase tracking-widest text-[#FFAAC0]">
-              Change
+            {activePlatform === "spotify" ? t("home.performance.fullCharts") : t("home.performance.insights")}
+            <ExternalLink className="size-3.5" />
+          </Link>
+        </div>
+
+        {/* Stats row */}
+        <div className="mb-10 grid grid-cols-2 gap-4 rounded-[2rem] border border-white/60 bg-white/40 p-6 sm:grid-cols-3">
+          <div className="overflow-hidden">
+            <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+              {activePlatform === "spotify"
+                ? t("performance.totalStreams")
+                : t("performance.totalViews")}
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="truncate text-3xl font-black tracking-tighter text-slate-950">
+                {mounted ? (activePlatformData?.totalValue?.toLocaleString() ?? "0") : "..."}
+              </div>
+              <MetricBadge
+                value={activePlatformData?.dailyChange ?? null}
+                format={activePlatformData?.dailyChangeFormat}
+              />
             </div>
           </div>
 
-          {/* Track rows */}
           <div
             className={cn(
-              "overflow-hidden rounded-2xl border",
-              activePlatform === "spotify" ? "border-[#A2D2FF]/40" : "border-[#FFC2D1]/40"
+              "overflow-hidden border-l pl-6",
+              activePlatform === "spotify" ? "border-sky-100" : "border-pink-100"
             )}
           >
-            {activePlatformData?.items && activePlatformData.items.length > 0 ? (
-              activePlatformData.items.slice(0, 5).map((track, i) => (
-                <PerformanceItemRow key={track.id} item={track} index={i} />
-              ))
-            ) : (
-              <div className="py-12 text-center text-sm italic text-slate-400">
-                {t("performance.empty")}
-              </div>
-            )}
-          </div>
-
-          {/* View all link */}
-          <div className="mt-4 text-center">
-            <Link
-              href={activePlatform === "spotify" ? "/charts?platform=spotify" : "/charts?platform=youtube"}
+            <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+              {activePlatform === "spotify" ? t("home.performance.dailyGlobal") : t("home.performance.dailyViews")}
+            </p>
+            <div
               className={cn(
-                "inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest transition-colors hover:opacity-80",
-                activePlatform === "spotify" ? "text-[#4A90E2]" : "text-[#FF708A]"
+                "truncate text-3xl font-black tracking-tighter",
+                activePlatform === "spotify" ? "text-sky-500" : "text-pink-500"
               )}
             >
-              View all tracks
-              <ExternalLink className="size-3" />
-            </Link>
+              {mounted
+                ? activePlatformData?.dailyValue
+                  ? `+${activePlatformData.dailyValue.toLocaleString()}`
+                  : "N/A"
+                : "..."}
+            </div>
           </div>
+
+          <div className="hidden overflow-hidden border-l border-slate-100 pl-6 sm:block">
+            <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+              {t("home.performance.topTrack")}
+            </p>
+            <div className="truncate text-[16px] font-black text-slate-900">
+              {activePlatformData?.items?.[0]?.title ?? "—"}
+            </div>
+          </div>
+        </div>
+
+        {/* Track table header */}
+        <div
+          className="mb-2 grid items-center px-4 py-3"
+          style={{ gridTemplateColumns: "48px 1fr 140px 120px 100px" }}
+        >
+          <div className="text-center text-[10px] font-black uppercase tracking-widest text-[#FFAAC0]">#</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-[#FFAAC0]">{t("charts.trackInfo").split(" ")[0]}</div>
+          <div className="hidden text-right text-[10px] font-black uppercase tracking-widest text-[#FFAAC0] lg:block">
+            {t("charts.total")}
+          </div>
+          <div className="hidden text-right text-[10px] font-black uppercase tracking-widest text-[#FFAAC0] md:block">
+            {t("charts.daily")}
+          </div>
+          <div className="text-right text-[10px] font-black uppercase tracking-widest text-[#FFAAC0]">
+            {t("charts.trend")}
+          </div>
+        </div>
+
+        {/* Track rows */}
+        <div className="overflow-hidden rounded-[2rem] border border-[#FFF0F5]">
+          {activePlatformData?.items && activePlatformData.items.length > 0 ? (
+            activePlatformData.items.slice(0, 5).map((track, i) => (
+              <PerformanceItemRow key={track.id} item={track} index={i} />
+            ))
+          ) : (
+            <div className="py-16 text-center text-sm italic text-slate-400">
+              {t("performance.empty")}
+            </div>
+          )}
+        </div>
+
+        {/* View all link */}
+        <div className="mt-8 text-center">
+          <Link
+            href={activePlatform === "spotify" ? "/charts?platform=spotify" : "/charts?platform=youtube"}
+            className={cn(
+              "inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest transition-all hover:scale-105",
+              activePlatform === "spotify" ? "text-sky-500" : "text-pink-500"
+            )}
+          >
+            {t("home.performance.viewAll")}
+            <ExternalLink className="size-3.5" />
+          </Link>
         </div>
       </div>
     </section>

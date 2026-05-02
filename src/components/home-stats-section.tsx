@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 import {
   CalendarDays,
@@ -99,8 +98,8 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
       value: debutDays,
       color: "bg-[#A2D2FF]",
       accent: "text-[#4A90E2]",
-      badge: "Debut Milestone",
-      desc: "Since 24 Feb 2025"
+      badge: t("home.stats.badge.debutMilestone"),
+      desc: t("home.stats.desc.sinceDebut")
     },
     {
       slug: "album-projects",
@@ -110,8 +109,8 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
       value: snapshot.albumCount,
       color: "bg-[#FFC2D1]",
       accent: "text-[#FF708A]",
-      badge: "Release Catalog",
-      desc: "Full Discography"
+      badge: t("home.stats.badge.releaseCatalog"),
+      desc: t("home.stats.desc.fullDiscography")
     },
     {
       slug: "music-show-wins",
@@ -121,8 +120,8 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
       value: snapshot.musicShowWins,
       color: "bg-[#A2D2FF]",
       accent: "text-[#4A90E2]",
-      badge: "Live Trophies",
-      desc: "Broadcast Wins"
+      badge: t("home.stats.badge.liveTrophies"),
+      desc: t("home.stats.desc.broadcastWins")
     },
     {
       slug: "award-ceremony-wins",
@@ -132,85 +131,79 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
       value: snapshot.awardCeremonyWins,
       color: "bg-[#FFC2D1]",
       accent: "text-[#FF708A]",
-      badge: "Global Awards",
-      desc: "Industry Honors"
+      badge: t("home.stats.badge.globalAwards"),
+      desc: t("home.stats.desc.industryHonors")
     },
   ]
 
   return (
-    <section ref={sectionRef} className="reveal-up py-20 px-4">
-      <div className="mx-auto max-w-7xl">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-20 px-4">
-          <div className="max-w-2xl">
-            <div className="flex items-center gap-3 text-[#FF99AC] mb-6">
-              <Sparkles className="size-6 fill-current animate-pulse" />
-              <p className="text-[12px] font-black uppercase tracking-[0.5em]">{t("stats.eyebrow")}</p>
-            </div>
-            <h2 className="text-5xl font-black uppercase leading-tight text-slate-900 sm:text-7xl">
-              Career <span className="text-gradient">Records</span>
-            </h2>
+    <section ref={sectionRef} className="reveal-up py-20">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-20 px-4">
+        <div className="max-w-2xl">
+          <div className="flex items-center gap-3 text-[#FF99AC] mb-6">
+            <Sparkles className="size-6 fill-current animate-pulse" />
+            <p className="text-[12px] font-black uppercase tracking-[0.5em]">{t("stats.eyebrow")}</p>
           </div>
-          <p className="max-w-md text-lg font-medium text-slate-700 leading-relaxed">
-            Hệ thống thống kê thời gian thực về sự nghiệp và các cột mốc quan trọng của nhóm.
-          </p>
+          <h2 className="text-title text-5xl sm:text-7xl">
+            {t("home.stats.careerRecords").split(" ")[0]} <span className="text-gradient">{t("home.stats.careerRecords").split(" ").slice(1).join(" ")}</span>
+          </h2>
         </div>
+      </div>
 
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-          {statCards.map((card) => {
-            const Icon = card.icon
+      <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4 px-4">
+        {statCards.map((card) => {
+          const Icon = card.icon
 
-            return (
-              <Link
-                key={card.key}
-                href={`/stats/${card.slug}`}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-[4rem] bg-white p-12 border border-slate-100 shadow-xl shadow-slate-200/20 transition-all duration-500 hover:-translate-y-4 hover:shadow-2xl hover:border-[#FFC2D1]/40"
-              >
-                <div className="relative z-10">
-                  <div className={cn(
-                    "flex h-20 w-20 items-center justify-center rounded-[2rem] shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-12",
-                    card.color,
-                    "text-white"
+          return (
+            <div
+              key={card.key}
+              className="group relative flex flex-col justify-between overflow-hidden rounded-[4rem] bg-white p-12 border border-slate-100 shadow-xl shadow-slate-200/20 transition-all duration-500 hover:-translate-y-4 hover:shadow-2xl hover:border-[#FFC2D1]/40"
+            >
+              <div className="relative z-10">
+                <div className={cn(
+                  "flex h-20 w-20 items-center justify-center rounded-[2rem] shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-12",
+                  card.color,
+                  "text-white"
+                )}>
+                  <Icon className="size-10" />
+                </div>
+                
+                <div className="mt-12 space-y-2">
+                  <span className={cn(
+                    "inline-flex px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-slate-50",
+                    card.accent
                   )}>
-                    <Icon className="size-10" />
-                  </div>
-                  
-                  <div className="mt-12 space-y-2">
-                    <span className={cn(
-                      "inline-block px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-slate-50",
-                      card.accent
-                    )}>
-                      {card.badge}
-                    </span>
-                    <p className={cn("text-[13px] font-black uppercase tracking-widest block pt-2", card.accent)}>
-                      {card.label}
-                    </p>
-                    <h3 className="text-7xl font-black tracking-tighter text-slate-900 pt-2">
-                      {mounted ? (
-                        <AnimatedNumber value={card.value} active={isVisible} />
-                      ) : (
-                        "0"
-                      )}
-                    </h3>
-                    <p className="text-[12px] font-bold text-slate-600 pt-2 uppercase tracking-widest">
-                      {card.desc}
-                    </p>
-                  </div>
+                    {card.badge}
+                  </span>
+                  <p className={cn("text-[13px] font-black uppercase tracking-widest block pt-2", card.accent)}>
+                    {card.label}
+                  </p>
+                  <h3 className="text-7xl font-black tracking-tighter text-slate-950 pt-2">
+                    {mounted ? (
+                      <AnimatedNumber value={card.value} active={isVisible} />
+                    ) : (
+                      "0"
+                    )}
+                  </h3>
+                  <p className="text-[12px] font-bold text-slate-500 pt-2 uppercase tracking-widest">
+                    {card.desc}
+                  </p>
                 </div>
+              </div>
 
-                <div className="relative z-10 mt-16 flex items-center justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 text-slate-400 group-hover:bg-[#FF708A] group-hover:text-white transition-all duration-500">
-                    <ArrowUpRight className="size-6" />
-                  </div>
+              <div className="relative z-10 mt-16 flex items-center justify-between">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 text-slate-400 group-hover:bg-[#FF708A] group-hover:text-white transition-all duration-500">
+                  <ArrowUpRight className="size-6" />
                 </div>
+              </div>
 
-                {/* Decorative Elements */}
-                <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-                  <Icon className="size-40" />
-                </div>
-              </Link>
-            )
-          })}
-        </div>
+              {/* Decorative Elements */}
+              <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                <Icon className="size-40" />
+              </div>
+            </div>
+          )
+        })}
       </div>
     </section>
   )

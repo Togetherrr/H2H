@@ -15,7 +15,6 @@ type CountdownParts = {
   isLive: boolean
 }
 
-// Fixed offset mapping relative to UTC
 const TZ_OFFSETS: Record<string, number> = {
   KST: 9,
   EDT: -4,
@@ -25,11 +24,9 @@ const TZ_OFFSETS: Record<string, number> = {
 function parseIsoDate(date: string) {
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
     const [day, month, year] = date.split("/")
-    // Default assumption is KST (UTC+9) for the source data
     return new Date(`${year}-${month}-${day}T00:00:00+09:00`)
   }
 
-  // If already ISO, assume it has an offset or use KST as fallback
   const normalized = /T/.test(date) ? date : `${date}T00:00:00+09:00`
   const parsed = new Date(normalized)
   return Number.isNaN(parsed.getTime()) ? null : parsed
@@ -91,12 +88,9 @@ export function ComebackWatchHeader({
         const parsed = parseIsoDate(releaseAt)
         if (!parsed) return releaseAt
         
-        // Calculate offset for non-LOCAL zones
         let displayDate = parsed
         if (timeZone !== "LOCAL") {
-          const offset = TZ_OFFSETS[timeZone] ?? 0
-          // Convert target to UTC first, then apply selected offset
-          const utc = parsed.getTime() // This is already absolute UTC timestamp
+          const utc = parsed.getTime()
           displayDate = new Date(utc)
         }
 
@@ -116,17 +110,17 @@ export function ComebackWatchHeader({
     : null
 
   const countdownItems = [
-    { label: "DAYS", value: countdown?.days ?? 0 },
-    { label: "HOURS", value: countdown?.hours ?? 0 },
-    { label: "MINS", value: countdown?.minutes ?? 0 },
-    { label: "SECS", value: countdown?.seconds ?? 0 },
+    { label: t("stats.comeback.days"), value: countdown?.days ?? 0 },
+    { label: t("stats.comeback.hours"), value: countdown?.hours ?? 0 },
+    { label: t("stats.comeback.minutes"), value: countdown?.minutes ?? 0 },
+    { label: t("stats.comeback.seconds"), value: countdown?.seconds ?? 0 },
   ]
 
   return (
-    <div className="reveal-up relative mx-auto w-full max-w-4xl px-4">
+    <div className="reveal-up relative mx-auto w-full max-w-4xl">
       <div className="relative flex flex-col items-center text-center">
         {/* Status Badge */}
-        <div className="mb-6 flex items-center gap-2 rounded-full border border-white/60 bg-white/40 px-5 py-2 shadow-sm backdrop-blur-md">
+        <div className="mb-8 flex items-center gap-2 rounded-full border border-white/60 bg-white/40 px-6 py-2.5 shadow-sm backdrop-blur-md">
           <span className="relative flex h-2 w-2">
             <span className={cn(
               "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
@@ -137,66 +131,67 @@ export function ComebackWatchHeader({
               hasComeback ? "bg-[#FF708A]" : "bg-slate-400"
             )} />
           </span>
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E05670]">
-            {hasComeback ? "Active Comeback Preparation" : "Standby Mode"}
+          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#E05670]">
+            {hasComeback ? t("home.comeback.active") : t("home.comeback.standby")}
           </span>
         </div>
 
         {/* Album Subtitle */}
-        <p className="text-[11px] font-black tracking-[0.25em] text-[#4A90E2] uppercase drop-shadow-sm">
-          {hasComeback ? `#${albumTitle.replace(/\s+/g, '')}` : "Preparing for next era"}
+        <p className="text-[12px] font-black tracking-[0.3em] text-sky-500 uppercase drop-shadow-sm mb-4">
+          {hasComeback ? `#${(albumTitle as string).replace(/\s+/g, '')}` : t("home.comeback.preparing")}
         </p>
 
         {/* Main Date Display */}
         <h2
           className={cn(
-            "mt-3 text-4xl font-black leading-none tracking-tighter text-slate-900 sm:text-6xl lg:text-7xl xl:text-8xl uppercase text-gradient drop-shadow-[0_2px_10px_rgba(255,255,255,0.8)]",
+            "text-title text-4xl leading-none sm:text-6xl lg:text-7xl xl:text-8xl uppercase drop-shadow-[0_2px_15px_rgba(255,255,255,0.9)]",
             !hasComeback && "opacity-40 italic"
           )}
         >
-          {hasComeback ? formattedDate : "Coming Soon"}
+          {hasComeback ? formattedDate : t("voting.comingSoon")}
         </h2>
 
         {/* Countdown Area */}
-        <div className="mt-12 flex items-center justify-center gap-4 sm:gap-10">
+        <div className="mt-16 flex items-center justify-center gap-4 sm:gap-10">
           {countdownItems.map((item, index) => (
-            <div key={item.label} className="flex items-center gap-4 sm:gap-10">
+            <div key={index} className="flex items-center gap-4 sm:gap-10">
               <div className="flex flex-col items-center">
-                <span className="font-mono text-5xl font-black tracking-tighter text-slate-900 sm:text-7xl lg:text-9xl">
+                <span className="text-title font-mono text-5xl tracking-tighter sm:text-7xl lg:text-9xl">
                   {pad2(item.value)}
                 </span>
-                <span className="mt-3 text-[10px] font-black tracking-[0.4em] text-[#4A90E2] uppercase">
+                <span className="mt-4 text-[10px] font-black tracking-[0.5em] text-sky-500 uppercase">
                   {item.label}
                 </span>
               </div>
               
               {index < 3 && (
-                <span className="mb-10 text-4xl font-black text-[#FFC2D1] sm:text-6xl">:</span>
+                <span className="mb-10 text-4xl font-black text-[#FFC2D1] sm:text-6xl lg:text-7xl">:</span>
               )}
             </div>
           ))}
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-14 flex flex-wrap items-center justify-center gap-5">
+        <div className="mt-16 flex flex-wrap items-center justify-center gap-6">
           {hasComeback ? (
             <>
-              <button className="group relative flex items-center gap-3 overflow-hidden rounded-full bg-gradient-to-r from-[#FF99AC] to-[#FF708A] px-10 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white shadow-lg shadow-pink-200/50 transition-all hover:scale-105 hover:shadow-xl">
-                <ShoppingCart className="size-4 relative z-10" />
-                <span className="relative z-10">Pre-order</span>
+              <button className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-[#FF99AC] to-[#FF708A] px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white shadow-xl shadow-pink-200/50 transition-all hover:scale-105 hover:shadow-2xl">
+                <ShoppingCart className="size-4" />
+                <span>{t("home.comeback.preOrder")}</span>
               </button>
-              <button className="group flex items-center gap-3 rounded-full border-2 border-[#A2D2FF] bg-white/40 px-10 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-[#4A90E2] backdrop-blur-md transition-all hover:bg-white hover:scale-105">
+              <button className="group flex items-center gap-3 rounded-2xl border-2 border-sky-100 bg-white/40 px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-sky-600 backdrop-blur-md transition-all hover:bg-white hover:scale-105">
                 <Music className="size-4" />
-                Pre-save
+                {t("home.comeback.preSave")}
               </button>
             </>
           ) : (
-            <button className="group flex items-center gap-3 rounded-full border border-slate-200 bg-white/40 px-10 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-slate-600 shadow-sm backdrop-blur-md transition-all hover:bg-white">
+            <button className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/40 px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-slate-600 shadow-sm backdrop-blur-md transition-all hover:bg-white">
               <Bell className="size-4" />
-              Notify me
+              {t("home.comeback.notifyMe")}
             </button>
           )}
         </div>
+
       </div>
     </div>
   )

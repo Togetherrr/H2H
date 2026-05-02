@@ -30,6 +30,11 @@
     --ring: 345 100% 70%;
 
     --radius: 1.5rem;
+
+    /* Text Colors */
+    --text-title: 222 47% 11%; /* Slate-950 equivalent */
+    --text-body: 215 16% 47%;  /* Slate-600/700 equivalent */
+    --text-muted: 215 16% 58%; /* Slate-500 equivalent */
   }
 
   * {
@@ -55,6 +60,7 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display), sans-serif;
     font-weight: 700;
+    letter-spacing: -0.02em;
   }
 }
 
@@ -94,6 +100,38 @@
   .delay-2 { animation-delay: 0.2s; }
   .delay-3 { animation-delay: 0.3s; }
   .delay-4 { animation-delay: 0.4s; }
+
+  /* New Utility Classes for Consistency */
+  .text-title {
+    color: hsl(var(--text-title));
+    font-family: var(--font-display), sans-serif;
+    @apply font-black tracking-tighter;
+  }
+
+  .text-body {
+    color: hsl(var(--text-body));
+    font-family: var(--font-body), sans-serif;
+    @apply font-medium leading-relaxed;
+  }
+
+  .text-description {
+    color: hsl(var(--text-muted));
+    font-family: var(--font-body), sans-serif;
+    @apply text-sm font-medium leading-relaxed;
+  }
+
+  .card-premium {
+    @apply rounded-[3rem] border border-white bg-white/40 shadow-xl shadow-slate-200/20 backdrop-blur-md transition-all duration-500;
+  }
+
+  .card-premium:hover {
+    @apply -translate-y-2 shadow-2xl border-[#FFC2D1]/40 bg-white/60;
+  }
+
+  .pill-base {
+    @apply inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.3em] backdrop-blur-sm;
+    font-family: var(--font-display), sans-serif;
+  }
 }
 
 @keyframes reveal-up {
@@ -119,3 +157,4 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-[#FFC2D1]/60;
 }
+

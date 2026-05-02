@@ -1,5 +1,7 @@
-/* eslint-disable @next/next/no-img-element */
+import { getTranslation, normalizeLanguage } from "@/i18n/translations"
+import { ArrowLeft, Sparkles, ShieldCheck } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { notFound } from "next/navigation"
 import { memberProfiles } from "@/lib/member-profiles"
 
@@ -7,10 +9,15 @@ type MemberDetailPageProps = {
   params: Promise<{
     slug: string
   }>
+  searchParams: Promise<{ lang?: string }>
 }
 
-export default async function MemberDetailPage({ params }: MemberDetailPageProps) {
+export default async function MemberDetailPage({ params, searchParams }: MemberDetailPageProps) {
   const { slug } = await params
+  const { lang: queryLang } = await searchParams
+  const lang = normalizeLanguage(queryLang)
+  const t = (key: any) => getTranslation(lang, key)
+
   const member = memberProfiles.find((item) => item.slug === slug)
 
   if (!member) {
@@ -18,56 +25,99 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#e9f7ff_0%,#f6fbff_48%,#edf8ff_100%)] px-5 py-8 sm:px-8 lg:px-10">
-      <div className="mx-auto w-full max-w-5xl">
+    <main className="min-h-screen selection:bg-[#A2D2FF]/30">
+      <div className="section-shell pt-32 lg:pt-40 pb-12 lg:pb-24">
         <Link
-          href="/"
-          className="inline-flex items-center rounded-full border border-white/70 bg-white/70 px-4 py-2 text-xs uppercase tracking-[0.2em] text-sky-700 transition hover:bg-white"
+          href={`/${queryLang ? `?lang=${queryLang}` : ""}`}
+          className="inline-flex items-center gap-2 rounded-full border border-slate-100 bg-white px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-slate-500 shadow-sm transition hover:bg-[#FFC2D1] hover:text-white hover:border-transparent"
         >
-          Back to home
+          <ArrowLeft className="h-4 w-4" />
+          {t("common.backToHome")}
         </Link>
 
-        <section className="mt-5 rounded-[2rem] border border-white/70 bg-white/70 p-5 shadow-[0_20px_50px_rgba(87,145,188,0.14)] backdrop-blur-xl sm:p-8">
-          <div className="grid gap-6 md:grid-cols-[0.95fr_1.05fr] md:items-start">
-            <div className="overflow-hidden rounded-[1.5rem] border border-sky-100/80 bg-sky-50/60">
-              <img src={member.image} alt={`${member.name} profile`} className="h-full w-full object-cover" />
+        <section className="mt-12 overflow-hidden rounded-[3rem] border border-white bg-white/40 shadow-xl backdrop-blur-xl">
+          <div className="grid gap-10 lg:grid-cols-[450px_1fr]">
+            {/* Image section */}
+            <div className="relative aspect-[4/5] lg:aspect-auto">
+              <Image 
+                src={member.image} 
+                alt={`${member.name} profile`} 
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 450px"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+              <div className="absolute bottom-8 left-8">
+                <div className="flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-md">
+                  <Sparkles className="size-4 text-[#FFC2D1]" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">
+                    {t("member.eyebrow")}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.3em] text-sky-700/70">Hearts2Hearts member</p>
-              <h1 className="mt-3 text-4xl uppercase leading-none text-slate-950 sm:text-5xl">{member.name}</h1>
-              <p className="mt-4 text-sm uppercase tracking-[0.2em] text-slate-500">{member.position}</p>
+            {/* Info section */}
+            <div className="flex flex-col p-10 lg:p-16">
+              <div className="flex-1">
+                <p className="text-[13px] font-black uppercase tracking-[0.4em] text-[#FF708A]">
+                  Hearts2Hearts
+                </p>
+                <h1 className="text-title mt-4 text-6xl uppercase lg:text-8xl">
+                  {member.name}
+                </h1>
+                <p className="mt-6 text-[14px] font-black uppercase tracking-[0.3em] text-slate-400">
+                  {member.position}
+                </p>
 
-              <p className="mt-6 text-sm leading-7 text-slate-700">{member.intro}</p>
+                <div className="mt-10 max-w-xl">
+                  <p className="text-body text-lg leading-relaxed text-slate-700">
+                    {member.intro}
+                  </p>
+                </div>
 
-              <div className="mt-6 rounded-[1.2rem] border border-white/70 bg-white/70 p-4">
-                <p className="text-[11px] uppercase tracking-[0.28em] text-sky-700/80">Highlights</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {member.keywords.map((keyword) => (
-                    <span
-                      key={keyword}
-                      className="rounded-full border border-sky-100 bg-sky-50/75 px-3 py-1 text-[11px] uppercase tracking-[0.14em] text-sky-700"
-                    >
-                      {keyword}
-                    </span>
-                  ))}
+                <div className="mt-12 space-y-6">
+                  <div className="flex items-center gap-3">
+                    <div className="h-px w-8 bg-[#FFC2D1]" />
+                    <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">
+                      {t("member.highlights")}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {member.keywords.map((keyword) => (
+                      <span
+                        key={keyword}
+                        className="rounded-2xl border border-white bg-white/60 px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-slate-600 shadow-sm"
+                      >
+                        {keyword}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-4 rounded-[1.2rem] border border-amber-200/75 bg-amber-50/70 p-4">
-                <p className="text-[11px] uppercase tracking-[0.28em] text-amber-800/90">Source & Attribution</p>
-                <p className="mt-2 text-xs leading-6 text-amber-900/90">
-                  Profile summary is fan-curated for informational use. Official trademarks, logos and artist-related
-                  assets belong to their respective owners.
-                </p>
-                <a
-                  href={member.sourceUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-2 inline-flex text-xs uppercase tracking-[0.16em] text-amber-800 underline-offset-4 hover:underline"
-                >
-                  Source: {member.sourceName}
-                </a>
+              {/* Attribution */}
+              <div className="mt-16 rounded-[2rem] border border-amber-100 bg-amber-50/50 p-8">
+                <div className="flex items-start gap-4">
+                  <ShieldCheck className="mt-1 size-5 text-amber-600" />
+                  <div className="space-y-3">
+                    <p className="text-[11px] font-black uppercase tracking-[0.3em] text-amber-800">
+                      {t("member.sourceAttribution")}
+                    </p>
+                    <p className="text-xs leading-relaxed text-amber-900/80">
+                      {t("member.disclaimer")}
+                    </p>
+                    <a
+                      href={member.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex text-[10px] font-black uppercase tracking-widest text-amber-700 underline underline-offset-4 hover:text-amber-900"
+                    >
+                      Source: {member.sourceName}
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -76,3 +126,4 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
     </main>
   )
 }
+
