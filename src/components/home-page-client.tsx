@@ -4,7 +4,6 @@
 
 import { useEffect, useState, type ReactNode } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { ArrowRight, Sparkles, Waves, Heart, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { HomeStatsSection } from "@/components/home-stats-section"
@@ -81,41 +80,39 @@ export function HomePageClient({
   const currentYear = new Date().getFullYear()
 
   return (
-    <main id="top" className="relative min-h-screen">
+    <main id="top" className="relative min-h-screen selection:bg-[#A2D2FF]/30">
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] size-[500px] rounded-full bg-[#A2D2FF]/20 blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] size-[500px] rounded-full bg-[#FFC2D1]/20 blur-[120px]" />
       </div>
 
-      {/* Reusable Navbar */}
       <Navbar timeZone={timeZone} onTimeZoneChange={setTimeZone} />
 
-      {/* Hero Section */}
-      <section className="relative pt-32 lg:pt-44">
-        <div className="section-shell">
-          <div id="comeback" className="reveal-up relative">
-            <div className="relative pb-12 sm:pb-20">
-              <ComebackWatchHeader snapshot={homeStatsSnapshot} timeZone={timeZone} />
-            </div>
-          </div>
-
-          <div id="stats" className="mt-20">
-            <HomeStatsSection snapshot={homeStatsSnapshot} />
-          </div>
-
-          <div id="performance" className="mt-24">
-            <TrackPerformanceSection snapshot={trackPerformanceSnapshot} />
-          </div>
-
-          <div id="timeline" className="mt-24">
-            <TimelineSection events={timelineEvents} />
-          </div>
+      <div className="section-shell pt-32 lg:pt-44">
+        {/* ── Hero / Comeback ── */}
+        <div id="comeback" className="reveal-up">
+          <ComebackWatchHeader snapshot={homeStatsSnapshot} timeZone={timeZone} />
         </div>
-      </section>
 
-      {/* Concept & Profile Section */}
-      <section id="concept" className="section-shell">
-        <div className="glass-panel rounded-[3.5rem] p-8 lg:p-16">
+        {/* ── Stats ── */}
+        <div id="stats" className="mt-20">
+          <HomeStatsSection snapshot={homeStatsSnapshot} />
+        </div>
+
+        {/* ── Performance ── */}
+        <div id="performance" className="mt-24">
+          <TrackPerformanceSection snapshot={trackPerformanceSnapshot} />
+        </div>
+
+        {/* ── Timeline ── */}
+        <div id="timeline" className="mt-24">
+          <TimelineSection events={timelineEvents} />
+        </div>
+      </div>
+
+      {/* ── Concept & Profile ── */}
+      <section id="concept" className="section-shell mt-24">
+        <div className="card-premium p-8 lg:p-16">
           <div className="grid gap-16 lg:grid-cols-[1fr_0.8fr]">
             <article className="space-y-12">
               <div>
@@ -123,10 +120,10 @@ export function HomePageClient({
                   <Star className="size-5 fill-current" />
                   <p className="text-[11px] font-black uppercase tracking-[0.5em]">{t("concept.official")}</p>
                 </div>
-                <h2 className="mt-6 text-5xl uppercase leading-none text-slate-900 sm:text-6xl">
+                <h2 className="text-title mt-6 text-5xl sm:text-6xl">
                   {t("concept.official.title")}
                 </h2>
-                <p className="mt-8 text-lg leading-relaxed text-slate-800 max-w-2xl">
+                <p className="text-body mt-8 max-w-2xl">
                   {t("concept.official.desc")}
                 </p>
               </div>
@@ -153,11 +150,9 @@ export function HomePageClient({
 
               {/* Members Grid */}
               <div id="members" className="space-y-10">
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <h3 className="text-4xl uppercase text-slate-900">
-                    {t("concept.members.title")}
-                  </h3>
-                </div>
+                <h3 className="text-title text-4xl">
+                  {t("concept.members.title")}
+                </h3>
                 
                 <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
                   {memberProfiles.map((member) => (
@@ -192,7 +187,7 @@ export function HomePageClient({
                   <Heart className="size-5 fill-current" />
                   <p className="text-[11px] font-black uppercase tracking-[0.5em]">{t("moments.title")}</p>
                 </div>
-                <p className="mt-8 text-base leading-relaxed text-slate-800">
+                <p className="text-body mt-8">
                   {t("moments.subtitle")}
                 </p>
 
@@ -240,14 +235,15 @@ export function HomePageClient({
         </div>
       </section>
 
-      <section id="join" className="section-shell">
+      {/* ── Join Section ── */}
+      <section id="join" className="section-shell mt-24 mb-24">
         <div className="relative overflow-hidden rounded-[4rem] bg-gradient-to-br from-[#FFC2D1] to-[#A2D2FF] p-10 lg:p-24 text-center shadow-2xl shadow-pink-100">
           <div className="relative z-10 max-w-2xl mx-auto space-y-10">
             <div className="flex items-center justify-center gap-3 text-white">
               <Waves className="size-6" />
               <p className="text-[11px] font-black uppercase tracking-[0.5em]">{t("join.title")}</p>
             </div>
-            <h2 className="text-5xl font-black uppercase text-white sm:text-7xl">
+            <h2 className="text-5xl font-black uppercase text-white sm:text-7xl drop-shadow-lg">
               {t("join.subtitle")}
             </h2>
             <p className="text-xl text-white/95 font-medium leading-relaxed">
@@ -269,7 +265,7 @@ export function HomePageClient({
       </section>
 
       <footer className="section-shell pb-12">
-        <div className="rounded-[2.5rem] border border-white/40 bg-white/20 p-10 text-center backdrop-blur-md">
+        <div className="card-premium !rounded-[2.5rem] !bg-white/20 p-10 text-center">
           <div className="flex flex-col items-center gap-6">
             <div className="flex items-center gap-6 text-[#FF8DA1]">
               <Heart className="size-5 fill-current" />
@@ -277,10 +273,10 @@ export function HomePageClient({
               <Star className="size-5 fill-current" />
             </div>
             <p className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-500">
-              © {currentYear} Hearts2Hearts · Unofficial Fan Project
+              {t("footer.copyright").replace("{year}", currentYear.toString())}
             </p>
             <p className="text-[11px] text-slate-400 max-w-2xl mx-auto leading-relaxed">
-              This is an independent fan encyclopedia. All trademarks belong to their respective owners.
+              {t("footer.disclaimer")}
             </p>
           </div>
         </div>

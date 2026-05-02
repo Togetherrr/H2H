@@ -17,6 +17,7 @@ export function LanguageSwitcher() {
   return (
     <button
       onClick={toggleLanguage}
+      suppressHydrationWarning
       className="flex items-center gap-2 rounded-full border border-white/60 bg-white/40 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-700 transition-all hover:bg-white/60 hover:border-white/80"
       title={displayLanguage === "vi" ? "Switch to English" : "Chuyển sang tiếng Việt"}
     >

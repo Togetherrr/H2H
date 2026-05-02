@@ -5,19 +5,25 @@ import { getTrackPerformanceSnapshot } from "@/lib/track-performance"
 import { Navbar } from "@/components/navbar"
 import { cn } from "@/lib/utils"
 import type { PerformanceItem } from "@/lib/track-performance"
+import { getTranslation, normalizeLanguage } from "@/i18n/translations"
+import { headers } from "next/headers"
 
-export const metadata = {
-  title: "Track Performance Charts | Hearts2Hearts",
-  description: "Real-time track performance charts for Hearts2Hearts on Spotify and YouTube.",
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
+  const { lang: queryLang } = await searchParams
+  const lang = normalizeLanguage(queryLang)
+  const t = (key: any) => getTranslation(lang, key)
+  
+  return {
+    title: `${t("charts.title")} | Hearts2Hearts`,
+    description: t("charts.subtitle"),
+  }
 }
 
 interface ChartsPageProps {
-  searchParams: Promise<{ platform?: string }>
+  searchParams: Promise<{ platform?: string; lang?: string }>
 }
 
-// ─── Row dùng riêng cho trang Full Charts ────────────────────────────────────
-// grid phải khớp với header bên dưới: 64px | 1fr | 160px | 140px | 110px
-function FullChartsItemRow({ item, index }: { item: PerformanceItem; index: number }) {
+function FullChartsItemRow({ item, index, lang }: { item: PerformanceItem; index: number; lang: string }) {
   const isPositive = (item.dailyChange || 0) >= 0
   const Icon = isPositive ? TrendingUp : TrendingDown
 
@@ -29,35 +35,30 @@ function FullChartsItemRow({ item, index }: { item: PerformanceItem; index: numb
       className="group/row grid items-center border-b border-slate-50 px-8 transition-colors hover:bg-slate-50/70 last:border-b-0"
       style={{ gridTemplateColumns: "64px 1fr 160px 140px 110px", minHeight: "72px" }}
     >
-      {/* Rank */}
       <div className="text-center">
         <span className="text-[12px] font-black text-[#FFAAC0]">
           #{String(index + 1).padStart(2, "0")}
         </span>
       </div>
 
-      {/* Track info */}
       <div className="flex min-w-0 items-center gap-4 px-4">
         <div className="h-[44px] w-[44px] shrink-0 overflow-hidden rounded-[10px] border border-slate-100">
           <Image src={item.imageUrl} alt={item.title} width={44} height={44} className="h-full w-full object-cover" />
         </div>
         <div className="min-w-0">
           <p className="truncate text-[13px] font-black text-slate-950">{item.title}</p>
-          <p className="truncate text-[11px] font-medium uppercase tracking-widest text-slate-600">{item.subtitle}</p>
+          <p className="truncate text-[11px] font-medium uppercase tracking-widest text-slate-500">{item.subtitle}</p>
         </div>
       </div>
 
-      {/* Total */}
       <div className="text-right font-mono text-[13px] font-bold tabular-nums text-slate-950 max-lg:hidden">
         {item.total?.toLocaleString() ?? "0"}
       </div>
 
-      {/* Daily */}
       <div className="text-right font-mono text-[13px] font-bold tabular-nums text-emerald-500 max-lg:hidden">
         {item.daily !== null && item.daily !== undefined ? `+${item.daily.toLocaleString()}` : "—"}
       </div>
 
-      {/* Change badge */}
       <div className="flex justify-end">
         <div
           className={cn(
@@ -75,30 +76,35 @@ function FullChartsItemRow({ item, index }: { item: PerformanceItem; index: numb
   )
 }
 
-// ─── Reusable table header — columns phải khớp với FullChartsItemRow ────────
-function TableHeader({ col2Label }: { col2Label: string }) {
+function TableHeader({ col2Label, t }: { col2Label: string; t: any }) {
   return (
     <div
-      className="grid items-center bg-slate-50/50 py-4 px-8 text-[10px] font-black uppercase tracking-widest text-slate-600 border-b border-slate-100"
+      className="grid items-center bg-slate-50/50 py-4 px-8 text-[10px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-100"
       style={{ gridTemplateColumns: "64px 1fr 160px 140px 110px" }}
     >
-      <div className="text-center">Rank</div>
+      <div className="text-center">{t("charts.rank")}</div>
       <div className="px-4">{col2Label}</div>
-      <div className="text-right max-lg:hidden">Total</div>
-      <div className="text-right max-lg:hidden">Daily</div>
-      <div className="text-right">Trend</div>
+      <div className="text-right max-lg:hidden">{t("charts.total")}</div>
+      <div className="text-right max-lg:hidden">{t("charts.daily")}</div>
+      <div className="text-right">{t("charts.trend")}</div>
     </div>
   )
 }
 
 export default async function ChartsPage({ searchParams }: ChartsPageProps) {
-  const { platform } = await searchParams
+  const { platform, lang: queryLang } = await searchParams
+  
+  // Get language from cookies or query
+  const cookieLang = (await headers()).get("cookie")?.match(/lang=([^;]+)/)?.[1]
+  const lang = normalizeLanguage(queryLang || cookieLang)
+  const t = (key: any) => getTranslation(lang, key)
+
   const snapshot = await getTrackPerformanceSnapshot()
 
   const showSpotify = !platform || platform === "spotify"
   const showYoutube = !platform || platform === "youtube"
 
-  const formattedUpdatedAt = new Date(snapshot.updatedAt).toLocaleString("vi-VN", {
+  const formattedUpdatedAt = new Date(snapshot.updatedAt).toLocaleString(lang === "vi" ? "vi-VN" : "en-US", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -107,12 +113,11 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
   })
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC] selection:bg-[#A2D2FF]/30">
+    <main className="min-h-screen selection:bg-[#A2D2FF]/30">
       <Navbar />
 
-      <div className="mx-auto max-w-6xl py-32 px-4">
-
-        {/* ── Page header ──────────────────────────────────────────────── */}
+      <div className="section-shell pt-32">
+        {/* ── Page header ── */}
         <div className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-10">
           <div className="space-y-6">
             <Link
@@ -120,30 +125,32 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
               className="inline-flex items-center gap-2 rounded-full border border-slate-100 bg-white px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-slate-500 shadow-sm transition hover:bg-[#FFC2D1] hover:text-white hover:border-transparent"
             >
               <ArrowLeft className="h-4 w-4" />
-              Return to Hub
+              {t("charts.return")}
             </Link>
             <div className="space-y-2">
               <div className="flex items-center gap-3 text-[#FF99AC]">
                 <Activity className="size-6" />
-                <p className="text-[12px] font-black uppercase tracking-[0.5em]">Real-time Data</p>
+                <p className="text-[12px] font-black uppercase tracking-[0.5em]">{t("charts.realtime")}</p>
               </div>
-              <h1 className="text-5xl font-black uppercase tracking-tighter text-slate-900 sm:text-7xl">
-                Track <span className="text-gradient">Performance</span>
+              <h1 className="text-title text-5xl sm:text-7xl">
+                {(t("charts.title") as string).split(" ")[0]} <span className="text-gradient">{(t("charts.title") as string).split(" ").slice(1).join(" ")}</span>
               </h1>
+              <p className="text-body max-w-xl">
+                {t("charts.subtitle")}
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 bg-white px-6 py-4 rounded-3xl shadow-sm border border-slate-100">
-            <Clock className="size-4 text-slate-400" />
+          <div className="flex items-center gap-3 bg-white/60 backdrop-blur-md px-6 py-4 rounded-3xl shadow-sm border border-white/80">
+            <Clock className="size-4 text-[#FF708A]" />
             <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-              Last Synced: <span className="text-slate-900">{formattedUpdatedAt}</span>
+              {t("charts.lastSynced")}: <span className="text-slate-950">{formattedUpdatedAt}</span>
             </p>
           </div>
         </div>
 
-        {/* ── Sections ─────────────────────────────────────────────────── */}
+        {/* ── Sections ── */}
         <div className="grid gap-20">
-
           {/* Spotify */}
           {showSpotify && (
             <section className="space-y-8">
@@ -153,30 +160,30 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                     <Music2 className="h-8 w-8" />
                   </div>
                   <div>
-                    <h2 className="text-3xl font-black uppercase tracking-tight text-slate-900">Spotify Charts</h2>
+                    <h2 className="text-3xl font-black uppercase tracking-tight text-slate-900">{t("charts.spotify.title")}</h2>
                     <p className="text-xs font-bold uppercase tracking-widest text-sky-500">
-                      {snapshot.spotify.items.length} Tracks Analyzed
+                      {snapshot.spotify.items.length} {t("charts.analyzed")}
                     </p>
                   </div>
                 </div>
                 <div className="text-right hidden sm:block">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Streams</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{t("performance.totalStreams")}</p>
                   <p className="text-2xl font-black text-slate-900">
                     {snapshot.spotify.totalValue?.toLocaleString() ?? "0"}
                   </p>
                 </div>
               </div>
 
-              <div className="overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white shadow-xl shadow-slate-200/20">
-                <TableHeader col2Label="Track Info" />
+              <div className="card-premium overflow-hidden !rounded-[2.5rem]">
+                <TableHeader col2Label={t("charts.trackInfo") as string} t={t} />
                 <div>
                   {snapshot.spotify.items.length > 0 ? (
                     snapshot.spotify.items.map((item, index) => (
-                      <FullChartsItemRow key={item.id} item={item} index={index} />
+                      <FullChartsItemRow key={item.id} item={item} index={index} lang={lang} />
                     ))
                   ) : (
-                    <div className="p-20 text-center text-slate-400 italic font-medium">
-                      No Spotify data available.
+                    <div className="p-20 text-center text-slate-500 italic font-medium">
+                      {t("charts.empty")}
                     </div>
                   )}
                 </div>
@@ -193,37 +200,36 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                     <Youtube className="h-8 w-8" />
                   </div>
                   <div>
-                    <h2 className="text-3xl font-black uppercase tracking-tight text-slate-900">YouTube Views</h2>
+                    <h2 className="text-3xl font-black uppercase tracking-tight text-slate-900">{t("charts.youtube.title")}</h2>
                     <p className="text-xs font-bold uppercase tracking-widest text-pink-500">
-                      {snapshot.youtube.items.length} Videos Analyzed
+                      {snapshot.youtube.items.length} {t("charts.analyzed.video")}
                     </p>
                   </div>
                 </div>
                 <div className="text-right hidden sm:block">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Views</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{t("performance.totalViews")}</p>
                   <p className="text-2xl font-black text-slate-900">
                     {snapshot.youtube.totalValue?.toLocaleString() ?? "0"}
                   </p>
                 </div>
               </div>
 
-              <div className="overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white shadow-xl shadow-slate-200/20">
-                <TableHeader col2Label="Video Info" />
+              <div className="card-premium overflow-hidden !rounded-[2.5rem]">
+                <TableHeader col2Label={t("charts.videoInfo") as string} t={t} />
                 <div>
                   {snapshot.youtube.items.length > 0 ? (
                     snapshot.youtube.items.map((item, index) => (
-                      <FullChartsItemRow key={item.id} item={item} index={index} />
+                      <FullChartsItemRow key={item.id} item={item} index={index} lang={lang} />
                     ))
                   ) : (
-                    <div className="p-20 text-center text-slate-400 italic font-medium">
-                      No YouTube data available.
+                    <div className="p-20 text-center text-slate-500 italic font-medium">
+                      {t("charts.empty")}
                     </div>
                   )}
                 </div>
               </div>
             </section>
           )}
-
         </div>
       </div>
     </main>

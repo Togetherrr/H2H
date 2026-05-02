@@ -1,18 +1,25 @@
-/* eslint-disable @next/next/no-img-element */
+import { getTranslation, normalizeLanguage } from "@/i18n/translations"
+import { ArrowLeft, Music2, ExternalLink, Calendar } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { notFound } from "next/navigation"
-import { getReleaseBySlug } from "../../../lib/release-catalog"
+import { getReleaseBySlug } from "@/lib/release-catalog"
 
 type AlbumPageProps = {
   params: Promise<{
     slug: string
   }>
+  searchParams: Promise<{ lang?: string }>
 }
 
 export const revalidate = 3600
 
-export default async function AlbumDetailPage({ params }: AlbumPageProps) {
+export default async function AlbumDetailPage({ params, searchParams }: AlbumPageProps) {
   const { slug } = await params
+  const { lang: queryLang } = await searchParams
+  const lang = normalizeLanguage(queryLang)
+  const t = (key: any) => getTranslation(lang, key)
+
   const album = await getReleaseBySlug(slug)
 
   if (!album) {
@@ -20,54 +27,102 @@ export default async function AlbumDetailPage({ params }: AlbumPageProps) {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#e9f7ff_0%,#f6fbff_48%,#edf8ff_100%)] px-5 py-8 sm:px-8 lg:px-10">
-      <div className="mx-auto w-full max-w-5xl">
+    <main className="min-h-screen selection:bg-[#A2D2FF]/30">
+      <div className="section-shell pt-32 lg:pt-40 pb-12 lg:pb-24">
         <Link
-          href="/"
-          className="inline-flex items-center rounded-full border border-white/70 bg-white/70 px-4 py-2 text-xs uppercase tracking-[0.2em] text-sky-700 transition hover:bg-white"
+          href={`/${queryLang ? `?lang=${queryLang}` : ""}`}
+          className="inline-flex items-center gap-2 rounded-full border border-slate-100 bg-white px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-slate-500 shadow-sm transition hover:bg-[#FFC2D1] hover:text-white hover:border-transparent"
         >
-          Back to home
+          <ArrowLeft className="h-4 w-4" />
+          {t("common.backToHome")}
         </Link>
 
-        <section className="mt-5 rounded-[2rem] border border-white/70 bg-white/70 p-5 shadow-[0_20px_50px_rgba(87,145,188,0.14)] backdrop-blur-xl sm:p-8">
-          <div className="grid gap-6 md:grid-cols-[0.95fr_1.05fr] md:items-start">
-            <div className="overflow-hidden rounded-[1.5rem] border border-sky-100/80 bg-sky-50/60">
-              <img src={album.cover} alt={`${album.title} cover`} className="h-full w-full object-cover" />
+        <section className="mt-12 overflow-hidden rounded-[3rem] border border-white bg-white/40 shadow-xl backdrop-blur-xl">
+          <div className="grid gap-10 lg:grid-cols-[450px_1fr]">
+            {/* Image section */}
+            <div className="relative aspect-square lg:aspect-auto">
+              <Image 
+                src={album.cover} 
+                alt={`${album.title} cover`} 
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 450px"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
             </div>
 
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.3em] text-sky-700/70">{album.subtitle}</p>
-              <h1 className="mt-3 text-4xl uppercase leading-none text-slate-950 sm:text-5xl">{album.title}</h1>
-              <p className="mt-4 text-sm uppercase tracking-[0.2em] text-slate-500">{album.type}</p>
-              <p className="mt-2 text-sm text-slate-600">Release date: {album.date}</p>
+            {/* Info section */}
+            <div className="flex flex-col p-10 lg:p-16">
+              <div className="flex-1">
+                <p className="text-[13px] font-black uppercase tracking-[0.4em] text-[#FF708A]">
+                  {album.subtitle}
+                </p>
+                <h1 className="text-title mt-4 text-5xl uppercase lg:text-7xl">
+                  {album.title}
+                </h1>
+                
+                <div className="mt-6 flex flex-wrap gap-6">
+                  <div className="flex items-center gap-2 text-[12px] font-black uppercase tracking-widest text-slate-500">
+                    <Music2 className="size-4 text-sky-400" />
+                    {album.type}
+                  </div>
+                  <div className="flex items-center gap-2 text-[12px] font-black uppercase tracking-widest text-slate-500">
+                    <Calendar className="size-4 text-pink-400" />
+                    {t("album.releaseDate")}: {album.date}
+                  </div>
+                </div>
 
-              <p className="mt-6 text-sm leading-7 text-slate-700">{album.summary}</p>
+                <div className="mt-10 max-w-xl">
+                  <p className="text-body text-lg leading-relaxed text-slate-700">
+                    {album.summary}
+                  </p>
+                </div>
 
-              <div className="mt-6 rounded-[1.2rem] border border-white/70 bg-white/70 p-4">
-                <p className="text-[11px] uppercase tracking-[0.28em] text-sky-700/80">Track list</p>
-                {album.tracks.length > 0 ? (
-                  <ul className="mt-3 space-y-2 text-sm text-slate-700">
-                    {album.tracks.map((track, index) => (
-                      <li key={track}>
-                        {index + 1}. {track}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="mt-3 text-sm text-slate-600">Track list sẽ được cập nhật khi nguồn wiki bổ sung.</p>
-                )}
+                <div className="mt-12 space-y-6">
+                  <div className="flex items-center gap-3">
+                    <div className="h-px w-8 bg-[#A2D2FF]" />
+                    <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">
+                      {t("album.trackList")}
+                    </p>
+                  </div>
+                  
+                  {album.tracks.length > 0 ? (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {album.tracks.map((track, index) => (
+                        <div
+                          key={track}
+                          className="flex items-center gap-4 rounded-2xl border border-white bg-white/60 p-4 shadow-sm"
+                        >
+                          <span className="text-[10px] font-black text-slate-300">
+                            {String(index + 1).padStart(2, "0")}
+                          </span>
+                          <span className="text-sm font-bold text-slate-700">{track}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm italic text-slate-400">
+                      {t("album.trackListEmpty")}
+                    </p>
+                  )}
+                </div>
+              </div>
 
-                {album.sourceUrl ? (
+              {/* Source */}
+              {album.sourceUrl && (
+                <div className="mt-16">
                   <a
                     href={album.sourceUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-4 inline-flex text-xs uppercase tracking-[0.2em] text-sky-700 hover:text-sky-900"
+                    className="inline-flex items-center gap-2 rounded-xl border border-sky-100 bg-sky-50/50 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-sky-600 transition hover:bg-sky-100"
                   >
-                    View source on Wikidata
+                    {t("album.viewSource")}
+                    <ExternalLink className="size-3.5" />
                   </a>
-                ) : null}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -75,3 +130,4 @@ export default async function AlbumDetailPage({ params }: AlbumPageProps) {
     </main>
   )
 }
+

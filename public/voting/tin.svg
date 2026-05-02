@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80" role="img" aria-label="TIN">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFC2D1"/>
+      <stop offset="1" stop-color="#A2D2FF"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="72" height="72" rx="18" fill="url(#g)"/>
+  <rect x="4" y="4" width="72" height="72" rx="18" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2"/>
+  <text x="40" y="48" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto" font-size="18" font-weight="800" fill="#0f172a">TN</text>
+</svg>
+
