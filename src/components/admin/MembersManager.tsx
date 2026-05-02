@@ -10,9 +10,12 @@ import {
   Image as ImageIcon, 
   Link as LinkIcon, 
   Info,
-  GripVertical
+  GripVertical,
+  Upload,
+  Loader2
 } from "lucide-react"
 import Image from "next/image"
+import { MediaManager } from "./MediaManager"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -72,29 +75,29 @@ function SortableRow({ member, onEdit, onDelete }: any) {
   }
 
   return (
-    <TableRow ref={setNodeRef} style={style} className={`group transition-colors hover:bg-sky-50/50 ${isDragging ? "bg-white shadow-lg" : ""}`}>
+    <TableRow ref={setNodeRef} style={style} className={`group transition-colors hover:bg-slate-900/50 ${isDragging ? "bg-slate-900 shadow-xl border-sky-500/50" : ""}`}>
       <TableCell className="w-10">
-        <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-slate-300 hover:text-sky-600 transition-colors">
+        <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-slate-600 hover:text-sky-500 transition-colors">
           <GripVertical className="size-4" />
         </button>
       </TableCell>
       <TableCell className="w-16">
         {member.profile_image_url ? (
-          <Image src={member.profile_image_url} alt={member.stage_name} width={40} height={40} className="size-10 rounded-full object-cover border border-sky-100 shadow-sm" />
+          <Image src={member.profile_image_url} alt={member.stage_name} width={40} height={40} className="size-10 rounded-full object-cover border border-slate-800 shadow-sm" />
         ) : (
-          <div className="flex size-10 items-center justify-center rounded-full bg-sky-100 text-sky-600 font-medium text-xs">
+          <div className="flex size-10 items-center justify-center rounded-full bg-slate-800 text-slate-400 font-medium text-xs border border-slate-700">
             {member.stage_name?.[0]}
           </div>
         )}
       </TableCell>
       <TableCell>
-        <p className="font-medium text-slate-900">{member.stage_name}</p>
+        <p className="font-medium text-slate-100">{member.stage_name}</p>
         <p className="text-xs text-slate-500">{member.full_name}</p>
       </TableCell>
-      <TableCell className="text-slate-600">
+      <TableCell className="text-slate-400">
         <div className="flex flex-wrap gap-1">
           {(member.positions || []).slice(0, 3).map((pos: string) => (
-            <span key={pos} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-sky-50 text-sky-700 border border-sky-100">
+            <span key={pos} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-800 text-slate-300 border border-slate-700">
               {pos}
             </span>
           ))}
@@ -344,24 +347,31 @@ export function MembersManager({ initialMembers }: { initialMembers: any[] }) {
 
   return (
     <div className="animate-in fade-in duration-300 relative">
-      <div className="mb-8 flex items-end justify-between">
-        <div>
-          <h2 className="text-3xl font-light tracking-tight text-slate-950 sm:text-4xl">Group Members 2.0</h2>
-          <p className="mt-2 text-sm text-slate-500">Kéo thả để sắp xếp vị trí hiển thị của các thành viên.</p>
-        </div>
-        <div className="flex gap-2">
-          {hasChanges && (
-            <Button onClick={saveSorting} disabled={isSubmitting} className="bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-100">
-              <Save className="mr-2 size-4" /> Lưu Thứ Tự
-            </Button>
-          )}
-          <Button onClick={() => handleOpen()} className="bg-sky-600 text-white hover:bg-sky-700 shadow-md shadow-sky-200">
-            <Plus className="mr-2 size-4" /> Thêm Thành Viên
-          </Button>
-        </div>
+      <div className="mb-12">
+        <h2 className="text-4xl font-extralight tracking-tight text-white mb-2">Member Management</h2>
+        <p className="text-slate-500 text-sm">Add, remove and manage the profiles of your group members.</p>
       </div>
 
-      <Card className="overflow-hidden border-slate-200 shadow-sm bg-white/60 backdrop-blur-sm">
+      <div className="flex justify-between items-center mb-6">
+          <div className="flex gap-2">
+            <Button onClick={() => handleOpen()} className="bg-sky-600 hover:bg-sky-700 text-white rounded-xl shadow-lg shadow-sky-900/20">
+              <Plus className="mr-2 h-4 w-4" /> Add New Member
+            </Button>
+            {hasChanges && (
+              <Button onClick={() => window.location.reload()} variant="outline" className="rounded-xl border-slate-800 text-slate-400 hover:bg-slate-900">
+                <X className="mr-2 h-4 w-4" /> Reset Order
+              </Button>
+            )}
+          </div>
+          {hasChanges && (
+            <Button onClick={saveSorting} disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-900/20">
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              Save New Order
+            </Button>
+          )}
+        </div>
+
+      <Card className="overflow-hidden border-slate-800 bg-slate-950/40 backdrop-blur-sm shadow-xl">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -369,13 +379,13 @@ export function MembersManager({ initialMembers }: { initialMembers: any[] }) {
           modifiers={[restrictToVerticalAxis]}
         >
           <Table>
-            <TableHeader className="bg-slate-50/80">
-              <TableRow>
+            <TableHeader className="bg-slate-900/50">
+              <TableRow className="border-slate-800 hover:bg-transparent">
                 <TableHead className="w-10"></TableHead>
-                <TableHead className="w-16">Image</TableHead>
-                <TableHead>Stage Name</TableHead>
-                <TableHead>Positions</TableHead>
-                <TableHead className="w-24 text-right">Actions</TableHead>
+                <TableHead className="w-16">Profile</TableHead>
+                <TableHead className="text-slate-400 font-medium">Stage Name</TableHead>
+                <TableHead className="text-slate-400 font-medium">Positions</TableHead>
+                <TableHead className="text-right text-slate-400 font-medium">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -409,82 +419,96 @@ export function MembersManager({ initialMembers }: { initialMembers: any[] }) {
 
       {/* Slide-out Panel */}
       <div 
-        className={`fixed inset-y-0 right-0 z-50 w-full max-w-3xl bg-white shadow-2xl transition-transform duration-500 ease-in-out border-l border-slate-200 overflow-hidden flex flex-col ${
+        className={`fixed inset-y-0 right-0 z-50 w-full max-w-3xl bg-slate-950 shadow-2xl transition-transform duration-500 ease-in-out border-l border-slate-800 overflow-hidden flex flex-col ${
           isPanelOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {formData && (
           <form onSubmit={handleSubmit} className="flex flex-col h-full">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white z-10">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950 z-10">
               <div>
-                <h3 className="text-xl font-medium text-slate-900">{editingId ? "Edit Member" : "Add Member"}</h3>
+                <h3 className="text-xl font-medium text-white">{editingId ? "Edit Member" : "Add Member"}</h3>
                 <p className="text-sm text-slate-500">Quản lý chi tiết hồ sơ thành viên.</p>
               </div>
-              <Button type="button" variant="ghost" size="icon" onClick={handleClose} className="rounded-full text-slate-500 hover:bg-slate-100">
+              <Button type="button" variant="ghost" size="icon" onClick={handleClose} className="rounded-full text-slate-400 hover:bg-slate-900">
                 <X className="size-5" />
               </Button>
             </div>
 
-            <div className="flex-1 overflow-y-auto bg-slate-50/50 p-6">
+            <div className="flex-1 overflow-y-auto bg-slate-950/50 p-6">
               <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-5 mb-6 bg-slate-100 p-1 rounded-xl">
-                  <TabsTrigger value="basic" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Basic</TabsTrigger>
-                  <TabsTrigger value="physical" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Physical</TabsTrigger>
-                  <TabsTrigger value="bio" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Bio</TabsTrigger>
-                  <TabsTrigger value="card" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Card</TabsTrigger>
-                  <TabsTrigger value="detail" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Detail</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-5 mb-6 bg-slate-900 p-1 rounded-xl">
+                  <TabsTrigger value="basic" className="rounded-lg data-[state=active]:bg-slate-800 data-[state=active]:text-white data-[state=active]:shadow-sm">Basic</TabsTrigger>
+                  <TabsTrigger value="physical" className="rounded-lg data-[state=active]:bg-slate-800 data-[state=active]:text-white data-[state=active]:shadow-sm">Physical</TabsTrigger>
+                  <TabsTrigger value="bio" className="rounded-lg data-[state=active]:bg-slate-800 data-[state=active]:text-white data-[state=active]:shadow-sm">Bio</TabsTrigger>
+                  <TabsTrigger value="card" className="rounded-lg data-[state=active]:bg-slate-800 data-[state=active]:text-white data-[state=active]:shadow-sm">Card</TabsTrigger>
+                  <TabsTrigger value="detail" className="rounded-lg data-[state=active]:bg-slate-800 data-[state=active]:text-white data-[state=active]:shadow-sm">Detail</TabsTrigger>
                 </TabsList>
 
                 {/* BASIC INFO */}
                 <TabsContent value="basic" className="space-y-6 focus-visible:outline-none focus-visible:ring-0 mt-0">
-                  <div className="grid gap-6 p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                  <div className="grid gap-6 p-6 bg-slate-900 rounded-2xl border border-slate-800 shadow-sm">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="grid gap-2">
-                        <Label>Stage Name <span className="text-red-500">*</span></Label>
-                        <Input value={formData.stage_name} onChange={e => setFormData({...formData, stage_name: e.target.value})} required className="bg-slate-50 border-slate-200" />
+                        <Label className="text-slate-300">Stage Name <span className="text-red-500">*</span></Label>
+                        <Input value={formData.stage_name} onChange={e => setFormData({...formData, stage_name: e.target.value})} required className="bg-slate-950 border-slate-800 text-white" />
                       </div>
                       <div className="grid gap-2">
-                        <Label>Stage Name (KR)</Label>
-                        <Input value={formData.stage_name_kr} onChange={e => setFormData({...formData, stage_name_kr: e.target.value})} className="bg-slate-50 border-slate-200" />
+                        <Label className="text-slate-300">Stage Name (KR)</Label>
+                        <Input value={formData.stage_name_kr} onChange={e => setFormData({...formData, stage_name_kr: e.target.value})} className="bg-slate-950 border-slate-800 text-white" />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="grid gap-2">
-                        <Label>Full Name</Label>
-                        <Input value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} className="bg-slate-50 border-slate-200" />
+                        <Label className="text-slate-300">Full Name</Label>
+                        <Input value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} className="bg-slate-950 border-slate-800 text-white" />
                       </div>
                       <div className="grid gap-2">
-                        <Label>Full Name (KR)</Label>
-                        <Input value={formData.full_name_kr} onChange={e => setFormData({...formData, full_name_kr: e.target.value})} className="bg-slate-50 border-slate-200" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="grid gap-2">
-                        <Label>Slug <span className="text-red-500">*</span></Label>
-                        <Input value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, "-")})} required className="bg-slate-50 border-slate-200" />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label>English Name</Label>
-                        <Input value={formData.english_name} onChange={e => setFormData({...formData, english_name: e.target.value})} className="bg-slate-50 border-slate-200" />
+                        <Label className="text-slate-300">Full Name (KR)</Label>
+                        <Input value={formData.full_name_kr} onChange={e => setFormData({...formData, full_name_kr: e.target.value})} className="bg-slate-950 border-slate-800 text-white" />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="grid gap-2">
-                        <Label>Birthday (Birth Date)</Label>
-                        <Input type="date" value={formData.birth_date} onChange={e => setFormData({...formData, birth_date: e.target.value})} className="bg-slate-50 border-slate-200" />
+                        <Label className="text-slate-300">Slug <span className="text-red-500">*</span></Label>
+                        <Input value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, "-")})} required className="bg-slate-950 border-slate-800 text-white" />
                       </div>
                       <div className="grid gap-2">
-                        <Label>Nationality</Label>
-                        <Input value={formData.nationality} onChange={e => setFormData({...formData, nationality: e.target.value})} className="bg-slate-50 border-slate-200" />
+                        <Label className="text-slate-300">English Name</Label>
+                        <Input value={formData.english_name} onChange={e => setFormData({...formData, english_name: e.target.value})} className="bg-slate-950 border-slate-800 text-white" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label className="text-slate-300">Birthday (Birth Date)</Label>
+                        <Input type="date" value={formData.birth_date} onChange={e => setFormData({...formData, birth_date: e.target.value})} className="bg-slate-950 border-slate-800 text-white" />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label className="text-slate-300">Nationality</Label>
+                        <Input value={formData.nationality} onChange={e => setFormData({...formData, nationality: e.target.value})} className="bg-slate-950 border-slate-800 text-white" />
                       </div>
                     </div>
                     <div className="grid gap-2">
-                      <Label>Profile Image URL</Label>
+                      <Label className="text-slate-300">Profile Image URL</Label>
                       <div className="flex gap-2">
-                        <div className="flex items-center justify-center size-10 rounded border border-slate-200 bg-slate-50 text-slate-400 shrink-0 overflow-hidden relative">
+                        <div className="flex items-center justify-center size-10 rounded border border-slate-800 bg-slate-950 text-slate-600 shrink-0 overflow-hidden relative">
                           {formData.profile_image_url ? <Image src={formData.profile_image_url} alt="" fill className="object-cover" /> : <ImageIcon className="size-4" />}
                         </div>
-                        <Input value={formData.profile_image_url} onChange={e => setFormData({...formData, profile_image_url: convertGDriveLink(e.target.value)})} placeholder="Main avatar URL" className="bg-slate-50 border-slate-200 flex-1" />
+                        <Input value={formData.profile_image_url} onChange={e => setFormData({...formData, profile_image_url: convertGDriveLink(e.target.value)})} placeholder="Main avatar URL" className="bg-slate-950 border-slate-800 text-white flex-1" />
+                        <MediaManager 
+                          defaultCategory="Members"
+                          onSelect={(url) => setFormData({...formData, profile_image_url: url})}
+                          trigger={
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="icon" 
+                              className="shrink-0 border-slate-800 hover:bg-slate-800 hover:text-sky-400"
+                            >
+                              <Upload className="size-4" />
+                            </Button>
+                          }
+                        />
                       </div>
                     </div>
                   </div>
@@ -492,58 +516,58 @@ export function MembersManager({ initialMembers }: { initialMembers: any[] }) {
 
                 {/* PHYSICAL */}
                 <TabsContent value="physical" className="space-y-6 focus-visible:outline-none focus-visible:ring-0 mt-0">
-                  <div className="grid grid-cols-2 gap-6 p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                  <div className="grid grid-cols-2 gap-6 p-6 bg-slate-900 rounded-2xl border border-slate-800 shadow-sm">
                     <div className="grid gap-2">
-                      <Label>Height (cm)</Label>
-                      <Input type="number" value={formData.height_cm} onChange={e => setFormData({...formData, height_cm: e.target.value})} className="bg-slate-50 border-slate-200" />
+                      <Label className="text-slate-300">Height (cm)</Label>
+                      <Input type="number" value={formData.height_cm} onChange={e => setFormData({...formData, height_cm: e.target.value})} className="bg-slate-950 border-slate-800 text-white" />
                     </div>
                     <div className="grid gap-2">
-                      <Label>Blood Type</Label>
-                      <Input value={formData.blood_type} onChange={e => setFormData({...formData, blood_type: e.target.value})} className="bg-slate-50 border-slate-200" />
+                      <Label className="text-slate-300">Blood Type</Label>
+                      <Input value={formData.blood_type} onChange={e => setFormData({...formData, blood_type: e.target.value})} className="bg-slate-950 border-slate-800 text-white" />
                     </div>
                     <div className="grid gap-2">
-                      <Label>MBTI</Label>
-                      <Input value={formData.mbti} onChange={e => setFormData({...formData, mbti: e.target.value})} className="bg-slate-50 border-slate-200" />
+                      <Label className="text-slate-300">MBTI</Label>
+                      <Input value={formData.mbti} onChange={e => setFormData({...formData, mbti: e.target.value})} className="bg-slate-950 border-slate-800 text-white" />
                     </div>
                     <div className="grid gap-2">
-                      <Label>Zodiac</Label>
-                      <Input value={formData.zodiac} onChange={e => setFormData({...formData, zodiac: e.target.value})} className="bg-slate-50 border-slate-200" />
+                      <Label className="text-slate-300">Zodiac</Label>
+                      <Input value={formData.zodiac} onChange={e => setFormData({...formData, zodiac: e.target.value})} className="bg-slate-950 border-slate-800 text-white" />
                     </div>
                     <div className="grid gap-2 col-span-2">
-                      <Label>Emoji</Label>
-                      <Input value={formData.emoji} onChange={e => setFormData({...formData, emoji: e.target.value})} className="bg-slate-50 border-slate-200 text-lg" />
+                      <Label className="text-slate-300">Emoji</Label>
+                      <Input value={formData.emoji} onChange={e => setFormData({...formData, emoji: e.target.value})} className="bg-slate-950 border-slate-800 text-white text-lg" />
                     </div>
                     <div className="grid gap-2 col-span-2">
-                      <Label>Birthplace</Label>
-                      <Input value={formData.birthplace} onChange={e => setFormData({...formData, birthplace: e.target.value})} className="bg-slate-50 border-slate-200" />
+                      <Label className="text-slate-300">Birthplace</Label>
+                      <Input value={formData.birthplace} onChange={e => setFormData({...formData, birthplace: e.target.value})} className="bg-slate-950 border-slate-800 text-white" />
                     </div>
                   </div>
                 </TabsContent>
 
                 {/* BIO & TRIVIA */}
                 <TabsContent value="bio" className="space-y-6 focus-visible:outline-none focus-visible:ring-0 mt-0">
-                  <div className="grid gap-6 p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                  <div className="grid gap-6 p-6 bg-slate-900 rounded-2xl border border-slate-800 shadow-sm">
                     <DynamicListInput label="Positions" items={formData.positions} onChange={items => setFormData({...formData, positions: items})} />
                     <div className="grid grid-cols-2 gap-4">
                       <div className="grid gap-2">
-                        <Label>Training Years</Label>
-                        <Input type="number" step="0.1" value={formData.training_years} onChange={e => setFormData({...formData, training_years: e.target.value})} className="bg-slate-50 border-slate-200" />
+                        <Label className="text-slate-300">Training Years</Label>
+                        <Input type="number" step="0.1" value={formData.training_years} onChange={e => setFormData({...formData, training_years: e.target.value})} className="bg-slate-950 border-slate-800 text-white" />
                       </div>
                       <div className="grid gap-2">
-                        <Label>Hakyuha Character</Label>
-                        <Input value={formData.hakyuha_character} onChange={e => setFormData({...formData, hakyuha_character: e.target.value})} className="bg-slate-50 border-slate-200" />
+                        <Label className="text-slate-300">Hakyuha Character</Label>
+                        <Input value={formData.hakyuha_character} onChange={e => setFormData({...formData, hakyuha_character: e.target.value})} className="bg-slate-950 border-slate-800 text-white" />
                       </div>
                     </div>
                     <div className="grid gap-2">
-                      <Label>Short Bio</Label>
-                      <Textarea value={formData.bio_short} onChange={e => setFormData({...formData, bio_short: e.target.value})} className="bg-slate-50 border-slate-200 h-20 resize-none" />
+                      <Label className="text-slate-300">Short Bio</Label>
+                      <Textarea value={formData.bio_short} onChange={e => setFormData({...formData, bio_short: e.target.value})} className="bg-slate-950 border-slate-800 text-white h-20 resize-none" />
                     </div>
                     <div className="grid gap-2">
-                      <Label>Short Bio (EN)</Label>
-                      <Textarea value={formData.bio_short_en} onChange={e => setFormData({...formData, bio_short_en: e.target.value})} className="bg-slate-50 border-slate-200 h-20 resize-none" />
+                      <Label className="text-slate-300">Short Bio (EN)</Label>
+                      <Textarea value={formData.bio_short_en} onChange={e => setFormData({...formData, bio_short_en: e.target.value})} className="bg-slate-950 border-slate-800 text-white h-20 resize-none" />
                     </div>
                   </div>
-                  <div className="grid gap-6 p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                  <div className="grid gap-6 p-6 bg-slate-900 rounded-2xl border border-slate-800 shadow-sm">
                     <DynamicListInput label="Nicknames" items={formData.nicknames} onChange={items => setFormData({...formData, nicknames: items})} />
                     <DynamicListInput label="Fun Facts (VI)" items={formData.fun_facts_vi} onChange={items => setFormData({...formData, fun_facts_vi: items})} />
                     <DynamicListInput label="Fun Facts (EN)" items={formData.fun_facts_en} onChange={items => setFormData({...formData, fun_facts_en: items})} />
@@ -553,82 +577,114 @@ export function MembersManager({ initialMembers }: { initialMembers: any[] }) {
 
                 {/* CARD CONFIG */}
                 <TabsContent value="card" className="space-y-6 focus-visible:outline-none focus-visible:ring-0 mt-0">
-                  <div className="grid gap-6 p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                  <div className="grid gap-6 p-6 bg-slate-900 rounded-2xl border border-slate-800 shadow-sm">
                     <div className="flex items-center gap-4 mb-2">
-                      <div className="size-16 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200 relative">
+                      <div className="size-16 rounded-xl bg-slate-950 flex items-center justify-center overflow-hidden border border-slate-800 relative">
                         {formData.card.avatar ? (
                           <Image src={normalizeImageUrl(formData.card.avatar)} alt="" fill className="object-cover" />
                         ) : (
-                          <ImageIcon className="text-slate-400" />
+                          <ImageIcon className="text-slate-600" />
                         )}
                       </div>
                       <div>
-                        <h4 className="font-medium">Card Preview</h4>
+                        <h4 className="font-medium text-white">Card Preview</h4>
                         <p className="text-xs text-slate-500">How the member appears in lists.</p>
                       </div>
                     </div>
                     <div className="grid gap-2">
-                      <Label>Card Avatar URL</Label>
-                      <Input value={formData.card.avatar} onChange={e => setFormData({...formData, card: {...formData.card, avatar: convertGDriveLink(e.target.value)}})} className="bg-slate-50 border-slate-200" />
+                      <Label className="text-slate-300">Card Avatar URL</Label>
+                      <div className="flex gap-2">
+                        <Input value={formData.card.avatar} onChange={e => setFormData({...formData, card: {...formData.card, avatar: convertGDriveLink(e.target.value)}})} className="bg-slate-950 border-slate-800 text-white flex-1" />
+                        <MediaManager 
+                          defaultCategory="Members"
+                          onSelect={(url) => setFormData({...formData, card: {...formData.card, avatar: url}})}
+                          trigger={
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="icon" 
+                              className="shrink-0 border-slate-800 hover:bg-slate-800 hover:text-sky-400"
+                            >
+                              <Upload className="size-4" />
+                            </Button>
+                          }
+                        />
+                      </div>
                     </div>
                     <div className="grid gap-2">
-                      <Label>Card Name (Uppercase)</Label>
-                      <Input value={formData.card.name} onChange={e => setFormData({...formData, card: {...formData.card, name: e.target.value.toUpperCase()}})} className="bg-slate-50 border-slate-200" />
+                      <Label className="text-slate-300">Card Name (Uppercase)</Label>
+                      <Input value={formData.card.name} onChange={e => setFormData({...formData, card: {...formData.card, name: e.target.value.toUpperCase()}})} className="bg-slate-950 border-slate-800 text-white" />
                     </div>
                     <div className="grid gap-2">
-                      <Label>Role Label</Label>
-                      <Input value={formData.card.role_label} onChange={e => setFormData({...formData, card: {...formData.card, role_label: e.target.value}})} placeholder="e.g. LEADER" className="bg-slate-50 border-slate-200" />
+                      <Label className="text-slate-300">Role Label</Label>
+                      <Input value={formData.card.role_label} onChange={e => setFormData({...formData, card: {...formData.card, role_label: e.target.value}})} placeholder="e.g. LEADER" className="bg-slate-950 border-slate-800 text-white" />
                     </div>
                   </div>
                 </TabsContent>
 
                 {/* DETAIL CONFIG */}
                 <TabsContent value="detail" className="space-y-6 focus-visible:outline-none focus-visible:ring-0 mt-0">
-                  <div className="grid gap-6 p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                  <div className="grid gap-6 p-6 bg-slate-900 rounded-2xl border border-slate-800 shadow-sm">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="grid gap-2">
-                        <Label>Group Label</Label>
-                        <Input value={formData.detail.group_label} onChange={e => setFormData({...formData, detail: {...formData.detail, group_label: e.target.value}})} className="bg-slate-50 border-slate-200" />
+                        <Label className="text-slate-300">Group Label</Label>
+                        <Input value={formData.detail.group_label} onChange={e => setFormData({...formData, detail: {...formData.detail, group_label: e.target.value}})} className="bg-slate-950 border-slate-800 text-white" />
                       </div>
                       <div className="grid gap-2">
-                        <Label>Detail Name</Label>
-                        <Input value={formData.detail.name} onChange={e => setFormData({...formData, detail: {...formData.detail, name: e.target.value}})} className="bg-slate-50 border-slate-200" />
+                        <Label className="text-slate-300">Detail Name</Label>
+                        <Input value={formData.detail.name} onChange={e => setFormData({...formData, detail: {...formData.detail, name: e.target.value}})} className="bg-slate-950 border-slate-800 text-white" />
                       </div>
                     </div>
                     <div className="grid gap-2">
-                      <Label>Detail Large Image URL</Label>
-                      <Input value={formData.detail.image} onChange={e => setFormData({...formData, detail: {...formData.detail, image: convertGDriveLink(e.target.value)}})} className="bg-slate-50 border-slate-200" />
+                      <Label className="text-slate-300">Detail Large Image URL</Label>
+                      <div className="flex gap-2">
+                        <Input value={formData.detail.image} onChange={e => setFormData({...formData, detail: {...formData.detail, image: convertGDriveLink(e.target.value)}})} className="bg-slate-950 border-slate-800 text-white flex-1" />
+                        <MediaManager 
+                          defaultCategory="Members"
+                          onSelect={(url) => setFormData({...formData, detail: {...formData.detail, image: url}})}
+                          trigger={
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="icon" 
+                              className="shrink-0 border-slate-800 hover:bg-slate-800 hover:text-sky-400"
+                            >
+                              <Upload className="size-4" />
+                            </Button>
+                          }
+                        />
+                      </div>
                     </div>
                     <div className="grid gap-2">
-                      <Label>Detail Biography</Label>
-                      <Textarea value={formData.detail.bio} onChange={e => setFormData({...formData, detail: {...formData.detail, bio: e.target.value}})} className="bg-slate-50 border-slate-200 h-24" />
+                      <Label className="text-slate-300">Detail Biography</Label>
+                      <Textarea value={formData.detail.bio} onChange={e => setFormData({...formData, detail: {...formData.detail, bio: e.target.value}})} className="bg-slate-950 border-slate-800 text-white h-24" />
                     </div>
                     <div className="grid gap-2">
-                      <Label>Detail Biography (EN)</Label>
-                      <Textarea value={formData.detail.bio_en} onChange={e => setFormData({...formData, detail: {...formData.detail, bio_en: e.target.value}})} className="bg-slate-50 border-slate-200 h-24" />
+                      <Label className="text-slate-300">Detail Biography (EN)</Label>
+                      <Textarea value={formData.detail.bio_en} onChange={e => setFormData({...formData, detail: {...formData.detail, bio_en: e.target.value}})} className="bg-slate-950 border-slate-800 text-white h-24" />
                     </div>
                     <DynamicListInput label="Highlights" items={formData.detail.highlights} onChange={items => setFormData({...formData, detail: {...formData.detail, highlights: items}})} />
                   </div>
 
-                  <div className="grid gap-4 p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                    <h4 className="font-medium flex items-center gap-2"><LinkIcon className="size-4" /> Source & Attribution</h4>
+                  <div className="grid gap-4 p-6 bg-slate-900 rounded-2xl border border-slate-800 shadow-sm">
+                    <h4 className="font-medium text-white flex items-center gap-2"><LinkIcon className="size-4" /> Source & Attribution</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="grid gap-2">
-                        <Label>Source Label</Label>
-                        <Input value={formData.detail.source_label} onChange={e => setFormData({...formData, detail: {...formData.detail, source_label: e.target.value}})} className="bg-slate-50 border-slate-200" />
+                        <Label className="text-slate-300">Source Label</Label>
+                        <Input value={formData.detail.source_label} onChange={e => setFormData({...formData, detail: {...formData.detail, source_label: e.target.value}})} className="bg-slate-950 border-slate-800 text-white" />
                       </div>
                       <div className="grid gap-2">
-                        <Label>Source Name</Label>
-                        <Input value={formData.detail.source_name} onChange={e => setFormData({...formData, detail: {...formData.detail, source_name: e.target.value}})} className="bg-slate-50 border-slate-200" />
+                        <Label className="text-slate-300">Source Name</Label>
+                        <Input value={formData.detail.source_name} onChange={e => setFormData({...formData, detail: {...formData.detail, source_name: e.target.value}})} className="bg-slate-950 border-slate-800 text-white" />
                       </div>
                     </div>
                     <div className="grid gap-2">
-                      <Label>Source URL</Label>
-                      <Input value={formData.detail.source_url} onChange={e => setFormData({...formData, detail: {...formData.detail, source_url: e.target.value}})} className="bg-slate-50 border-slate-200" />
+                      <Label className="text-slate-300">Source URL</Label>
+                      <Input value={formData.detail.source_url} onChange={e => setFormData({...formData, detail: {...formData.detail, source_url: e.target.value}})} className="bg-slate-950 border-slate-800 text-white" />
                     </div>
                     <div className="grid gap-2">
-                      <Label>Source Note</Label>
-                      <Textarea value={formData.detail.source_note} onChange={e => setFormData({...formData, detail: {...formData.detail, source_note: e.target.value}})} className="bg-slate-50 border-slate-200 h-20 text-xs" />
+                      <Label className="text-slate-300">Source Note</Label>
+                      <Textarea value={formData.detail.source_note} onChange={e => setFormData({...formData, detail: {...formData.detail, source_note: e.target.value}})} className="bg-slate-950 border-slate-800 text-white h-20 text-xs" />
                     </div>
                   </div>
                 </TabsContent>
@@ -636,8 +692,8 @@ export function MembersManager({ initialMembers }: { initialMembers: any[] }) {
               </Tabs>
             </div>
 
-            <div className="p-4 bg-white border-t border-slate-100 flex items-center justify-end gap-3 z-10 shadow-lg">
-              <Button type="button" variant="outline" onClick={handleClose} className="border-slate-200">Cancel</Button>
+            <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-end gap-3 z-10 shadow-lg">
+              <Button type="button" variant="outline" onClick={handleClose} className="border-slate-800 text-slate-300 hover:bg-slate-900">Cancel</Button>
               <Button type="submit" disabled={isSubmitting} className="bg-sky-600 text-white hover:bg-sky-700 min-w-[120px]">
                 {isSubmitting ? "Saving..." : <><Save className="size-4 mr-2" /> Save 2.0</>}
               </Button>

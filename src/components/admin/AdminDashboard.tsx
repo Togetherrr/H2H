@@ -10,6 +10,8 @@ import { SiteSettingsManager } from "@/components/admin/SiteSettingsManager"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Sparkles, Users, Disc3, Link as LinkIcon, Database, Palette } from "lucide-react"
 import { ThemesManager } from "@/components/admin/ThemesManager"
+import { MediaLibrary } from "@/components/admin/MediaManager"
+import { Image as ImageIcon } from "lucide-react"
 
 type AdminStats = {
   users: number
@@ -33,7 +35,7 @@ type AdminDashboardProps = {
   profile: any
 }
 
-const VALID_TABS = new Set(["overview", "users", "members", "themes", "socials", "settings"])
+const VALID_TABS = new Set(["overview", "users", "members", "themes", "socials", "settings", "media"])
 
 function normalizeTab(tab: string) {
   return VALID_TABS.has(tab) ? tab : "overview"
@@ -278,6 +280,17 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
                 </div>
                 <LinkIcon className="size-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
               </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange("media")}
+                className="group flex items-center justify-between rounded-xl border border-slate-800 bg-slate-800/50 p-4 text-left transition-colors hover:bg-slate-800 hover:border-slate-700"
+              >
+                <div>
+                  <h4 className="font-medium text-slate-200">Manage Media</h4>
+                  <p className="text-sm text-slate-400">Upload and organize images in your library</p>
+                </div>
+                <ImageIcon className="size-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
+              </button>
             </CardContent>
           </Card>
 
@@ -303,19 +316,17 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
                   </div>
                 ))}
               </div>
-              <div className="mt-6 rounded-xl border border-sky-900/50 bg-sky-950/30 p-4">
-                <p className="text-sm text-slate-300">
-                  To edit these core settings, please use the Supabase dashboard directly to update the
-                  `site_settings` table.
+              <div className="mt-6 rounded-xl border border-slate-800 bg-slate-800/20 p-4">
+                <p className="text-sm text-slate-400">
+                  You can now manage these core settings directly within the dashboard.
                 </p>
-                <a
-                  href="https://supabase.com/dashboard/project/csztfcowiepgjhdjdtik/editor/1?schema=public&table=site_settings"
-                  target="_blank"
-                  rel="noreferrer"
+                <button
+                  type="button"
+                  onClick={() => handleTabChange("settings")}
                   className="mt-3 inline-flex items-center text-sm font-medium text-sky-400 hover:text-sky-300"
                 >
-                  Open Supabase <LinkIcon className="ml-1 size-3" />
-                </a>
+                  Go to Settings <LinkIcon className="ml-1 size-3" />
+                </button>
               </div>
             </CardContent>
           </Card>
@@ -353,6 +364,9 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
         ) : (
           <TabLoadingState title="Loading site settings..." />
         )
+      }
+      case "media": {
+        return <MediaLibrary />
       }
       case "overview":
       default:

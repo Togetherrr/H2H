@@ -4,8 +4,8 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
+    --background: 222.2 84% 4.9%; /* Slate-950 */
+    --foreground: 210 40% 98%;
 
     --baby-blue: 206 100% 82%; /* #A2D2FF */
     --baby-pink: 345 100% 88%; /* #FFC2D1 */
@@ -43,6 +43,8 @@
 
   html {
     scroll-behavior: smooth;
+    color-scheme: dark;
+    background-color: #020617; /* High contrast dark for early loading */
   }
 
   body {
