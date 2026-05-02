@@ -44,8 +44,8 @@
     @apply text-foreground;
     font-family: var(--font-body), sans-serif;
     min-height: 100vh;
-    background-color: #fff;
-    background-image: url('/background.jpg');
+    background-color: hsl(var(--background-fallback, 0 0% 100%));
+    background-image: var(--background-image, url('/background.jpg'));
     background-size: cover;
     background-position: center;
     background-attachment: fixed;

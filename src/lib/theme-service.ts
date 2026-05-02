@@ -3,10 +3,10 @@ import { createClient } from "@/lib/supabase/server"
 export interface ThemeConfig {
   colors: {
     primary: string
-    secondary: string
-    background: string
     accent: string
-    foreground?: string
+    foreground: string
+    surface: string
+    background_fallback?: string
   }
   assets: {
     logo: string
@@ -44,18 +44,22 @@ export async function getActiveTheme(): Promise<Theme | null> {
 }
 
 export function generateThemeStyle(theme: Theme | null): string {
-  if (!theme) return ""
+  if (!theme || !theme.config || !theme.config.colors) return ""
 
   const { colors, assets } = theme.config
+  
+  const bgImageVar = assets?.background_image ? `--background-image: url('${assets.background_image}');` : '';
   
   return `
     :root {
       --primary: ${colors.primary};
-      --secondary: ${colors.secondary};
-      --background: ${colors.background};
-      --foreground: ${colors.foreground || '222 47% 11%'};
       --accent: ${colors.accent};
-      --background-image: ${assets.background_image ? `url('${assets.background_image}')` : 'none'};
+      --foreground: ${colors.foreground};
+      --surface: ${colors.surface || '0 0% 100%'};
+      --background-fallback: ${colors.background_fallback || '222 47% 11%'};
+      
+      /* Asset Variables */
+      ${bgImageVar}
     }
   `
 }
