@@ -22,7 +22,7 @@ function MetricBadge({ value, format }: { value: number | null; format?: "number
   const displayValue =
     format === "percent"
       ? `${isPositive ? "+" : ""}${value.toFixed(2)}%`
-      : `${isPositive ? "+" : ""}${value.toLocaleString()}`
+      : `${isPositive ? "+" : ""}${value.toLocaleString("en-US")}`
 
   return (
     <div
@@ -75,12 +75,12 @@ export function PerformanceItemRow({ item, index }: { item: PerformanceItem; ind
 
       {/* Total — ẩn dưới lg */}
       <div className="hidden text-right font-mono text-[13px] font-bold tabular-nums text-slate-950 lg:block">
-        {mounted ? (item.total?.toLocaleString() ?? "0") : "—"}
+        {mounted ? (item.total?.toLocaleString("en-US") ?? "0") : "—"}
       </div>
 
       {/* Daily — ẩn dưới md */}
       <div className="hidden text-right font-mono text-[13px] font-bold tabular-nums text-emerald-500 md:block">
-        {mounted && item.daily !== null ? `+${item.daily.toLocaleString()}` : "—"}
+        {mounted && item.daily !== null ? `+${item.daily.toLocaleString("en-US")}` : "—"}
       </div>
 
       {/* Change badge */}
@@ -95,7 +95,7 @@ export function PerformanceItemRow({ item, index }: { item: PerformanceItem; ind
           {mounted
             ? item.dailyChangeFormat === "percent"
               ? `${(item.dailyChange ?? 0).toFixed(2)}%`
-              : (item.dailyChange ?? 0).toLocaleString()
+              : (item.dailyChange ?? 0).toLocaleString("en-US")
             : "0%"}
         </div>
       </div>
@@ -269,7 +269,7 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
               </p>
               <div className="flex items-center gap-2">
                 <div className="truncate text-2xl font-black tracking-tighter text-slate-900">
-                  {mounted ? (activePlatformData?.totalValue?.toLocaleString() ?? "0") : "..."}
+                  {mounted ? (activePlatformData?.totalValue?.toLocaleString("en-US") ?? "0") : "..."}
                 </div>
                 <MetricBadge
                   value={activePlatformData?.dailyChange ?? null}
@@ -295,7 +295,7 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
               >
                 {mounted
                   ? activePlatformData?.dailyValue
-                    ? `+${activePlatformData.dailyValue.toLocaleString()}`
+                    ? `+${activePlatformData.dailyValue.toLocaleString("en-US")}`
                     : "N/A"
                   : "..."}
               </div>
