@@ -126,6 +126,7 @@ export function ThemesManager({ initialThemes }: ThemesManagerProps) {
     if (isEditing) {
       applyIframeStyles()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editFormData, isEditing])
 
   const handleEdit = (theme: Theme) => {
@@ -250,6 +251,7 @@ export function ThemesManager({ initialThemes }: ThemesManagerProps) {
               <CardHeader className="relative flex flex-row items-center justify-between border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md px-6 py-6">
                 <div className="flex items-center gap-5">
                   <div className="size-14 rounded-full shadow-inner border-2 border-slate-800 flex items-center justify-center overflow-hidden shrink-0 bg-slate-900">
+                     {/* eslint-disable-next-line @next/next/no-img-element */}
                      <img src={theme.config?.assets?.background_image || '/background.jpg'} alt="bg" className="w-full h-full object-cover" />
                   </div>
                   <div>
