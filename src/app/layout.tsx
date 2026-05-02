@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Inter, Montserrat } from "next/font/google"
 import { Toaster } from "@/components/ui/sonner"
 import { ClientProvider } from "@/components/client-provider"
+import { getActiveTheme, generateThemeStyle } from "@/lib/theme-service"
 import "./globals.css"
 
 const bodyFont = Inter({
@@ -21,11 +22,17 @@ export const metadata: Metadata = {
   description: "Không gian trải nghiệm dành riêng cho S2U với sắc màu Baby Blue & Baby Pink.",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const activeTheme = await getActiveTheme()
+  const themeCss = generateThemeStyle(activeTheme)
+
   return (
     <html lang="vi" suppressHydrationWarning>
+      <head>
+        {themeCss && <style dangerouslySetInnerHTML={{ __html: themeCss }} />}
+      </head>
       <body className={`${bodyFont.variable} ${displayFont.variable} antialiased`} suppressHydrationWarning>
         <ClientProvider>{children}</ClientProvider>
         <Toaster position="top-right" richColors closeButton />
