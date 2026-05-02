@@ -4,14 +4,15 @@ import { getFilmFrames, getTimelineEvents } from "../lib/release-catalog"
 import { memberProfiles as staticMemberProfiles } from "@/lib/member-profiles"
 import { hearts2heartsOfficialProfile } from "@/lib/group-official-profile"
 import { getHomeStatsSnapshot } from "@/lib/home-stats"
+import { getTrackPerformanceSnapshot } from "@/lib/track-performance"
 
-export const revalidate = 3600
 
 export default async function HomePage() {
-  const [timelineEvents, filmFrames, homeStatsSnapshot] = await Promise.all([
+  const [timelineEvents, filmFrames, homeStatsSnapshot, trackPerformanceSnapshot] = await Promise.all([
     getTimelineEvents(),
     getFilmFrames(4),
     getHomeStatsSnapshot(hearts2heartsOfficialProfile.debutDate),
+    getTrackPerformanceSnapshot(),
   ])
   let memberProfiles = staticMemberProfiles
   let officialLinks = staticOfficialLinks
@@ -56,6 +57,7 @@ export default async function HomePage() {
       officialLinks={officialLinks}
       officialProfile={hearts2heartsOfficialProfile}
       homeStatsSnapshot={homeStatsSnapshot}
+      trackPerformanceSnapshot={trackPerformanceSnapshot}
     />
   )
 }

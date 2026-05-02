@@ -13,25 +13,7 @@ export const translations = {
     "header.nav.join": "Join",
 
     // Hero Section
-    "hero.badge": "All About Hearts2Hearts",
     "hero.title": "Hearts2Hearts",
-    "hero.subtitle":
-      "This is a space for S2U to get closer to Hearts2Hearts and fully experience the spirit of the group through every moment. Every detail on this page has been carefully selected so you can follow that journey naturally and emotionally.",
-    "hero.tags": ["S2U Fan Space", "Hearts2Hearts Profile", "Member Stories", "Updates & Moments"],
-
-    // Feature Cards
-    "features.card1.label": "For S2U",
-    "features.card1.title": "Easy-to-understand content about Hearts2Hearts",
-    "features.card1.desc":
-      "This section helps you quickly grasp the spirit of the page: enter and immediately understand this is the place for S2U to follow and learn about Hearts2Hearts clearly and smoothly.",
-    "features.card2.label": "What you'll see",
-    "features.card2.title": "Member stories and standout moments",
-    "features.card2.desc":
-      "From member profiles to visuals and key highlights, everything is organized logically so you can browse quickly while still appreciating the depth.",
-    "features.card3.label": "Why this page exists",
-    "features.card3.title": "Easy to follow, emotions remain whole",
-    "features.card3.desc":
-      "You don't need to look in many places - you can still stay updated on important information and feel the true colors of Hearts2Hearts right here on one landing page.",
 
     // CTA Buttons
     "cta.opening": "Watch opening",
@@ -68,6 +50,24 @@ export const translations = {
     "stats.comeback.seconds": "Seconds",
     "stats.comeback.date": "Release date:",
     "stats.comeback.realtime": "This countdown updates in real time after the official schedule is added.",
+
+    // Track Performance Section
+    "performance.label": "Track performance",
+    "performance.title": "Track performance",
+    "performance.subtitle": "Spotify Charts daily streams and official MV views in one snapshot.",
+    "performance.updatedAt": "Updated",
+    "performance.spotify": "Spotify",
+    "performance.youtube": "YouTube",
+    "performance.totalStreams": "Total streams",
+    "performance.dailyStreams": "Total daily streams",
+    "performance.totalViews": "Total views",
+    "performance.dailyViews": "Total daily views",
+    "performance.dailyChange": "Daily change",
+    "performance.totalLabel": "Total",
+    "performance.topTracks": "Top 5 tracks",
+    "performance.topVideos": "Top 5 videos",
+    "performance.viewAll": "View all",
+    "performance.empty": "No track data returned from this source yet.",
 
     // Concept Section
     "concept.official": "Official links",
@@ -133,25 +133,7 @@ export const translations = {
     "header.nav.join": "Tham gia",
 
     // Hero Section
-    "hero.badge": "Tất cả về Hearts2Hearts",
     "hero.title": "Hearts2Hearts",
-    "hero.subtitle":
-      "Đây là không gian để S2U đến gần hơn với Hearts2Hearts và cảm nhận trọn vẹn tinh thần của nhóm qua từng khoảnh khắc. Mọi chi tiết trên trang đều được chọn lọc để bạn theo dõi hành trình ấy một cách tự nhiên và cảm xúc.",
-    "hero.tags": ["Không gian fan S2U", "Hồ sơ Hearts2Hearts", "Câu chuyện thành viên", "Cập nhật & Khoảnh khắc"],
-
-    // Feature Cards
-    "features.card1.label": "Dành cho S2U",
-    "features.card1.title": "Nội dung dễ hiểu về Hearts2Hearts",
-    "features.card1.desc":
-      "Phần này giúp bạn nắm nhanh tinh thần của trang: vào là hiểu ngay đây là nơi để S2U theo dõi và tìm hiểu Hearts2Hearts một cách rõ ràng, không rối.",
-    "features.card2.label": "Bạn sẽ thấy gì",
-    "features.card2.title": "Câu chuyện thành viên và khoảnh khắc nổi bật",
-    "features.card2.desc":
-      "Từ profile thành viên đến visual và những điểm nhấn quan trọng, mọi thứ được sắp xếp mạch lạc để bạn xem nhanh nhưng vẫn cảm nhận đủ chiều sâu.",
-    "features.card3.label": "Vì sao có trang này",
-    "features.card3.title": "Theo dõi dễ dàng, cảm xúc vẫn trọn",
-    "features.card3.desc":
-      "Bạn không cần tìm nhiều nơi vẫn có thể cập nhật thông tin quan trọng và cảm nhận rõ màu sắc của Hearts2Hearts ngay trên một landing page.",
 
     // CTA Buttons
     "cta.opening": "Xem opening",
@@ -188,6 +170,24 @@ export const translations = {
     "stats.comeback.seconds": "Giây",
     "stats.comeback.date": "Ngày phát hành:",
     "stats.comeback.realtime": "Countdown này sẽ cập nhật realtime ngay khi ngày phát hành chính thức được thêm vào.",
+
+    // Track Performance Section
+    "performance.label": "Hiệu suất track",
+    "performance.title": "Hiệu suất track",
+    "performance.subtitle": "Stream theo ngày từ Spotify Charts và lượt xem MV chính thức trong một bảng.",
+    "performance.updatedAt": "Cập nhật",
+    "performance.spotify": "Spotify",
+    "performance.youtube": "YouTube",
+    "performance.totalStreams": "Tổng stream",
+    "performance.dailyStreams": "Stream mỗi ngày",
+    "performance.totalViews": "Tổng views",
+    "performance.dailyViews": "Views mỗi ngày",
+    "performance.dailyChange": "Biến động ngày",
+    "performance.totalLabel": "Tổng",
+    "performance.topTracks": "Top 5 bài hát",
+    "performance.topVideos": "Top 5 video",
+    "performance.viewAll": "Xem tất cả",
+    "performance.empty": "Chưa có dữ liệu track từ nguồn này.",
 
     // Concept Section
     "concept.official": "Kênh chính thức",
@@ -273,5 +273,5 @@ export function getTranslation<K extends TranslationKey>(
   const localized = translations[safeLang][key]
   const fallbackVi = translations[DEFAULT_LANGUAGE][key]
   const fallbackEn = translations.en[key]
-  return (localized ?? fallbackVi ?? fallbackEn) as TranslationValue<K>
+  return (localized ?? fallbackVi ?? fallbackEn) as unknown as TranslationValue<K>
 }
