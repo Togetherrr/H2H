@@ -4,22 +4,26 @@ import type { FilmFrame } from "../lib/release-catalog"
 
 type FilmStripProps = {
   frames: FilmFrame[]
+  showHeader?: boolean
+  className?: string
 }
 
-export function FilmStrip({ frames }: FilmStripProps) {
+export function FilmStrip({ frames, showHeader = true, className }: FilmStripProps) {
   return (
-    <div className="full-bleed-strip reveal-soft delay-3 relative">
+    <div className={["full-bleed-strip reveal-soft delay-3 relative", className].filter(Boolean).join(" ")}>
       <div className="absolute inset-y-0 left-0 w-32 z-10 bg-gradient-to-r from-[#f0f9ff] to-transparent pointer-events-none" />
       <div className="absolute inset-y-0 right-0 w-32 z-10 bg-gradient-to-l from-[#f0f9ff] to-transparent pointer-events-none" />
 
-      <div className="film-strip-header">
-        <span>S2U Archive</span>
-        <span>Hearts2Hearts Moments</span>
-        <span>From S2U, With Love</span>
-      </div>
+      {showHeader ? (
+        <div className="film-strip-header">
+          <span>S2U Archive</span>
+          <span>Hearts2Hearts Moments</span>
+          <span>From S2U, With Love</span>
+        </div>
+      ) : null}
 
       <div className="film-strip-wrap">
-        <div className="film-strip-track hover:[animation-play-state:paused] cursor-pointer transition-all">
+        <div className="film-strip-track">
           {[0, 1].map((segment) => (
             <div key={segment} className="film-strip-segment" aria-hidden={segment === 1}>
               {frames.map((frame) => (

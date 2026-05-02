@@ -1,23 +1,23 @@
 import type { Metadata } from "next"
-import { Merriweather, Playfair_Display } from "next/font/google"
+import { Inter, Montserrat } from "next/font/google"
 import { Toaster } from "@/components/ui/sonner"
 import { ClientProvider } from "@/components/client-provider"
 import "./globals.css"
 
-const bodyFont = Merriweather({
+const bodyFont = Inter({
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "700"],
   variable: "--font-body",
 })
 
-const displayFont = Playfair_Display({
+const displayFont = Montserrat({
   subsets: ["latin", "vietnamese"],
   variable: "--font-display",
+  weight: ["400", "700", "900"],
 })
 
 export const metadata: Metadata = {
-  title: "H2H Home",
-  description: "Homepage Hearts2Hearts với concept film-strip, logo remove và bảng màu skyblue.",
+  title: "Hearts2Hearts | Official Fan Home",
+  description: "Không gian trải nghiệm dành riêng cho S2U với sắc màu Baby Blue & Baby Pink.",
 }
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <body className={`${bodyFont.variable} ${displayFont.variable}`} suppressHydrationWarning>
+      <body className={`${bodyFont.variable} ${displayFont.variable} antialiased`} suppressHydrationWarning>
         <ClientProvider>{children}</ClientProvider>
         <Toaster position="top-right" richColors closeButton />
       </body>

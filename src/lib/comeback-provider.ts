@@ -58,10 +58,6 @@ async function getUpcomingComebackFromSupabase(): Promise<UpcomingComeback | nul
   }
 
   // TODO: Replace this stub with a real table query when the DB is ready.
-  // Example shape:
-  // const client = await createClient()
-  // const { data } = await client.from("comeback_settings").select("title, release_at, note, source_label, source_url").single()
-  // return data?.release_at ? { title: data.title, releaseAt: data.release_at, note: data.note, source: { label: data.source_label, href: data.source_url } } : null
   return null
 }
 
@@ -69,9 +65,13 @@ export async function getUpcomingComeback(): Promise<UpcomingComeback | null> {
   // Switch provider by setting H2H_COMEBACK_PROVIDER=env|supabase.
   const provider = (process.env.H2H_COMEBACK_PROVIDER ?? "env").toLowerCase() as ComebackProviderKey
 
+  let comeback: UpcomingComeback | null = null
+
   if (provider === "supabase") {
-    return getUpcomingComebackFromSupabase()
+    comeback = await getUpcomingComebackFromSupabase()
+  } else {
+    comeback = getUpcomingComebackFromEnv()
   }
 
-  return getUpcomingComebackFromEnv()
+  return comeback
 }

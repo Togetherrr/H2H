@@ -6,8 +6,6 @@ import { hearts2heartsOfficialProfile } from "@/lib/group-official-profile"
 import { getHomeStatsSnapshot } from "@/lib/home-stats"
 import { getTrackPerformanceSnapshot } from "@/lib/track-performance"
 
-export const dynamic = "force-dynamic"
-export const fetchCache = "force-no-store"
 
 export default async function HomePage() {
   const [timelineEvents, filmFrames, homeStatsSnapshot, trackPerformanceSnapshot] = await Promise.all([

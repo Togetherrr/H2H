@@ -5,8 +5,8 @@ export type PerformanceItem = {
   imageUrl: string
   daily: number | null
   total: number | null
-  delta: number | null
-  deltaFormat?: "number" | "percent"
+  dailyChange: number | null
+  dailyChangeFormat?: "number" | "percent"
   href?: string
   meta?: string
 }
@@ -55,6 +55,52 @@ const DEFAULT_YOUTUBE: PlatformPerformance = {
   items: [],
 }
 
+const SAMPLE_SPOTIFY: PlatformPerformance = {
+  name: "Spotify",
+  totalValue: 1245000,
+  dailyValue: 45200,
+  dailyChange: 1200,
+  dailyChangeFormat: "number",
+  highlights: [],
+  items: [
+    {
+      id: "sample-1",
+      title: "The Chase",
+      subtitle: "Hearts2Hearts",
+      imageUrl: "/group.png",
+      total: 450000,
+      daily: 15000,
+      dailyChange: 5.2,
+      dailyChangeFormat: "percent",
+      href: "https://open.spotify.com",
+    },
+    {
+      id: "sample-2",
+      title: "Butterflies",
+      subtitle: "Hearts2Hearts",
+      imageUrl: "/group.png",
+      total: 320000,
+      daily: 12000,
+      dailyChange: 3.1,
+      dailyChangeFormat: "percent",
+      href: "https://open.spotify.com",
+    },
+    {
+      id: "sample-3",
+      title: "Style",
+      subtitle: "Hearts2Hearts",
+      imageUrl: "/group.png",
+      total: 210000,
+      daily: 8500,
+      dailyChange: -1.2,
+      dailyChangeFormat: "percent",
+      href: "https://open.spotify.com",
+    },
+  ],
+  note: "Sample Data (Offline)",
+  viewAllHref: "/charts",
+}
+
 const H2H_TRACK_TITLES = [
   "the chase",
   "butterflies",
@@ -70,7 +116,7 @@ const H2H_TRACK_TITLES = [
 type ChartexStats = {
   total: number | null
   daily: number | null
-  delta: number | null
+  dailyChange: number | null
 }
 
 function firstArray(payload: any): any[] {
@@ -159,11 +205,8 @@ function isHearts2HeartsSong(song: any) {
   const artist = getArtistName(song).toLowerCase()
   const title = pickString(song, ["song_name", "title", "name"]).toLowerCase()
 
-  if (artist) {
-    return artist.includes("hearts2hearts") || title.includes("hearts2hearts")
-  }
-
-  return H2H_TRACK_TITLES.some((trackTitle) => title === trackTitle || title.includes(`${trackTitle} -`))
+  // Chỉ chấp nhận nếu nghệ sĩ là Hearts2Hearts hoặc tiêu đề chứa Hearts2Hearts
+  return artist.includes("hearts2hearts") || title.includes("hearts2hearts")
 }
 
 function parseStatsValue(point: any) {
@@ -183,26 +226,31 @@ async function fetchChartex(path: string, params?: Record<string, string | numbe
     url.searchParams.set(key, String(value))
   })
 
-  const response = await fetch(url.toString(), {
-    headers: {
-      "X-APP-ID": appId,
-      "X-APP-TOKEN": appToken,
-      Accept: "application/json",
-    },
-    signal: AbortSignal.timeout(8000),
-    next: { revalidate: 3600 },
-  })
+  try {
+    const response = await fetch(url.toString(), {
+      headers: {
+        "X-APP-ID": appId,
+        "X-APP-TOKEN": appToken,
+        Accept: "application/json",
+      },
+      signal: AbortSignal.timeout(8000),
+      next: { revalidate: 3600 },
+    })
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return null
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error(`Chartex fetch error for ${path}:`, error)
     return null
   }
-
-  return response.json()
 }
 
 async function fetchChartexSpotifyStats(spotifyId: string): Promise<ChartexStats> {
   if (!spotifyId) {
-    return { total: null, daily: null, delta: null }
+    return { total: null, daily: null, dailyChange: null }
   }
 
   const [dailyPayload, totalPayload] = await Promise.all([
@@ -225,7 +273,7 @@ async function fetchChartexSpotifyStats(spotifyId: string): Promise<ChartexStats
   return {
     total: latestTotal,
     daily: latestDaily,
-    delta: latestDaily !== null && previousDaily !== null ? latestDaily - previousDaily : null,
+    dailyChange: latestDaily !== null && previousDaily !== null ? latestDaily - previousDaily : null,
   }
 }
 
@@ -263,11 +311,11 @@ async function fetchChartexSpotify(): Promise<PlatformPerformance | null> {
     if (!songs.length) return null
 
     const items: PerformanceItem[] = await Promise.all(
-      songs.map(async (song: any, index: number) => {
+      songs.map(async (song: any, index: number): Promise<PerformanceItem> => {
         const spotifyId = getSpotifyId(song)
         const artistName = getArtistName(song) || "Hearts2Hearts"
         const title = pickString(song, ["song_name", "title", "name"]) || "Untitled"
-        const total = pickNumber(song, [
+        const totalValue = pickNumber(song, [
           "spotify_total_streams",
           "spotify_streams_total",
           "total_spotify_streams",
@@ -275,7 +323,7 @@ async function fetchChartexSpotify(): Promise<PlatformPerformance | null> {
           "total_streams",
           "streams",
         ])
-        const daily = pickNumber(song, [
+        const dailyValue = pickNumber(song, [
           "spotify_daily_streams",
           "spotify_last_24_hours_streams",
           "spotify_24h_streams",
@@ -296,9 +344,11 @@ async function fetchChartexSpotify(): Promise<PlatformPerformance | null> {
           "daily_streams_percentage",
           "change_percentage",
         ])
-        const needsStats = spotifyId && (total === null || daily === null || (absoluteDelta === null && percentageDelta === null))
-        const stats = needsStats ? await fetchChartexSpotifyStats(spotifyId) : { total: null, daily: null, delta: null }
-        const delta = absoluteDelta ?? stats.delta ?? percentageDelta
+        const needsStats = spotifyId && (totalValue === null || dailyValue === null || (absoluteDelta === null && percentageDelta === null))
+        const stats = needsStats ? await fetchChartexSpotifyStats(spotifyId) : { total: null, daily: null, dailyChange: null }
+
+        const finalDailyChange = absoluteDelta ?? stats.dailyChange ?? percentageDelta
+        const finalDailyChangeFormat = absoluteDelta !== null || (stats && stats.dailyChange !== null) ? "number" : percentageDelta !== null ? "percent" : undefined
 
         return {
           id: pickString(song, ["song_id", "id"]) || spotifyId || `${index}-${title}`,
@@ -307,10 +357,10 @@ async function fetchChartexSpotify(): Promise<PlatformPerformance | null> {
           imageUrl:
             pickString(song, ["image_url", "song_image_url", "album_image_url", "thumbnail_url", "cover_url"]) ||
             "/group.png",
-          daily: daily ?? stats.daily,
-          total: total ?? stats.total,
-          delta,
-          deltaFormat: absoluteDelta !== null || stats.delta !== null ? "number" : percentageDelta !== null ? "percent" : undefined,
+          daily: dailyValue ?? stats.daily,
+          total: totalValue ?? stats.total,
+          dailyChange: finalDailyChange,
+          dailyChangeFormat: finalDailyChangeFormat,
           href: spotifyId
             ? `https://open.spotify.com/track/${spotifyId}`
             : pickString(song, ["spotify_url", "url", "song_url"]) || undefined,
@@ -321,20 +371,20 @@ async function fetchChartexSpotify(): Promise<PlatformPerformance | null> {
 
     const totalValue = items.reduce((sum, item) => sum + (item.total || 0), 0)
     const dailyValue = items.reduce((sum, item) => sum + (item.daily || 0), 0)
-    const numberChanges = items.filter((item) => item.delta !== null && item.deltaFormat !== "percent")
-    const percentChanges = items.filter((item) => item.delta !== null && item.deltaFormat === "percent")
-    const dailyChange =
+    const numberChanges = items.filter((item) => item.dailyChange !== null && item.dailyChangeFormat !== "percent")
+    const percentChanges = items.filter((item) => item.dailyChange !== null && item.dailyChangeFormat === "percent")
+    const platformDailyChange =
       numberChanges.length > 0
-        ? numberChanges.reduce((sum, item) => sum + (item.delta || 0), 0)
+        ? numberChanges.reduce((sum, item) => sum + (item.dailyChange || 0), 0)
         : percentChanges.length > 0
-          ? percentChanges.reduce((sum, item) => sum + (item.delta || 0), 0) / percentChanges.length
+          ? percentChanges.reduce((sum, item) => sum + (item.dailyChange || 0), 0) / percentChanges.length
           : null
 
     return {
       name: "Spotify",
       totalValue: totalValue || null,
       dailyValue: dailyValue || null,
-      dailyChange,
+      dailyChange: platformDailyChange,
       dailyChangeFormat: numberChanges.length > 0 ? "number" : percentChanges.length > 0 ? "percent" : undefined,
       highlights: [],
       items: items
@@ -377,7 +427,7 @@ async function fetchSpotifyCharts(): Promise<PlatformPerformance | null> {
           imageUrl: "/group.png",
           daily: streams,
           total: streams,
-          delta: null,
+          dailyChange: null,
           href: cols[4],
         }
       })
@@ -440,8 +490,8 @@ async function fetchYouTubeSnapshot(): Promise<PlatformPerformance | null> {
         subtitle: "Official MV",
         imageUrl: v.snippet.thumbnails?.medium?.url || "/group.png",
         total,
-        daily: null, // chưa có DB nên để null
-        delta: null,
+        daily: null,
+        dailyChange: null,
         href: `https://www.youtube.com/watch?v=${v.id}`,
       }
     })
@@ -471,7 +521,7 @@ export async function getTrackPerformanceSnapshot(): Promise<TrackPerformanceSna
   const fallback = await fetchSpotifyCharts()
   const youtube = await fetchYouTubeSnapshot()
 
-  const spotify = chartex ?? fallback ?? DEFAULT_SPOTIFY
+  const spotify = chartex ?? fallback ?? SAMPLE_SPOTIFY
 
   return {
     updatedAt: new Date().toISOString(),
