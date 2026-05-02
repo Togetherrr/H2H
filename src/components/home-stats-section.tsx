@@ -250,41 +250,41 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
   ]
   const latestReleaseCardContent = (
     <>
-      <p className="text-[11px] uppercase tracking-[0.2em] text-sky-700/80">{t("stats.latestRelease")}</p>
+      <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">{t("stats.latestRelease")}</p>
       <div className="mt-2 flex items-center gap-2">
-        <p className="text-lg text-slate-900">{snapshot.latestRelease.title}</p>
+        <p className="text-lg text-foreground">{snapshot.latestRelease.title}</p>
         {snapshot.latestRelease.mvUrl ? (
-          <span className="inline-flex items-center justify-center rounded-full border border-sky-200 bg-white/90 p-1 text-sky-700 opacity-70 transition duration-300 group-hover:opacity-100">
+          <span className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-background/90 p-1 text-primary opacity-70 transition duration-300 group-hover:opacity-100">
             <ExternalLink className="size-3.5 stroke-[2.2]" />
           </span>
         ) : null}
       </div>
-      <p className="mt-1 text-sm text-slate-500">{formattedLatestReleaseDate ?? snapshot.latestRelease.date}</p>
-      <p className="mt-2 text-xs text-slate-500">{snapshot.latestRelease.sourceLabel}</p>
+      <p className="mt-1 text-sm text-foreground/60">{formattedLatestReleaseDate ?? snapshot.latestRelease.date}</p>
+      <p className="mt-2 text-xs text-foreground/50">{snapshot.latestRelease.sourceLabel}</p>
       {snapshot.latestRelease.mvUrl ? null : (
-        <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-dashed border-sky-200 bg-white/65 px-4 py-2 text-xs uppercase tracking-[0.2em] text-slate-500">
+        <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-dashed border-primary/30 bg-background/65 px-4 py-2 text-xs uppercase tracking-[0.2em] text-foreground/50">
           <PlayCircle className="size-4" />
           {t("stats.latestRelease.mvPending")}
         </div>
       )}
-      <p className="mt-2 text-xs text-slate-500">{t("stats.comeback.placeholderDesc")}</p>
+      <p className="mt-2 text-xs text-foreground/50">{t("stats.comeback.placeholderDesc")}</p>
     </>
   )
 
   return (
     <section ref={sectionRef} className="reveal-up delay-4 mt-12">
-      <div className="overflow-hidden rounded-[2rem] border border-white/70 bg-[linear-gradient(135deg,rgba(255,255,255,0.82),rgba(222,242,255,0.9))] shadow-[0_28px_80px_rgba(72,133,180,0.16)]">
+      <div className="overflow-hidden rounded-[2rem] border border-primary/20 bg-gradient-to-br from-background/90 via-secondary/70 to-background/90 shadow-[0_28px_80px_hsla(var(--primary),0.12)]">
         <div className="grid gap-0 lg:grid-cols-[1.15fr_0.85fr]">
-          <div className="border-b border-white/70 p-6 sm:p-8 lg:border-b-0 lg:border-r">
-            <div className="flex items-center gap-3 text-sky-700">
+          <div className="border-b border-primary/10 p-6 sm:p-8 lg:border-b-0 lg:border-r">
+            <div className="flex items-center gap-3 text-primary">
               <Sparkles className="size-4" />
               <p className="text-xs uppercase tracking-[0.42em]">{t("stats.eyebrow")}</p>
             </div>
 
-            <h2 className="mt-4 text-3xl uppercase leading-none text-slate-950 sm:text-4xl">
+            <h2 className="mt-4 text-3xl uppercase leading-none text-foreground sm:text-4xl">
               {t("stats.title")}
             </h2>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600">{t("stats.desc")}</p>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-foreground/70">{t("stats.desc")}</p>
 
             <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               {statCards.map((card) => {
@@ -294,23 +294,23 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
                   <Link
                     key={card.key}
                     href={`/stats/${card.slug}`}
-                    className="group rounded-[1.5rem] border border-white/85 bg-white/72 p-4 shadow-[0_14px_34px_rgba(94,140,182,0.08)] transition hover:-translate-y-1 hover:border-sky-200 hover:bg-white/80"
+                    className="group rounded-[1.5rem] border border-primary/15 bg-background/50 p-4 shadow-[0_14px_34px_hsla(var(--primary),0.08)] transition hover:-translate-y-1 hover:border-primary/40 hover:bg-background/80"
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <span className="rounded-full border border-sky-100 bg-sky-50/90 p-2 text-sky-600">
+                      <span className="rounded-full border border-primary/10 bg-primary/5 p-2 text-primary">
                         <Icon className="size-4" />
                       </span>
-                      <span className="text-[10px] uppercase tracking-[0.18em] text-sky-700/75">
+                      <span className="text-[10px] uppercase tracking-[0.18em] text-primary/70">
                         {t("stats.viewDetails")}
                       </span>
                     </div>
-
-                    <p className="mt-5 text-[11px] uppercase tracking-[0.22em] text-slate-500">{card.label}</p>
-                    <p className="mt-3 text-4xl font-light tracking-tight text-slate-950 sm:text-[3.1rem]">
+ 
+                    <p className="mt-5 text-[11px] uppercase tracking-[0.22em] text-foreground/50">{card.label}</p>
+                    <p className="mt-3 text-4xl font-light tracking-tight text-foreground sm:text-[3.1rem]">
                       <AnimatedNumber value={card.value} active={isVisible} />
                     </p>
-                    <p className="mt-3 text-xs text-slate-500">{card.source.label}</p>
-                    {"note" in card && card.note ? <p className="mt-2 text-xs leading-5 text-slate-500">{card.note}</p> : null}
+                    <p className="mt-3 text-xs text-foreground/40">{card.source.label}</p>
+                    {"note" in card && card.note ? <p className="mt-2 text-xs leading-5 text-foreground/40">{card.note}</p> : null}
                   </Link>
                 )
               })}
@@ -318,31 +318,31 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
           </div>
 
           <aside className="p-6 sm:p-8">
-            <div className="flex items-center gap-3 text-sky-700">
+            <div className="flex items-center gap-3 text-primary">
               <Clock3 className="size-4" />
               <p className="text-xs uppercase tracking-[0.42em]">{t("stats.comeback.eyebrow")}</p>
             </div>
 
-            <h3 className="mt-4 text-3xl uppercase leading-none text-slate-950 sm:text-4xl">
+            <h3 className="mt-4 text-3xl uppercase leading-none text-foreground sm:text-4xl">
               {t("stats.comeback.templateTitle")}
             </h3>
-            <p className="mt-3 text-[11px] uppercase tracking-[0.22em] text-sky-700/80">
+            <p className="mt-3 text-[11px] uppercase tracking-[0.22em] text-primary/80">
               {snapshot.upcomingComeback?.title ?? t("stats.comeback.templateLabel")}
             </p>
-            <p className="mt-4 text-sm leading-7 text-slate-600">
+            <p className="mt-4 text-sm leading-7 text-foreground/70">
               {snapshot.upcomingComeback?.note ?? t("stats.comeback.pendingDesc")}
             </p>
 
-            <div className="mt-6 rounded-[1.7rem] border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(228,241,255,0.84))] p-4 shadow-[0_18px_44px_rgba(94,140,182,0.12)]">
+            <div className="mt-6 rounded-[1.7rem] border border-primary/20 bg-gradient-to-b from-background/90 to-secondary/80 p-4 shadow-[0_18px_44px_hsla(var(--primary),0.12)]">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-foreground/50">
                   {t("stats.comeback.templateDisplay")}
                 </p>
                 <span
                   className={`rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] ${
                     snapshot.upcomingComeback
-                      ? "bg-sky-100 text-sky-700"
-                      : "border border-dashed border-sky-200 bg-white/70 text-slate-500"
+                      ? "bg-primary text-white"
+                      : "border border-dashed border-primary/30 bg-background/50 text-foreground/50"
                   }`}
                 >
                   {snapshot.upcomingComeback ? t("stats.comeback.ready") : t("stats.comeback.placeholder")}
@@ -355,33 +355,33 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
                     key={item.key}
                     className={`rounded-[1.3rem] px-3 py-4 text-center ${
                       snapshot.upcomingComeback
-                        ? "border border-white/85 bg-white/82 shadow-[0_14px_34px_rgba(94,140,182,0.08)]"
-                        : "border border-dashed border-sky-200/90 bg-white/60"
+                        ? "border border-primary/20 bg-background/80 shadow-[0_14px_34px_hsla(var(--primary),0.08)]"
+                        : "border border-dashed border-primary/30 bg-background/50"
                     }`}
                   >
-                    <p className="text-3xl font-light text-slate-950">
+                    <p className="text-3xl font-light text-foreground">
                       {item.value.toLocaleString(undefined, { minimumIntegerDigits: 2 })}
                     </p>
-                    <p className="mt-2 text-[10px] uppercase tracking-[0.22em] text-slate-500">{item.label}</p>
+                    <p className="mt-2 text-[10px] uppercase tracking-[0.22em] text-foreground/50">{item.label}</p>
                   </div>
                 ))}
               </div>
 
-              <p className="mt-4 text-center text-sm tracking-[0.28em] text-slate-400">
+              <p className="mt-4 text-center text-sm tracking-[0.28em] text-foreground/30">
                 {countdownItems
                   .map((item) => item.value.toLocaleString(undefined, { minimumIntegerDigits: 2 }))
                   .join(" : ")}
               </p>
             </div>
 
-            <div className="mt-6 rounded-[1.4rem] border border-white/80 bg-white/65 p-4">
+            <div className="mt-6 rounded-[1.4rem] border border-primary/15 bg-background/50 p-4">
               {snapshot.upcomingComeback ? (
                 <>
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-sky-700/80">
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
                     {t("stats.comeback.date")}
                   </p>
-                  <p className="mt-2 text-sm text-slate-600">{formattedComebackDate ?? snapshot.upcomingComeback.releaseAt}</p>
-                  <p className="mt-2 text-xs text-slate-500">{t("stats.comeback.realtime")}</p>
+                  <p className="mt-2 text-sm text-foreground/70">{formattedComebackDate ?? snapshot.upcomingComeback.releaseAt}</p>
+                  <p className="mt-2 text-xs text-foreground/40">{t("stats.comeback.realtime")}</p>
                   <a
                     href={snapshot.upcomingComeback.source.href}
                     target="_blank"

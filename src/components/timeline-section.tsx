@@ -63,16 +63,16 @@ function formatReleaseCount(
 }
 
 const TYPE_PALETTE: Record<string, { bg: string; text: string; dot: string }> = {
-  debut: { bg: "#e0f2fe", text: "#0369a1", dot: "#0ea5e9" },
-  comeback: { bg: "#dbeafe", text: "#1d4ed8", dot: "#3b82f6" },
-  "pre-release": { bg: "#f0f9ff", text: "#0284c7", dot: "#38bdf8" },
-  "1st ep": { bg: "#ecfeff", text: "#0e7490", dot: "#06b6d4" },
-  ep: { bg: "#ecfeff", text: "#0e7490", dot: "#06b6d4" },
-  single: { bg: "#e0f2fe", text: "#075985", dot: "#0ea5e9" },
-  album: { bg: "#dbeafe", text: "#1e40af", dot: "#60a5fa" },
+  debut: { bg: "hsla(var(--primary), 0.15)", text: "hsl(var(--primary))", dot: "hsla(var(--primary), 0.8)" },
+  comeback: { bg: "hsla(var(--primary), 0.12)", text: "hsl(var(--primary))", dot: "hsla(var(--primary), 0.7)" },
+  "pre-release": { bg: "hsla(var(--primary), 0.1)", text: "hsl(var(--primary))", dot: "hsla(var(--primary), 0.6)" },
+  "1st ep": { bg: "hsla(var(--primary), 0.18)", text: "hsl(var(--primary))", dot: "hsla(var(--primary), 0.85)" },
+  ep: { bg: "hsla(var(--primary), 0.18)", text: "hsl(var(--primary))", dot: "hsla(var(--primary), 0.85)" },
+  single: { bg: "hsla(var(--primary), 0.15)", text: "hsl(var(--primary))", dot: "hsla(var(--primary), 0.8)" },
+  album: { bg: "hsla(var(--primary), 0.2)", text: "hsl(var(--primary))", dot: "hsla(var(--primary), 0.9)" },
 }
 
-const DEFAULT_PALETTE = { bg: "#f0f9ff", text: "#0369a1", dot: "#7dd3fc" }
+const DEFAULT_PALETTE = { bg: "hsla(var(--primary), 0.1)", text: "hsl(var(--primary))", dot: "hsla(var(--primary), 0.7)" }
 
 function typePalette(type: string) {
   return TYPE_PALETTE[type.toLowerCase()] ?? DEFAULT_PALETTE
@@ -110,12 +110,12 @@ function TimelineCard({
             }}
           />
         </span>
-        <span className="tl-body text-[10px] uppercase tracking-[0.18em] text-slate-400">{event.date}</span>
+        <span className="tl-body text-[10px] uppercase tracking-[0.18em] text-foreground/40">{event.date}</span>
       </div>
 
       <Link
         href={`/albums/${event.slug}`}
-        className="group block overflow-hidden rounded-2xl border border-sky-100/80 bg-white shadow-[0_4px_20px_rgba(14,165,233,0.07)] transition-all duration-500 hover:-translate-y-2 hover:border-sky-200 hover:shadow-[0_20px_50px_rgba(14,165,233,0.16)]"
+        className="group block overflow-hidden rounded-2xl border border-primary/20 bg-background shadow-[0_4px_20px_hsla(var(--primary),0.07)] transition-all duration-500 hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_20px_50px_hsla(var(--primary),0.16)]"
       >
         {/*
           Landscape 16:10 ratio — fits group photos (wide) without cropping.
@@ -143,7 +143,7 @@ function TimelineCard({
               {typeLabel}
             </span>
             {isNewest ? (
-              <span className="flex items-center gap-1 rounded-full bg-sky-500/90 px-2.5 py-[3px] shadow-md backdrop-blur-sm">
+              <span className="flex items-center gap-1 rounded-full bg-primary/90 px-2.5 py-[3px] shadow-md backdrop-blur-sm">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
                 <span className="tl-body text-[8px] uppercase tracking-[0.2em] text-white">New</span>
               </span>
@@ -163,8 +163,8 @@ function TimelineCard({
 
         {/* Footer */}
         <div className="flex items-center justify-between px-4 py-2.5">
-          <span className="tl-body text-[9px] uppercase tracking-[0.16em] text-slate-400">{event.date}</span>
-          <span className="tl-body flex items-center gap-1 text-[9px] uppercase tracking-[0.14em] text-slate-400 transition-all duration-300 group-hover:gap-1.5 group-hover:text-sky-500">
+          <span className="tl-body text-[9px] uppercase tracking-[0.16em] text-foreground/40">{event.date}</span>
+          <span className="tl-body flex items-center gap-1 text-[9px] uppercase tracking-[0.14em] text-foreground/40 transition-all duration-300 group-hover:gap-1.5 group-hover:text-primary">
             {viewLabel}
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300 group-hover:translate-x-0.5">
               <path d="M2 5h6M5 2l3 3-3 3" />
@@ -346,20 +346,20 @@ export function TimelineSection({ events }: TimelineSectionProps) {
           width: 36px;
           height: 36px;
           border-radius: 50%;
-          border: 1px solid rgba(186,230,253,0.7);
-          background: rgba(255,255,255,0.88);
+          border: 1px solid hsla(var(--primary), 0.3);
+          background: hsla(var(--background), 0.88);
           backdrop-filter: blur(8px);
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #38bdf8;
-          box-shadow: 0 4px 16px rgba(56,189,248,0.14);
+          color: hsl(var(--primary));
+          box-shadow: 0 4px 16px hsla(var(--primary), 0.14);
           cursor: pointer;
           transition: opacity 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease, background 0.2s ease;
         }
         .tl-arrow-btn:hover {
-          background: rgba(255,255,255,1);
-          box-shadow: 0 6px 22px rgba(56,189,248,0.22);
+          background: hsla(var(--background), 1);
+          box-shadow: 0 6px 22px hsla(var(--primary), 0.22);
           transform: translateY(-50%) scale(1.08);
         }
         .tl-arrow-btn:disabled {
@@ -416,38 +416,38 @@ export function TimelineSection({ events }: TimelineSectionProps) {
         <div
           aria-hidden
           className="pointer-events-none absolute -bottom-16 -left-10 h-64 w-64 rounded-full"
-          style={{ background: "radial-gradient(circle,rgba(186,230,253,0.14) 0%,transparent 70%)" }}
+          style={{ background: "radial-gradient(circle,hsla(var(--primary), 0.14) 0%,transparent 70%)" }}
         />
 
-        <header className="tl-rise relative flex flex-wrap items-center justify-between gap-3 border-b border-white/70 px-5 py-4 sm:px-7 sm:py-5">
+        <header className="tl-rise relative flex flex-wrap items-center justify-between gap-3 border-b border-primary/10 px-5 py-4 sm:px-7 sm:py-5">
           <div>
-            <p className="text-xs uppercase tracking-[0.45em] text-sky-700/70">{tStr("timeline.label")}</p>
-            <h2 className="tl-display mt-4 text-3xl uppercase leading-none text-slate-950 sm:text-4xl">
+            <p className="text-xs uppercase tracking-[0.45em] text-primary/70">{tStr("timeline.label")}</p>
+            <h2 className="tl-display mt-4 text-3xl uppercase leading-none text-foreground sm:text-4xl">
               {tStr("timeline.title")}
             </h2>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="tl-body rounded-full border border-white/80 bg-white/75 px-3 py-1 text-[9px] uppercase tracking-[0.2em] text-slate-600">
+            <span className="tl-body rounded-full border border-primary/10 bg-background/75 px-3 py-1 text-[9px] uppercase tracking-[0.2em] text-foreground/60">
               {events.length} {tStr("timeline.eras")}
             </span>
-            <span className="tl-body rounded-full border border-white/80 bg-white/75 px-3 py-1 text-[9px] uppercase tracking-[0.2em] text-slate-600">
+            <span className="tl-body rounded-full border border-primary/10 bg-background/75 px-3 py-1 text-[9px] uppercase tracking-[0.2em] text-foreground/60">
               {firstYear || "-"} - {lastYear}
             </span>
           </div>
         </header>
 
         {!hasEvents ? (
-          <div className="border-b border-white/70 px-5 py-10 text-center sm:px-7">
-            <p className="tl-display text-2xl italic text-slate-800">{tStr("timeline.emptyTitle")}</p>
-            <p className="tl-body mt-2 text-xs uppercase tracking-[0.2em] text-slate-500">
+          <div className="border-b border-primary/10 px-5 py-10 text-center sm:px-7">
+            <p className="tl-display text-2xl italic text-foreground">{tStr("timeline.emptyTitle")}</p>
+            <p className="tl-body mt-2 text-xs uppercase tracking-[0.2em] text-foreground/50">
               {tStr("timeline.emptyDesc")}
             </p>
           </div>
         ) : null}
 
         {latestRelease && hasEvents ? (
-          <div className="tl-rise tl-rise-d1 relative overflow-hidden border-b border-white/70">
+          <div className="tl-rise tl-rise-d1 relative overflow-hidden border-b border-primary/10">
             <img
               src={latestRelease.cover}
               alt=""
@@ -456,15 +456,15 @@ export function TimelineSection({ events }: TimelineSectionProps) {
             />
 
             <div className="relative flex flex-wrap items-center justify-between gap-5 px-5 py-5 sm:px-7 sm:py-6">
-              <div className="flex items-stretch gap-4 border-l-[2.5px] border-sky-500 pl-4 sm:gap-5 sm:pl-5">
-                <div className="h-[76px] w-[57px] shrink-0 overflow-hidden rounded-xl border border-sky-200 shadow-[0_8px_28px_rgba(14,165,233,0.18)]">
+              <div className="flex items-stretch gap-4 border-l-[2.5px] border-primary pl-4 sm:gap-5 sm:pl-5">
+                <div className="h-[76px] w-[57px] shrink-0 overflow-hidden rounded-xl border border-primary/20 shadow-[0_8px_28px_hsla(var(--primary),0.18)]">
                   <img src={latestRelease.cover} alt={latestRelease.title} className="h-full w-full object-cover" />
                 </div>
 
                 <div>
                   <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sky-500" />
-                    <span className="tl-body text-[9px] uppercase tracking-[0.3em] text-sky-500">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+                    <span className="tl-body text-[9px] uppercase tracking-[0.3em] text-primary">
                       {tStr("timeline.newestDrop")}
                     </span>
                     <span
@@ -478,10 +478,10 @@ export function TimelineSection({ events }: TimelineSectionProps) {
                     </span>
                   </div>
 
-                  <p className="tl-display text-[clamp(1.55rem,4.3vw,2.25rem)] italic leading-none text-slate-900">
+                  <p className="tl-display text-[clamp(1.55rem,4.3vw,2.25rem)] italic leading-none text-foreground">
                     {latestRelease.title}
                   </p>
-                  <p className="tl-body mt-1.5 text-[9px] uppercase tracking-[0.22em] text-slate-400">
+                  <p className="tl-body mt-1.5 text-[9px] uppercase tracking-[0.22em] text-foreground/40">
                     {latestRelease.date}
                   </p>
                 </div>
@@ -489,7 +489,7 @@ export function TimelineSection({ events }: TimelineSectionProps) {
 
               <Link
                 href={`/albums/${latestRelease.slug}`}
-                className="group inline-flex items-center gap-2.5 rounded-full border border-white/80 bg-white/80 px-5 py-2.5 text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white hover:shadow-[0_8px_24px_rgba(94,140,182,0.12)]"
+                className="group inline-flex items-center gap-2.5 rounded-full border border-primary/15 bg-background/80 px-5 py-2.5 text-foreground transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-background hover:shadow-[0_8px_24px_hsla(var(--primary),0.12)]"
               >
                 <span className="tl-body text-[10px] uppercase tracking-[0.2em]">{tStr("timeline.openAlbum")}</span>
                 <svg
@@ -498,8 +498,7 @@ export function TimelineSection({ events }: TimelineSectionProps) {
                   viewBox="0 0 12 12"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
+                                 strokeLinecap="round"
                   strokeLinejoin="round"
                   className="transition-transform duration-300 group-hover:translate-x-0.5"
                 >
@@ -511,24 +510,16 @@ export function TimelineSection({ events }: TimelineSectionProps) {
         ) : null}
 
         {hiddenYearCount > 0 && hasEvents ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/70 bg-white/55 px-5 py-3 sm:px-7">
-            <p className="tl-body text-[9px] uppercase tracking-[0.18em] text-slate-400">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-primary/10 bg-background/55 px-5 py-3 sm:px-7">
+            <p className="tl-body text-[9px] uppercase tracking-[0.18em] text-foreground/40">
               {tStr("timeline.showingYears")} {visibleGroups.length}/{groups.length} {tStr("timeline.latestYears")}
             </p>
             <button
               type="button"
               onClick={() => setVisibleYearCount((prev) => Math.min(groups.length, prev + INITIAL_VISIBLE_YEAR_GROUPS))}
-              className="flex items-center gap-1.5 rounded-full border border-white/80 bg-white px-4 py-1.5 text-slate-700 transition-all duration-200 hover:border-sky-200 hover:shadow-md"
+              className="flex items-center gap-1.5 rounded-full border border-primary/10 bg-background px-4 py-1.5 text-foreground transition-all duration-200 hover:border-primary/30 hover:shadow-md"
             >
-              <svg
-                width="10"
-                height="10"
-                viewBox="0 0 10 10"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              >
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
                 <path d="M5 8V2M2 5l3-3 3 3" />
               </svg>
               <span className="tl-body text-[9px] uppercase tracking-[0.18em]">
@@ -538,7 +529,7 @@ export function TimelineSection({ events }: TimelineSectionProps) {
           </div>
         ) : null}
 
-        <div className="tl-rise tl-rise-d2 border-b border-white/70 px-5 py-4 sm:px-7">
+        <div className="tl-rise tl-rise-d2 border-b border-primary/10 px-5 py-4 sm:px-7">
           <div className="flex items-center justify-between gap-3">
             <div className="tl-year-nav flex items-center gap-2 overflow-x-auto [scrollbar-width:none]">
               {visibleGroups.map((group) => {
@@ -557,20 +548,20 @@ export function TimelineSection({ events }: TimelineSectionProps) {
                       padding: "7px 22px",
                       fontSize: "1.15rem",
                       letterSpacing: "0.02em",
-                      border: isActive ? "1.5px solid #7cc5f3" : "1px solid rgba(255,255,255,0.8)",
+                      border: isActive ? "1.5px solid hsla(var(--primary), 0.5)" : "1px solid hsla(var(--primary), 0.1)",
                       background: isActive
-                        ? "linear-gradient(135deg,rgba(94,177,236,0.95) 0%,rgba(56,148,214,0.95) 100%)"
-                        : "rgba(255,255,255,0.86)",
-                      color: isActive ? "#ffffff" : "#64748b",
-                      boxShadow: isActive ? "0 6px 18px rgba(72,155,227,0.28)" : "0 1px 4px rgba(94,140,182,0.06)",
+                        ? "linear-gradient(135deg, hsla(var(--primary), 0.95) 0%, hsla(var(--primary), 0.8) 100%)"
+                        : "hsla(var(--background), 0.86)",
+                      color: isActive ? "#ffffff" : "hsla(var(--foreground), 0.6)",
+                      boxShadow: isActive ? "0 6px 18px hsla(var(--primary), 0.28)" : "0 1px 4px hsla(var(--primary), 0.06)",
                     }}
                   >
                     {group.year}
                     <span
                       className="tl-body ml-2 rounded-full px-1.5 py-0.5 text-[9px] not-italic tracking-[0.14em]"
                       style={{
-                        background: isActive ? "rgba(255,255,255,0.25)" : "#e0f2fe",
-                        color: isActive ? "white" : "#0369a1",
+                        background: isActive ? "rgba(255,255,255,0.25)" : "hsla(var(--primary), 0.1)",
+                        color: isActive ? "white" : "hsl(var(--primary))",
                       }}
                     >
                       {group.events.length}
@@ -580,7 +571,7 @@ export function TimelineSection({ events }: TimelineSectionProps) {
               })}
             </div>
             {activeYear ? (
-              <span className="tl-display shrink-0 text-[0.85rem] italic text-sky-400/80">{activeYear}</span>
+              <span className="tl-display shrink-0 text-[0.85rem] italic text-primary/60">{activeYear}</span>
             ) : null}
           </div>
         </div>
@@ -591,7 +582,7 @@ export function TimelineSection({ events }: TimelineSectionProps) {
             aria-hidden
             className="pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-16"
             style={{
-              background: "linear-gradient(to right, rgba(235,248,255,0.95) 0%, transparent 100%)",
+              background: "linear-gradient(to right, hsla(var(--background), 0.95) 0%, transparent 100%)",
               opacity: canScrollLeft ? 1 : 0,
               transition: "opacity 0.3s ease",
             }}
@@ -600,117 +591,103 @@ export function TimelineSection({ events }: TimelineSectionProps) {
             aria-hidden
             className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-16"
             style={{
-              background: "linear-gradient(to left, rgba(235,248,255,0.95) 0%, transparent 100%)",
+              background: "linear-gradient(to left, hsla(var(--background), 0.95) 0%, transparent 100%)",
               opacity: canScrollRight ? 1 : 0,
               transition: "opacity 0.3s ease",
             }}
           />
 
-          <button
-            type="button"
-            aria-label="Scroll left"
-            disabled={!canScrollLeft}
-            onClick={() => scrollRailBy(-320)}
-            className="tl-arrow-btn tl-arrow-left"
-          >
+          <button type="button" aria-label="Scroll left" disabled={!canScrollLeft} onClick={() => scrollRailBy(-320)} className="tl-arrow-btn tl-arrow-left">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 2L4 7l5 5" />
             </svg>
           </button>
 
-          <button
-            type="button"
-            aria-label="Scroll right"
-            disabled={!canScrollRight}
-            onClick={() => scrollRailBy(320)}
-            className="tl-arrow-btn tl-arrow-right"
-          >
+          <button type="button" aria-label="Scroll right" disabled={!canScrollRight} onClick={() => scrollRailBy(320)} className="tl-arrow-btn tl-arrow-right">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 2l5 5-5 5" />
             </svg>
           </button>
 
-        <div
-          ref={railRef}
-          className="tl-rail tl-rise tl-rise-d3 overflow-x-auto [scrollbar-width:none]"
-          onScroll={updateScrollState}
-          // biome-ignore lint/a11y/useSemanticElements: layout scroll container
-          role="region"
-          aria-label="Timeline scroll area"
-        >
-          <div className="flex min-w-max gap-8 px-5 py-6 sm:gap-10 sm:px-7 sm:py-7">
-            {visibleGroups.map((group, groupIndex) => (
-              <section
-                key={group.year}
-                ref={(node) => {
-                  yearRefs.current[group.year] = node
-                }}
-                data-year={group.year}
-                className="relative min-w-max scroll-mx-7"
-              >
-                <div
-                  aria-hidden
-                  className="tl-display tl-year-wm pointer-events-none absolute -top-3 left-0 select-none text-[clamp(4.2rem,9vw,7rem)] italic leading-none"
-                  style={{
-                    color:
-                      group.year === activeYear ? "rgba(186,230,253,0.55)" : "rgba(224,242,254,0.38)",
-                    letterSpacing: "-0.03em",
-                    zIndex: 0,
+          <div
+            ref={railRef}
+            className="tl-rail tl-rise tl-rise-d3 overflow-x-auto [scrollbar-width:none]"
+            onScroll={updateScrollState}
+            role="region"
+            aria-label="Timeline scroll area"
+          >
+            <div className="flex min-w-max gap-8 px-5 py-6 sm:gap-10 sm:px-7 sm:py-7">
+              {visibleGroups.map((group, groupIndex) => (
+                <section
+                  key={group.year}
+                  ref={(node) => {
+                    yearRefs.current[group.year] = node
                   }}
+                  data-year={group.year}
+                  className="relative min-w-max scroll-mx-7"
                 >
-                  {group.year}
-                </div>
-
-                <div className="relative mb-5 flex items-center gap-3" style={{ zIndex: 1 }}>
-                  <span
-                    className="tl-display rounded-full px-4 py-1 text-[1.1rem] italic"
+                  <div
+                    aria-hidden
+                    className="tl-display tl-year-wm pointer-events-none absolute -top-3 left-0 select-none text-[clamp(4.2rem,9vw,7rem)] italic leading-none"
                     style={{
-                      border: group.year === activeYear ? "1.5px solid #7dd3fc" : "1px solid rgba(255,255,255,0.8)",
-                      background:
-                        group.year === activeYear
-                          ? "linear-gradient(135deg,rgba(224,242,254,0.95),rgba(186,230,253,0.95))"
-                          : "rgba(255,255,255,0.85)",
-                      color: group.year === activeYear ? "#0369a1" : "#94a3b8",
-                      transition: "all 0.35s ease",
+                      color: group.year === activeYear ? "hsla(var(--primary), 0.35)" : "hsla(var(--primary), 0.15)",
+                      letterSpacing: "-0.03em",
+                      zIndex: 0,
                     }}
                   >
                     {group.year}
-                  </span>
+                  </div>
 
-                  <span className="tl-body text-[9px] uppercase tracking-[0.2em] text-slate-300">
-                    {formatReleaseCount(group.events.length, releaseLabel, releasePluralLabel)}
-                  </span>
+                  <div className="relative mb-5 flex items-center gap-3" style={{ zIndex: 1 }}>
+                    <span
+                      className="tl-display rounded-full px-4 py-1 text-[1.1rem] italic"
+                      style={{
+                        border: group.year === activeYear ? "1.5px solid hsla(var(--primary), 0.5)" : "1px solid hsla(var(--primary), 0.15)",
+                        background:
+                          group.year === activeYear
+                            ? "linear-gradient(135deg,hsla(var(--primary),0.2),hsla(var(--primary),0.1))"
+                            : "hsla(var(--background), 0.85)",
+                        color: group.year === activeYear ? "hsl(var(--primary))" : "hsla(var(--foreground), 0.4)",
+                        transition: "all 0.35s ease",
+                      }}
+                    >
+                      {group.year}
+                    </span>
 
-                  {groupIndex < visibleGroups.length - 1 ? (
-                    <div
-                      className="ml-2 h-px w-12"
-                      style={{ background: "linear-gradient(to right,#bae6fd 0%,transparent 100%)" }}
-                    />
-                  ) : null}
-                </div>
+                    <span className="tl-body text-[9px] uppercase tracking-[0.2em] text-foreground/20">
+                      {formatReleaseCount(group.events.length, releaseLabel, releasePluralLabel)}
+                    </span>
 
-                <ol className="relative flex gap-3 pb-2" style={{ zIndex: 1 }}>
-                  {group.events.map((event) => {
-                    const isNewest = latestRelease?.slug === event.slug && latestRelease.date === event.date
-
-                    return (
-                      <TimelineCard
-                        key={`${event.date}-${event.title}`}
-                        event={event}
-                        isNewest={isNewest}
-                        viewLabel={tStr("timeline.view")}
-                        tStr={tStr}
+                    {groupIndex < visibleGroups.length - 1 ? (
+                      <div
+                        className="ml-2 h-px w-12"
+                        style={{ background: "linear-gradient(to right,hsla(var(--primary), 0.4) 0%,transparent 100%)" }}
                       />
-                    )
-                  })}
-                </ol>
-              </section>
-            ))}
+                    ) : null}
+                  </div>
+
+                  <ol className="relative flex gap-3 pb-2" style={{ zIndex: 1 }}>
+                    {group.events.map((event) => {
+                      const isNewest = latestRelease?.slug === event.slug && latestRelease.date === event.date
+
+                      return (
+                        <TimelineCard
+                          key={`${event.date}-${event.title}`}
+                          event={event}
+                          isNewest={isNewest}
+                          viewLabel={tStr("timeline.view")}
+                          tStr={tStr}
+                        />
+                      )
+                    })}
+                  </ol>
+                </section>
+              ))}
+            </div>
           </div>
         </div>
-        </div>
 
-        <div aria-hidden className="h-[2px] w-full bg-[linear-gradient(to_right,transparent_0%,#d2ecff_22%,#7ec6f5_50%,#d2ecff_78%,transparent_100%)]" />
+        <div aria-hidden className="h-[2px] w-full bg-[linear-gradient(to_right,transparent_0%,hsla(var(--primary),0.2)_22%,hsla(var(--primary),0.5)_50%,hsla(var(--primary),0.2)_78%,transparent_100%)]" />
       </div>
     </>
   )

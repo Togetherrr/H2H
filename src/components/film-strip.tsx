@@ -9,8 +9,8 @@ type FilmStripProps = {
 export function FilmStrip({ frames }: FilmStripProps) {
   return (
     <div className="full-bleed-strip reveal-soft delay-3 relative">
-      <div className="absolute inset-y-0 left-0 w-32 z-10 bg-gradient-to-r from-[#f0f9ff] to-transparent pointer-events-none" />
-      <div className="absolute inset-y-0 right-0 w-32 z-10 bg-gradient-to-l from-[#f0f9ff] to-transparent pointer-events-none" />
+      <div className="absolute inset-y-0 left-0 w-32 z-10 bg-gradient-to-r from-background to-transparent pointer-events-none" />
+      <div className="absolute inset-y-0 right-0 w-32 z-10 bg-gradient-to-l from-background to-transparent pointer-events-none" />
 
       <div className="film-strip-header">
         <span>S2U Archive</span>
