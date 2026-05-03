@@ -34,15 +34,15 @@ function TimeZoneSwitcher({
       <button
         onClick={() => setIsOpen(!isOpen)}
         suppressHydrationWarning
-        className="flex items-center gap-2 rounded-full border border-white/60 bg-white/40 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-slate-800 backdrop-blur-md transition hover:bg-white/60"
+        className="flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-white/80 backdrop-blur-md transition hover:bg-white/15 hover:border-white/25"
       >
-        <Clock className="size-3.5 text-[#FF708A]" />
+        <Clock className="size-3.5 text-sky-400" />
         <span>{currentTimeZone}</span>
         <ChevronDown className={cn("size-3 transition-transform", isOpen && "rotate-180")} />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-32 overflow-hidden rounded-2xl border border-white/60 bg-white/80 p-1 shadow-xl backdrop-blur-2xl ring-1 ring-black/5 animate-in fade-in zoom-in duration-200">
+        <div className="absolute right-0 mt-2 w-32 overflow-hidden rounded-2xl border border-white/15 bg-slate-900/90 p-1 shadow-xl backdrop-blur-2xl animate-in fade-in zoom-in duration-200">
           {options.map((tz) => (
             <button
               key={tz}
@@ -53,8 +53,8 @@ function TimeZoneSwitcher({
               className={cn(
                 "w-full px-4 py-2 text-left text-[11px] font-black uppercase tracking-widest transition-colors rounded-xl",
                 currentTimeZone === tz 
-                  ? "bg-[#FFC2D1]/40 text-[#FF708A]" 
-                  : "text-slate-700 hover:bg-slate-50"
+                  ? "bg-sky-400/20 text-sky-300" 
+                  : "text-white/70 hover:bg-white/10"
               )}
             >
               {tz}
@@ -120,15 +120,15 @@ function HeaderAccountButton() {
   }, [router])
 
   if (!mounted) return (
-    <div className="hidden items-center rounded-full border border-white/80 bg-white/40 px-8 py-2.5 md:inline-flex opacity-0">
-      <span className="text-[11px] font-black uppercase tracking-widest">{t("header.login")}</span>
+    <div className="hidden items-center rounded-full border border-white/15 bg-white/8 px-8 py-2.5 md:inline-flex opacity-0">
+      <span className="text-[11px] font-black uppercase tracking-widest text-white/70">{t("header.login")}</span>
     </div>
   )
 
   return (
     <Link
       href={headerAccount?.href ?? "/login"}
-      className="flex items-center rounded-full border border-white/80 bg-white/40 p-1 shadow-sm backdrop-blur-md transition hover:bg-white/60"
+      className="flex items-center rounded-full border border-white/15 bg-white/8 p-1 shadow-sm backdrop-blur-md transition hover:border-sky-400/30 hover:bg-white/15"
     >
       {headerAccount ? (
         <div className="flex items-center gap-2 pr-4">
@@ -145,12 +145,12 @@ function HeaderAccountButton() {
               {headerAccount.displayName.slice(0, 2).toUpperCase()}
             </span>
           )}
-          <span className="hidden text-[10px] font-black uppercase tracking-widest text-slate-900 md:block max-w-[80px] truncate">
+          <span className="hidden text-[10px] font-black uppercase tracking-widest text-white/80 md:block max-w-[80px] truncate">
             {headerAccount.displayName}
           </span>
         </div>
       ) : (
-        <span className="px-6 py-2.5 text-[11px] font-black uppercase tracking-widest text-slate-900">{t("header.login")}</span>
+        <span className="px-6 py-2.5 text-[11px] font-black uppercase tracking-widest text-white/80">{t("header.login")}</span>
       )}
     </Link>
   )
@@ -160,10 +160,10 @@ function HeaderNavLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="relative group text-[11px] font-black tracking-[0.2em] text-slate-950 transition-colors hover:text-[#FF8DA1] uppercase"
+      className="relative group text-[11px] font-black tracking-[0.2em] text-white/70 transition-colors hover:text-sky-300 uppercase"
     >
       {label}
-      <span className="absolute -bottom-1 left-0 h-[2px] w-0 bg-gradient-to-r from-[#FFC2D1] to-[#A2D2FF] transition-all duration-300 group-hover:w-full" />
+      <span className="absolute -bottom-1 left-0 h-[2px] w-0 bg-gradient-to-r from-sky-400 to-sky-300 transition-all duration-300 group-hover:w-full" />
     </Link>
   )
 }
@@ -195,13 +195,13 @@ export function Navbar({
 
   return (
     <header className="fixed inset-x-0 top-4 z-50 flex justify-center px-4 sm:px-6">
-      <div className="flex h-16 w-full max-w-[1400px] items-center justify-between rounded-full border border-white/60 bg-white/40 px-6 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.05)] backdrop-blur-2xl transition-all hover:bg-white/50">
+      <div className="flex h-16 w-full max-w-[1400px] items-center justify-between rounded-full border border-white/15 bg-black/30 px-6 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.3)] backdrop-blur-2xl transition-all hover:bg-black/40 hover:border-white/20">
         <div className="flex items-center gap-6">
           <Link href="/" className="group flex items-center gap-3">
-            <div className="relative h-9 w-9 overflow-hidden rounded-full border-2 border-white bg-gradient-to-br from-[#A2D2FF] to-[#FFC2D1] shadow-sm transition-transform group-hover:scale-110">
+            <div className="relative h-9 w-9 overflow-hidden rounded-full border-2 border-sky-100 bg-gradient-to-br from-sky-200 to-pink-100 shadow-sm transition-transform group-hover:scale-110">
               <Image src="/logo-official-removebg-.png" alt="Logo" width={36} height={36} className="h-full w-full object-cover" />
             </div>
-            <p className="hidden xl:block text-[11px] font-black uppercase tracking-[0.3em] text-slate-900">
+            <p className="hidden xl:block text-[11px] font-black uppercase tracking-[0.3em] text-slate-800">
               {t("header.brand")}
             </p>
           </Link>

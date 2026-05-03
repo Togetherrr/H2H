@@ -4,37 +4,41 @@
 
 @layer base {
   :root {
-    --background: 222.2 84% 4.9%; /* Slate-950 */
-    --foreground: 210 40% 98%;
+    /* ── Signature Accent Colors ── */
+    --sky: 200 80% 72%;
+    /* Skyblue accent #5BB8F5 */
+    --sky-light: 200 100% 88%;
+    /* #A2D2FF */
+    --pink: 345 100% 85%;
+    /* Baby pink accent — #FFC2D1 */
+    --pink-vivid: 345 90% 65%;
+    /* #F2527A */
 
-    --baby-blue: 206 100% 82%; /* #A2D2FF */
-    --baby-pink: 345 100% 88%; /* #FFC2D1 */
-    
-    --primary: 345 100% 70%; /* Vibrant Pink */
+    /* ── Text (light on dark) ── */
+    --foreground: 210 40% 96%;
+    /* near-white */
+    --text-title: 0 0% 100%;
+    /* pure white for headings */
+    --text-body: 215 30% 80%;
+    /* light slate for body text */
+    --text-muted: 215 20% 60%;
+    /* muted for secondary info */
+
+    /* ── Card / Surface ── */
+    --surface: 220 30% 15%;
+    /* dark card base */
+
+    /* ── Semantic tokens ── */
+    --primary: 200 80% 62%;
     --primary-foreground: 0 0% 100%;
-    
-    --secondary: 206 100% 90%;
-    --secondary-foreground: 224 71.4% 4.1%;
-    
-    --muted: 345 100% 96%;
-    --muted-foreground: 220 8.9% 46.1%;
-    
-    --accent: 206 100% 96%;
-    --accent-foreground: 224 71.4% 4.1%;
-    
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-
-    --border: 345 20% 90%;
-    --input: 345 20% 90%;
-    --ring: 345 100% 70%;
-
+    --muted: 220 30% 20%;
+    --muted-foreground: 215 20% 60%;
+    --border: 220 30% 25%;
+    --input: 220 30% 20%;
+    --ring: 200 80% 60%;
     --radius: 1.5rem;
-
-    /* Text Colors */
-    --text-title: 222 47% 11%; /* Slate-950 equivalent */
-    --text-body: 215 16% 47%;  /* Slate-600/700 equivalent */
-    --text-muted: 215 16% 58%; /* Slate-500 equivalent */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
   }
 
   * {
@@ -44,66 +48,96 @@
   html {
     scroll-behavior: smooth;
     color-scheme: dark;
-    background-color: #020617; /* High contrast dark for early loading */
+    background-color: #0a0f1e;
   }
 
   body {
     @apply text-foreground;
     font-family: var(--font-body), sans-serif;
     min-height: 100vh;
-    background-color: hsl(var(--background-fallback, 0 0% 100%));
-    background-image: var(--background-image, url('/background.jpg'));
+    /* Album art full-page background */
+    background-color: #0a0f1e;
+    background-image: var(--bg-album-art, url('/background.jpg'));
     background-size: cover;
-    background-position: center;
+    background-position: center center;
     background-attachment: fixed;
     background-repeat: no-repeat;
+    position: relative;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  /* Global dark overlay on body so content is always readable */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(160deg,
+        rgba(8, 12, 28, 0.25) 0%,
+        rgba(10, 15, 35, 0.23) 50%,
+        rgba(12, 18, 40, 0.30) 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* All page content sits above the overlay */
+  body>* {
+    position: relative;
+    z-index: 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-display), sans-serif;
     font-weight: 700;
     letter-spacing: -0.02em;
+    color: hsl(var(--text-title));
   }
 }
 
 @layer utilities {
+
+  /* ── Glass Panels — dark version ── */
   .glass-panel {
-    @apply bg-white/40 backdrop-blur-2xl border border-white/50 shadow-[0_32px_80px_rgba(255,194,209,0.15)];
+    background: rgba(255, 255, 255, 0.05);
+    @apply border border-white/10 backdrop-blur-xl;
   }
 
   .glass-pink {
-    background: linear-gradient(135deg, rgba(255, 194, 209, 0.4), rgba(255, 255, 255, 0.4));
-    @apply backdrop-blur-xl border border-white/60 shadow-[0_20px_50px_rgba(255,194,209,0.12)];
+    background: linear-gradient(135deg, rgba(255, 194, 209, 0.08), rgba(255, 255, 255, 0.04));
+    @apply border border-pink-300/15 backdrop-blur-xl;
   }
 
   .glass-blue {
-    background: linear-gradient(135deg, rgba(162, 210, 255, 0.4), rgba(255, 255, 255, 0.4));
-    @apply backdrop-blur-xl border border-white/60 shadow-[0_20px_50px_rgba(162,210,255,0.12)];
+    background: linear-gradient(135deg, rgba(91, 184, 245, 0.08), rgba(255, 255, 255, 0.04));
+    @apply border border-sky-300/15 backdrop-blur-xl;
   }
 
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#FF99AC] to-[#7FBFFF];
+  /* ── Card ── */
+  .card-premium {
+    background: rgba(255, 255, 255, 0.06);
+    @apply rounded-[3rem] border border-white/10 backdrop-blur-2xl shadow-[0_32px_80px_rgb(0_0_0_/_40%)] transition-all duration-500;
   }
 
-  .section-shell {
-    max-width: 80rem;
-    margin: 0 auto;
+  .card-premium:hover {
+    background: rgba(255, 255, 255, 0.09);
+    @apply -translate-y-2 shadow-[0_40px_100px_rgb(0_0_0_/_50%)] border-sky-400/20;
+  }
+
+  /* ── Hero Section ── */
+  .hero-section {
+    position: relative;
     width: 100%;
-    padding: 5rem 1.5rem;
+    overflow: hidden;
   }
 
-  .reveal-up {
-    opacity: 0;
-    transform: translateY(24px);
-    animation: reveal-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  /* ── Text Scale ── */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-sky-300 to-sky-500;
   }
 
-  .delay-1 { animation-delay: 0.1s; }
-  .delay-2 { animation-delay: 0.2s; }
-  .delay-3 { animation-delay: 0.3s; }
-  .delay-4 { animation-delay: 0.4s; }
-
-  /* New Utility Classes for Consistency */
   .text-title {
     color: hsl(var(--text-title));
     font-family: var(--font-display), sans-serif;
@@ -122,17 +156,49 @@
     @apply text-sm font-medium leading-relaxed;
   }
 
-  .card-premium {
-    @apply rounded-[3rem] border border-white bg-white/40 shadow-xl shadow-slate-200/20 backdrop-blur-md transition-all duration-500;
+  /* ── Layout ── */
+  .section-shell {
+    max-width: 80rem;
+    margin: 0 auto;
+    width: 100%;
+    padding: 5rem 1.5rem;
   }
 
-  .card-premium:hover {
-    @apply -translate-y-2 shadow-2xl border-[#FFC2D1]/40 bg-white/60;
-  }
-
+  /* ── Badges ── */
   .pill-base {
-    @apply inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.3em] backdrop-blur-sm;
+    @apply inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.3em];
     font-family: var(--font-display), sans-serif;
+  }
+
+  .pill-sky {
+    @apply pill-base bg-sky-400/15 text-sky-300 border border-sky-400/20;
+  }
+
+  .pill-pink {
+    @apply pill-base bg-pink-400/15 text-pink-300 border border-pink-400/20;
+  }
+
+  /* ── Animations ── */
+  .reveal-up {
+    opacity: 0;
+    transform: translateY(24px);
+    animation: reveal-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .delay-1 {
+    animation-delay: 0.1s;
+  }
+
+  .delay-2 {
+    animation-delay: 0.2s;
+  }
+
+  .delay-3 {
+    animation-delay: 0.3s;
+  }
+
+  .delay-4 {
+    animation-delay: 0.4s;
   }
 }
 
@@ -145,7 +211,7 @@
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -153,10 +219,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-[#FFC2D1]/40 border-4 border-transparent bg-clip-padding rounded-full;
+  background: rgba(91, 184, 245, 0.3);
+  border-radius: 99px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-[#FFC2D1]/60;
+  background: rgba(91, 184, 245, 0.5);
 }
-
