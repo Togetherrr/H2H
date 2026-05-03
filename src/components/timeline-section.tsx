@@ -62,13 +62,13 @@ function formatReleaseCount(
 }
 
 const TYPE_PALETTE: Record<string, { bg: string; text: string }> = {
-  debut: { bg: "bg-[#A2D2FF]/20", text: "text-[#4A90E2]" },
-  comeback: { bg: "bg-[#FFC2D1]/20", text: "text-[#FF708A]" },
-  "pre-release": { bg: "bg-slate-100", text: "text-slate-600" },
-  "1st ep": { bg: "bg-[#A2D2FF]/20", text: "text-[#4A90E2]" },
-  ep: { bg: "bg-[#A2D2FF]/20", text: "text-[#4A90E2]" },
-  single: { bg: "bg-slate-100", text: "text-slate-600" },
-  album: { bg: "bg-[#FFC2D1]/20", text: "text-[#FF708A]" },
+  debut: { bg: "bg-sky-100", text: "text-sky-600" },
+  comeback: { bg: "bg-sky-100", text: "text-sky-600" },
+  "pre-release": { bg: "bg-slate-100", text: "text-slate-500" },
+  "1st ep": { bg: "bg-sky-100", text: "text-sky-600" },
+  ep: { bg: "bg-sky-100", text: "text-sky-600" },
+  single: { bg: "bg-slate-100", text: "text-slate-500" },
+  album: { bg: "bg-pink-100", text: "text-pink-600" },
 }
 
 function TimelineCard({
@@ -90,22 +90,22 @@ function TimelineCard({
       <div className="mb-4 flex items-center gap-3">
         <div className={cn(
           "size-2.5 rounded-full",
-          isNewest ? "bg-[#FF708A] animate-pulse" : "bg-slate-200"
+          isNewest ? "bg-sky-400 animate-pulse" : "bg-white/20"
         )} />
-        <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">{event.date}</span>
+        <span className="text-[11px] font-black uppercase tracking-widest text-white/40">{event.date}</span>
       </div>
 
       <Link
         href={`/albums/${event.slug}`}
-        className="group block overflow-hidden rounded-[2rem] border border-white bg-white/40 p-3 shadow-sm backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:bg-white hover:shadow-xl"
+        className="group block overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-3 backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:border-sky-400/25 hover:bg-white/10 hover:shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
       >
         <div className="relative aspect-square overflow-hidden rounded-[1.6rem]">
           <img
             src={event.cover}
             alt={event.title}
-            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+            className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
           
           <div className="absolute top-4 left-4">
             <span className={cn(
@@ -119,10 +119,10 @@ function TimelineCard({
         </div>
 
         <div className="p-4">
-          <p className="text-[16px] font-black uppercase tracking-tight text-slate-900 group-hover:text-[#FF708A] transition-colors">{event.title}</p>
+          <p className="text-[16px] font-black uppercase tracking-tight text-white group-hover:text-sky-300 transition-colors">{event.title}</p>
           <div className="mt-4 flex items-center justify-between">
-            <span className="text-[10px] font-bold text-slate-400">{viewLabel}</span>
-            <div className="size-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-[#FFC2D1]/30 group-hover:text-[#FF708A] transition-all">
+            <span className="text-[10px] font-bold text-white/40">{viewLabel}</span>
+            <div className="size-8 rounded-full bg-white/8 flex items-center justify-center text-white/40 group-hover:bg-sky-400/20 group-hover:text-sky-300 transition-all">
               <ArrowRight className="size-4" />
             </div>
           </div>
@@ -183,11 +183,11 @@ export function TimelineSection({ events }: TimelineSectionProps) {
       <div className="glass-panel rounded-[3rem] p-8 lg:p-12">
         <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between mb-12">
           <div className="max-w-xl">
-            <div className="flex items-center gap-3 text-[#A2D2FF]">
+            <div className="flex items-center gap-3 text-sky-500">
               <Clock className="size-5" />
               <p className="text-[10px] font-black uppercase tracking-[0.5em]">{tStr("timeline.label")}</p>
             </div>
-            <h2 className="mt-5 text-4xl uppercase leading-none text-slate-900 sm:text-5xl">
+            <h2 className="mt-5 text-4xl uppercase leading-none text-slate-900 sm:text-5xl font-black tracking-tighter">
               {tStr("timeline.title")}
             </h2>
           </div>
@@ -196,14 +196,14 @@ export function TimelineSection({ events }: TimelineSectionProps) {
             <button
               onClick={() => scroll("left")}
               disabled={!canScrollLeft}
-              className="size-12 rounded-full border border-white bg-white/40 flex items-center justify-center text-slate-600 disabled:opacity-30 hover:bg-white transition-all shadow-sm"
+              className="size-12 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-500 disabled:opacity-30 hover:bg-sky-50 hover:border-sky-200 hover:text-sky-600 transition-all shadow-sm"
             >
               <ChevronLeft className="size-5" />
             </button>
             <button
               onClick={() => scroll("right")}
               disabled={!canScrollRight}
-              className="size-12 rounded-full border border-white bg-white/40 flex items-center justify-center text-slate-600 disabled:opacity-30 hover:bg-white transition-all shadow-sm"
+              className="size-12 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-500 disabled:opacity-30 hover:bg-sky-50 hover:border-sky-200 hover:text-sky-600 transition-all shadow-sm"
             >
               <ChevronRight className="size-5" />
             </button>
@@ -218,8 +218,8 @@ export function TimelineSection({ events }: TimelineSectionProps) {
           {visibleGroups.map((group) => (
             <div key={group.year} className="flex flex-col gap-8 shrink-0">
               <div className="flex items-center gap-4">
-                <span className="text-3xl font-black italic text-slate-200">{group.year}</span>
-                <div className="h-px w-20 bg-gradient-to-r from-slate-200 to-transparent" />
+                <span className="text-3xl font-black italic text-white/20">{group.year}</span>
+                <div className="h-px w-20 bg-gradient-to-r from-white/15 to-transparent" />
               </div>
               
               <ol className="flex gap-6">
@@ -238,10 +238,10 @@ export function TimelineSection({ events }: TimelineSectionProps) {
         </div>
 
         {groups.length > visibleYearCount && (
-          <div className="mt-10 pt-10 border-t border-white/40 text-center">
+          <div className="mt-10 pt-10 border-t border-slate-100 text-center">
             <button
               onClick={() => setVisibleYearCount(prev => prev + 2)}
-              className="px-10 py-4 rounded-full border border-[#FFC2D1] bg-[#FFC2D1]/10 text-[#FF708A] text-[11px] font-black uppercase tracking-widest hover:bg-[#FFC2D1] hover:text-white transition-all"
+              className="px-10 py-4 rounded-full border border-sky-200 bg-sky-50 text-sky-600 text-[11px] font-black uppercase tracking-widest hover:bg-sky-500 hover:text-white hover:border-sky-500 transition-all"
             >
               {tStr("timeline.showMoreYears")}
             </button>

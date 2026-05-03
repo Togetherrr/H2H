@@ -96,8 +96,8 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
       icon: CalendarDays,
       label: t("stats.debutDays"),
       value: debutDays,
-      color: "bg-[#A2D2FF]",
-      accent: "text-[#4A90E2]",
+      color: "bg-sky-400",
+      accent: "text-sky-600",
       badge: t("home.stats.badge.debutMilestone"),
       desc: t("home.stats.desc.sinceDebut")
     },
@@ -107,8 +107,8 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
       icon: Disc3,
       label: t("stats.albums"),
       value: snapshot.albumCount,
-      color: "bg-[#FFC2D1]",
-      accent: "text-[#FF708A]",
+      color: "bg-pink-300",
+      accent: "text-sky-600",
       badge: t("home.stats.badge.releaseCatalog"),
       desc: t("home.stats.desc.fullDiscography")
     },
@@ -118,8 +118,8 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
       icon: Radio,
       label: t("stats.musicShows"),
       value: snapshot.musicShowWins,
-      color: "bg-[#A2D2FF]",
-      accent: "text-[#4A90E2]",
+      color: "bg-sky-300",
+      accent: "text-sky-600",
       badge: t("home.stats.badge.liveTrophies"),
       desc: t("home.stats.desc.broadcastWins")
     },
@@ -129,8 +129,8 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
       icon: Trophy,
       label: t("stats.awardCeremonies"),
       value: snapshot.awardCeremonyWins,
-      color: "bg-[#FFC2D1]",
-      accent: "text-[#FF708A]",
+      color: "bg-sky-500",
+      accent: "text-sky-600",
       badge: t("home.stats.badge.globalAwards"),
       desc: t("home.stats.desc.industryHonors")
     },
@@ -140,7 +140,7 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
     <section ref={sectionRef} className="reveal-up py-20">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-20 px-4">
         <div className="max-w-2xl">
-          <div className="flex items-center gap-3 text-[#FF99AC] mb-6">
+          <div className="flex items-center gap-3 text-sky-500 mb-6">
             <Sparkles className="size-6 fill-current animate-pulse" />
             <p className="text-[12px] font-black uppercase tracking-[0.5em]">{t("stats.eyebrow")}</p>
           </div>
@@ -157,7 +157,7 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
           return (
             <div
               key={card.key}
-              className="group relative flex flex-col justify-between overflow-hidden rounded-[4rem] bg-white p-12 border border-slate-100 shadow-xl shadow-slate-200/20 transition-all duration-500 hover:-translate-y-4 hover:shadow-2xl hover:border-[#FFC2D1]/40"
+              className="group relative flex flex-col justify-between overflow-hidden rounded-[4rem] bg-white/6 p-12 border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-all duration-500 hover:-translate-y-4 hover:shadow-[0_30px_80px_rgba(0,0,0,0.4)] hover:border-sky-400/25 hover:bg-white/10"
             >
               <div className="relative z-10">
                 <div className={cn(
@@ -170,7 +170,7 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
                 
                 <div className="mt-12 space-y-2">
                   <span className={cn(
-                    "inline-flex px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-slate-50",
+                    "inline-flex px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-white/8",
                     card.accent
                   )}>
                     {card.badge}
@@ -178,28 +178,28 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
                   <p className={cn("text-[13px] font-black uppercase tracking-widest block pt-2", card.accent)}>
                     {card.label}
                   </p>
-                  <h3 className="text-7xl font-black tracking-tighter text-slate-950 pt-2">
+                  <h3 className="text-7xl font-black tracking-tighter text-white pt-2">
                     {mounted ? (
                       <AnimatedNumber value={card.value} active={isVisible} />
                     ) : (
                       "0"
                     )}
                   </h3>
-                  <p className="text-[12px] font-bold text-slate-500 pt-2 uppercase tracking-widest">
+                  <p className="text-[12px] font-bold text-white/50 pt-2 uppercase tracking-widest">
                     {card.desc}
                   </p>
                 </div>
               </div>
 
               <div className="relative z-10 mt-16 flex items-center justify-between">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 text-slate-400 group-hover:bg-[#FF708A] group-hover:text-white transition-all duration-500">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/8 text-white/40 group-hover:bg-sky-500 group-hover:text-white transition-all duration-500">
                   <ArrowUpRight className="size-6" />
                 </div>
               </div>
 
-              {/* Decorative Elements */}
-              <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-                <Icon className="size-40" />
+              {/* Decorative icon bg */}
+              <div className="absolute top-0 right-0 p-8 opacity-[0.04] group-hover:opacity-[0.10] transition-opacity">
+                <Icon className="size-40 text-white" />
               </div>
             </div>
           )
