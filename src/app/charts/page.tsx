@@ -1,4 +1,4 @@
-import { Music2, Youtube, ArrowLeft, TrendingUp, TrendingDown, Clock, Activity } from "lucide-react"
+import { Music2, Youtube, ArrowLeft, TrendingUp, TrendingDown, Clock, Activity, ExternalLink } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { getTrackPerformanceSnapshot } from "@/lib/track-performance"
@@ -101,8 +101,42 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
 
   const snapshot = await getTrackPerformanceSnapshot()
 
-  const showSpotify = !platform || platform === "spotify"
-  const showYoutube = !platform || platform === "youtube"
+  const activePlatforms = platform 
+    ? [platform] 
+    : ["spotify", "youtube", "korea"]
+
+  const platformConfigs: Record<string, { title: string; icon: any; color: string; shadow: string; totalLabel: string; analyzedLabel: string; items: PerformanceItem[]; totalValue: number | null }> = {
+    spotify: {
+      title: t("charts.spotify.title") as string,
+      icon: <Music2 className="h-8 w-8" />,
+      color: "bg-[#A2D2FF]",
+      shadow: "shadow-sky-100",
+      totalLabel: t("performance.totalStreams") as string,
+      analyzedLabel: t("charts.analyzed") as string,
+      items: snapshot.spotify.items,
+      totalValue: snapshot.spotify.totalValue,
+    },
+    youtube: {
+      title: t("charts.youtube.title") as string,
+      icon: <Youtube className="h-8 w-8" />,
+      color: "bg-[#FFC2D1]",
+      shadow: "shadow-pink-100",
+      totalLabel: t("performance.totalViews") as string,
+      analyzedLabel: t("charts.analyzed.video") as string,
+      items: snapshot.youtube.items,
+      totalValue: snapshot.youtube.totalValue,
+    },
+    korea: {
+      title: t("performance.korea") as string,
+      icon: <Activity className="h-8 w-8" />,
+      color: "bg-emerald-400",
+      shadow: "shadow-emerald-100",
+      totalLabel: "External Links",
+      analyzedLabel: "Official Platforms",
+      items: [],
+      totalValue: null,
+    },
+  }
 
   const formattedUpdatedAt = new Date(snapshot.updatedAt).toLocaleString(lang === "vi" ? "vi-VN" : "en-US", {
     day: "2-digit",
@@ -149,87 +183,140 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
           </div>
         </div>
 
-        {/* ── Sections ── */}
         <div className="grid gap-20">
-          {/* Spotify */}
-          {showSpotify && (
-            <section className="space-y-8">
-              <div className="flex items-center justify-between px-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#A2D2FF] text-white shadow-xl shadow-sky-100">
-                    <Music2 className="h-8 w-8" />
+          {activePlatforms.map((pKey) => {
+            const config = platformConfigs[pKey]
+            if (!config) return null
+
+            if (pKey === "korea") {
+              const koreaChartGroups = [
+                {
+                  platform: "Melon",
+                  icon: "M",
+                  color: "bg-emerald-500 shadow-emerald-200",
+                  links: [
+                    { label: "Top 100", url: "#" },
+                    { label: "Hot 100", url: "#" },
+                    { label: "Daily", url: "#" },
+                    { label: "Weekly", url: "#" },
+                  ]
+                },
+                {
+                  platform: "Genie",
+                  icon: "G",
+                  color: "bg-blue-500 shadow-blue-200",
+                  links: [
+                    { label: "Realtime", url: "#" },
+                    { label: "Daily", url: "#" },
+                    { label: "Weekly", url: "#" },
+                  ]
+                },
+                {
+                  platform: "Bugs",
+                  icon: "B",
+                  color: "bg-rose-500 shadow-rose-200",
+                  links: [
+                    { label: "Realtime", url: "#" },
+                    { label: "Daily", url: "#" },
+                    { label: "Weekly", url: "#" },
+                  ]
+                },
+                {
+                  platform: "Vibe",
+                  icon: "V",
+                  color: "bg-slate-800 shadow-slate-200",
+                  links: [
+                    { label: "Today Top 100", url: "#" },
+                    { label: "Weekly", url: "#" },
+                  ]
+                }
+              ]
+
+              return (
+                <section key={pKey} className="space-y-8">
+                  <div className="flex items-center gap-4 px-4">
+                    <div className={cn("flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-xl", config.color, config.shadow)}>
+                      {config.icon}
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-black uppercase tracking-tight text-slate-900">{config.title}</h2>
+                      <p className="text-xs font-bold uppercase tracking-widest text-emerald-500">
+                        {t("performance.korea.desc")}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-3xl font-black uppercase tracking-tight text-slate-900">{t("charts.spotify.title")}</h2>
-                    <p className="text-xs font-bold uppercase tracking-widest text-sky-500">
-                      {snapshot.spotify.items.length} {t("charts.analyzed")}
+
+                  <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+                    {koreaChartGroups.map((group, gIdx) => (
+                      <div key={gIdx} className="flex flex-col gap-4">
+                        <div className={cn("flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/40 border border-white shadow-sm")}>
+                          <div className={cn("flex size-10 items-center justify-center rounded-xl text-lg font-black text-white shadow-md", group.color)}>
+                            {group.icon}
+                          </div>
+                          <span className="text-sm font-black uppercase tracking-widest text-slate-900">{group.platform}</span>
+                        </div>
+                        <div className="grid gap-2 pl-2">
+                          {group.links.map((link, lIdx) => (
+                            <a
+                              key={lIdx}
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group flex items-center justify-between rounded-2xl border border-white/50 bg-white/20 p-5 transition-all hover:translate-x-1 hover:bg-white hover:shadow-xl"
+                            >
+                              <span className="text-[14px] font-bold text-slate-700 group-hover:text-slate-950">
+                                {group.platform}, {link.label}
+                              </span>
+                              <ExternalLink className="size-4 text-slate-300 group-hover:text-slate-500" />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )
+            }
+
+            return (
+              <section key={pKey} className="space-y-8">
+                <div className="flex items-center justify-between px-4">
+                  <div className="flex items-center gap-4">
+                    <div className={cn("flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-xl", config.color, config.shadow)}>
+                      {config.icon}
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-black uppercase tracking-tight text-slate-900">{config.title}</h2>
+                      <p className={cn("text-xs font-bold uppercase tracking-widest", pKey === "spotify" ? "text-sky-500" : "text-pink-500")}>
+                        {config.items.length} {config.analyzedLabel}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right hidden sm:block">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{config.totalLabel}</p>
+                    <p className="text-2xl font-black text-slate-900">
+                      {config.totalValue?.toLocaleString() ?? "0"}
                     </p>
                   </div>
                 </div>
-                <div className="text-right hidden sm:block">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{t("performance.totalStreams")}</p>
-                  <p className="text-2xl font-black text-slate-900">
-                    {snapshot.spotify.totalValue?.toLocaleString() ?? "0"}
-                  </p>
-                </div>
-              </div>
 
-              <div className="card-premium overflow-hidden !rounded-[2.5rem]">
-                <TableHeader col2Label={t("charts.trackInfo") as string} t={t} />
-                <div>
-                  {snapshot.spotify.items.length > 0 ? (
-                    snapshot.spotify.items.map((item, index) => (
-                      <FullChartsItemRow key={item.id} item={item} index={index} lang={lang} />
-                    ))
-                  ) : (
-                    <div className="p-20 text-center text-slate-500 italic font-medium">
-                      {t("charts.empty")}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* YouTube */}
-          {showYoutube && (
-            <section className="space-y-8">
-              <div className="flex items-center justify-between px-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FFC2D1] text-white shadow-xl shadow-pink-100">
-                    <Youtube className="h-8 w-8" />
-                  </div>
+                <div className="card-premium overflow-hidden !rounded-[2.5rem]">
+                  <TableHeader col2Label={t("charts.trackInfo") as string} t={t} />
                   <div>
-                    <h2 className="text-3xl font-black uppercase tracking-tight text-slate-900">{t("charts.youtube.title")}</h2>
-                    <p className="text-xs font-bold uppercase tracking-widest text-pink-500">
-                      {snapshot.youtube.items.length} {t("charts.analyzed.video")}
-                    </p>
+                    {config.items.length > 0 ? (
+                      config.items.map((item, index) => (
+                        <FullChartsItemRow key={item.id} item={item} index={index} lang={lang} />
+                      ))
+                    ) : (
+                      <div className="p-20 text-center text-slate-500 italic font-medium">
+                        {t("charts.empty")}
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="text-right hidden sm:block">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{t("performance.totalViews")}</p>
-                  <p className="text-2xl font-black text-slate-900">
-                    {snapshot.youtube.totalValue?.toLocaleString() ?? "0"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="card-premium overflow-hidden !rounded-[2.5rem]">
-                <TableHeader col2Label={t("charts.videoInfo") as string} t={t} />
-                <div>
-                  {snapshot.youtube.items.length > 0 ? (
-                    snapshot.youtube.items.map((item, index) => (
-                      <FullChartsItemRow key={item.id} item={item} index={index} lang={lang} />
-                    ))
-                  ) : (
-                    <div className="p-20 text-center text-slate-500 italic font-medium">
-                      {t("charts.empty")}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </section>
-          )}
+              </section>
+            )
+          })}
         </div>
       </div>
     </main>
