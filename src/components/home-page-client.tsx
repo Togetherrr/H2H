@@ -10,6 +10,7 @@ import { HomeStatsSection } from "@/components/home-stats-section"
 import { TrackPerformanceSection } from "@/components/track-performance-section"
 import { TimelineSection } from "@/components/timeline-section"
 import { ComebackWatchHeader } from "@/components/comeback-watch-header"
+import { SpotlightNotice } from "@/components/spotlight-notice"
 import { Navbar, type TimeZone } from "@/components/navbar"
 import { useTranslation } from "@/hooks/useTranslation"
 import type { FilmFrame, TimelineEvent } from "@/lib/release-catalog"
@@ -53,7 +54,7 @@ export function HomePageClient({
 }: HomePageClientProps) {
   const { t } = useTranslation()
   const [timeZone, setTimeZone] = useState<TimeZone>("KST")
-  
+
   const officialFacts = [
     { key: "group", label: t("moments.fact.group"), value: officialProfile.groupName },
     { key: "company", label: t("moments.fact.company"), value: officialProfile.company },
@@ -76,7 +77,7 @@ export function HomePageClient({
       ),
     },
   ]
-  
+
   const currentYear = new Date().getFullYear()
 
   return (
@@ -92,6 +93,11 @@ export function HomePageClient({
         {/* ── Hero / Comeback ── */}
         <div id="comeback" className="reveal-up">
           <ComebackWatchHeader snapshot={homeStatsSnapshot} timeZone={timeZone} />
+        </div>
+
+        {/* ── Spotlight / Breaking News ── */}
+        <div className="mt-12">
+          <SpotlightNotice />
         </div>
 
         {/* ── Stats ── */}
@@ -153,7 +159,7 @@ export function HomePageClient({
                 <h3 className="text-title text-4xl">
                   {t("concept.members.title")}
                 </h3>
-                
+
                 <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
                   {memberProfiles.map((member) => (
                     <Link
@@ -235,34 +241,7 @@ export function HomePageClient({
         </div>
       </section>
 
-      {/* ── Join Section ── */}
-      <section id="join" className="section-shell mt-24 mb-24">
-        <div className="relative overflow-hidden rounded-[4rem] bg-gradient-to-br from-[#FFC2D1] to-[#A2D2FF] p-10 lg:p-24 text-center shadow-2xl shadow-pink-100">
-          <div className="relative z-10 max-w-2xl mx-auto space-y-10">
-            <div className="flex items-center justify-center gap-3 text-white">
-              <Waves className="size-6" />
-              <p className="text-[11px] font-black uppercase tracking-[0.5em]">{t("join.title")}</p>
-            </div>
-            <h2 className="text-5xl font-black uppercase text-white sm:text-7xl drop-shadow-lg">
-              {t("join.subtitle")}
-            </h2>
-            <p className="text-xl text-white/95 font-medium leading-relaxed">
-              {t("join.desc")}
-            </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto">
-              <input
-                type="email"
-                placeholder="skyline@h2h.vn"
-                className="h-16 flex-1 rounded-full border-none bg-white px-8 text-slate-800 shadow-xl outline-none"
-              />
-              <Button className="h-16 px-12 rounded-full bg-slate-900 text-white font-black uppercase tracking-widest hover:bg-slate-800 shadow-xl">
-                {t("join.subscribe")}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <footer className="section-shell pb-12">
         <div className="card-premium !rounded-[2.5rem] !bg-white/20 p-10 text-center">

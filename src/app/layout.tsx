@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Inter, Montserrat } from "next/font/google"
 import { Toaster } from "@/components/ui/sonner"
 import { ClientProvider } from "@/components/client-provider"
+import { NoticeBoard } from "@/components/notice-board"
 import { getActiveTheme, generateThemeStyle } from "@/lib/theme-service"
 import "./globals.css"
 
@@ -34,7 +35,10 @@ export default async function RootLayout({
         {themeCss && <style dangerouslySetInnerHTML={{ __html: themeCss }} />}
       </head>
       <body className={`${bodyFont.variable} ${displayFont.variable} antialiased`} suppressHydrationWarning>
-        <ClientProvider>{children}</ClientProvider>
+        <ClientProvider>
+          {children}
+          <NoticeBoard />
+        </ClientProvider>
         <Toaster position="top-right" richColors closeButton />
       </body>
     </html>
