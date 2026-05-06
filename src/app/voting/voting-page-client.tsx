@@ -18,7 +18,7 @@ import {
 } from "lucide-react"
 import { votingGuideContent, type VotingAppCategoryId, type VotingAppCardSection } from "@/lib/voting-guide"
 import { cn } from "@/lib/utils"
-import { getTranslation, type Language } from "@/i18n/translations"
+import { t } from "@/i18n/translations"
 
 // ─── Category config ─────────────────────────────────────────────────────────
 const CATEGORY_COLORS: Record<VotingAppCategoryId, { pill: string; dot: string; icon: string }> = {
@@ -88,7 +88,6 @@ function VotingAppCard({
   androidHref,
   iosHref,
   websiteHref,
-  t,
 }: {
   name: string
   badge?: string
@@ -98,7 +97,6 @@ function VotingAppCard({
   androidHref?: string
   iosHref?: string
   websiteHref?: string
-  t: any
 }) {
   const [expanded, setExpanded] = useState(true)
 
@@ -210,8 +208,7 @@ function VotingAppCard({
 }
 
 // ─── Main client component ────────────────────────────────────────────────────
-export function VotingPageClient({ lang }: { lang: Language }) {
-  const t = (key: any) => getTranslation(lang, key)
+export function VotingPageClient() {
   const [activeTab, setActiveTab] = useState<"guide" | "tracking">("guide")
   const [activeCategoryId, setActiveCategoryId] = useState<VotingAppCategoryId>("music_shows")
 
@@ -241,8 +238,8 @@ export function VotingPageClient({ lang }: { lang: Language }) {
             className={cn(
               "rounded-2xl px-8 py-4 text-[11px] font-black uppercase tracking-widest transition-all",
               activeTab === tab
-                ? "bg-[#FF3B57] text-white shadow-xl shadow-pink-200"
-                : "border border-white bg-white/40 text-slate-600 hover:bg-white/60"
+                ? "bg-[#FF3B57] text-white shadow-xl shadow-pink-100"
+                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
             )}
           >
             {tab === "guide" ? t("voting.guide") : t("voting.tracking")}
@@ -266,7 +263,7 @@ export function VotingPageClient({ lang }: { lang: Language }) {
                     "flex items-center gap-3 rounded-2xl border px-6 py-3.5 text-[11px] font-black uppercase tracking-widest transition-all",
                     isActive
                       ? colors.pill + " shadow-sm scale-105"
-                      : "border-white bg-white/40 text-slate-500 hover:bg-white/60"
+                      : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
                   )}
                 >
                   <CategoryIcon id={c.id} className={isActive ? colors.icon : "text-slate-400"} />
@@ -291,8 +288,8 @@ export function VotingPageClient({ lang }: { lang: Language }) {
               {t(`voting.category.${activeCategoryId}`)} —{" "}
               {apps.length}{" "}
               {apps.length === 1
-                ? (t("voting.appCount") as string).replace("{count}", "")
-                : (t("voting.appsCount") as string).replace("{count}", "")}
+                ? t("voting.appCount").replace("{count}", "")
+                : t("voting.appsCount").replace("{count}", "")}
             </p>
           </div>
 
@@ -309,7 +306,6 @@ export function VotingPageClient({ lang }: { lang: Language }) {
                 androidHref={app.androidHref}
                 iosHref={app.iosHref}
                 websiteHref={app.websiteHref}
-                t={t}
               />
             ))}
 

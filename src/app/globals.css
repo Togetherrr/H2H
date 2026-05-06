@@ -49,14 +49,18 @@
     scroll-behavior: smooth;
     color-scheme: dark;
     background-color: #0a0f1e;
+    /* Slightly larger, responsive base font for better readability */
+    font-size: clamp(16px, 0.6vw + 13.5px, 18px);
   }
 
   body {
     @apply text-foreground;
     font-family: var(--font-body), sans-serif;
+    font-size: 1rem;
+    line-height: 1.65;
     min-height: 100vh;
     /* Album art full-page background */
-    background-color: #0a0f1e;
+    background-color: #1a2238;
     background-image: var(--bg-album-art, url('/background.jpg'));
     background-size: cover;
     background-position: center center;
@@ -71,15 +75,16 @@
     position: fixed;
     inset: 0;
     background: linear-gradient(160deg,
-        rgba(8, 12, 28, 0.25) 0%,
-        rgba(10, 15, 35, 0.23) 50%,
-        rgba(12, 18, 40, 0.30) 100%);
+        rgba(30, 58, 138, 0.1) 0%,
+        rgba(15, 23, 42, 0.05) 50%,
+        rgba(30, 58, 138, 0.12) 100%);
+    backdrop-filter: blur(8px);
     pointer-events: none;
     z-index: 0;
   }
 
   /* All page content sits above the overlay */
-  body>* {
+  body>*:not(#ambient-layer):not(.fixed) {
     position: relative;
     z-index: 1;
   }
@@ -99,31 +104,91 @@
 
 @layer utilities {
 
-  /* ── Glass Panels — dark version ── */
+  /* ── Glass Panels ── */
+  /* Ambient Theme Layer (universal) */
+  :root {
+    --ambient-x: 0.5;
+    --ambient-y: 0.35;
+  }
+
+  .ambient-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.9;
+    background:
+      radial-gradient(
+        900px circle at calc(var(--ambient-x) * 100%) calc(var(--ambient-y) * 100%),
+        rgba(255, 255, 255, 0.08) 0%,
+        rgba(91, 184, 245, 0.08) 20%,
+        rgba(242, 82, 122, 0.05) 45%,
+        rgba(0, 0, 0, 0) 70%
+      );
+  }
+
+  .ambient-layer--orbs::before {
+    content: "";
+    position: absolute;
+    inset: -10%;
+    background:
+      radial-gradient(600px circle at 15% 25%, rgba(91, 184, 245, 0.12), rgba(0, 0, 0, 0) 60%),
+      radial-gradient(520px circle at 85% 20%, rgba(255, 194, 209, 0.10), rgba(0, 0, 0, 0) 62%),
+      radial-gradient(700px circle at 70% 90%, rgba(91, 184, 245, 0.08), rgba(0, 0, 0, 0) 65%);
+    filter: blur(2px);
+    transform: translate3d(0, 0, 0);
+    animation: ambient-drift 18s ease-in-out infinite alternate;
+  }
+
+  .ambient-layer--grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.08;
+    mix-blend-mode: overlay;
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        rgba(255, 255, 255, 0.06) 0px,
+        rgba(255, 255, 255, 0.06) 1px,
+        rgba(0, 0, 0, 0) 2px,
+        rgba(0, 0, 0, 0) 4px
+      );
+    animation: ambient-grain 2.2s steps(2) infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ambient-layer,
+    .ambient-layer::before,
+    .ambient-layer::after {
+      animation: none !important;
+    }
+  }
+
   .glass-panel {
-    background: rgba(255, 255, 255, 0.05);
-    @apply border border-white/10 backdrop-blur-xl;
+    background: linear-gradient(135deg, rgba(255, 240, 245, 0.9), rgba(255, 222, 233, 0.95));
+    @apply border border-white/60 backdrop-blur-xl shadow-sm;
   }
 
   .glass-pink {
-    background: linear-gradient(135deg, rgba(255, 194, 209, 0.08), rgba(255, 255, 255, 0.04));
-    @apply border border-pink-300/15 backdrop-blur-xl;
+    background: linear-gradient(135deg, #FFF0F5, #FFD1DC);
+    @apply border border-white/60 backdrop-blur-xl shadow-sm;
   }
 
   .glass-blue {
-    background: linear-gradient(135deg, rgba(91, 184, 245, 0.08), rgba(255, 255, 255, 0.04));
-    @apply border border-sky-300/15 backdrop-blur-xl;
+    background: linear-gradient(135deg, rgba(91, 184, 245, 0.1), rgba(255, 255, 255, 0.95));
+    @apply border border-sky-100/60 backdrop-blur-xl shadow-sm;
   }
 
   /* ── Card ── */
   .card-premium {
-    background: rgba(255, 255, 255, 0.06);
-    @apply rounded-[3rem] border border-white/10 backdrop-blur-2xl shadow-[0_32px_80px_rgb(0_0_0_/_40%)] transition-all duration-500;
+    background: linear-gradient(135deg, #FFF0F5 0%, #FFD1DC 100%);
+    @apply rounded-[3rem] border border-white/60 shadow-[0_20px_50px_rgba(255,182,193,0.15)] transition-all duration-500;
   }
 
   .card-premium:hover {
-    background: rgba(255, 255, 255, 0.09);
-    @apply -translate-y-2 shadow-[0_40px_100px_rgb(0_0_0_/_50%)] border-sky-400/20;
+    background: linear-gradient(135deg, #FFD1DC 0%, #FFB6C1 100%);
+    @apply -translate-y-2 shadow-[0_30px_70px_rgba(255,182,193,0.25)] border-white;
   }
 
   /* ── Hero Section ── */
@@ -144,6 +209,11 @@
     @apply font-black tracking-tighter;
   }
 
+  .section-title {
+    @apply text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-[0.2em] text-black drop-shadow-sm leading-none;
+    font-family: var(--font-display), sans-serif;
+  }
+
   .text-body {
     color: hsl(var(--text-body));
     font-family: var(--font-body), sans-serif;
@@ -161,13 +231,32 @@
     max-width: 80rem;
     margin: 0 auto;
     width: 100%;
-    padding: 5rem 1.5rem;
+    padding: clamp(3.75rem, 6vw, 5.25rem) clamp(1rem, 3vw, 1.5rem);
   }
 
   /* ── Badges ── */
   .pill-base {
-    @apply inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.3em];
+    @apply inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.3em];
     font-family: var(--font-display), sans-serif;
+  }
+
+  /* â”€â”€ Minimum Readable Label Sizes â”€â”€ */
+  /* Tailwind arbitrary font-size utilities (e.g. text-[10px]) are used in many places.
+     These overrides lift ultra-small labels site-wide to keep typography readable and consistent. */
+  .text-\[8px\] {
+    font-size: 10px !important;
+  }
+
+  .text-\[9px\] {
+    font-size: 11px !important;
+  }
+
+  .text-\[10px\] {
+    font-size: 12px !important;
+  }
+
+  .text-\[11px\] {
+    font-size: 13px !important;
   }
 
   .pill-sky {
@@ -200,6 +289,20 @@
   .delay-4 {
     animation-delay: 0.4s;
   }
+
+  .animate-marquee {
+    animation: marquee 20s linear infinite;
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 @keyframes reveal-up {
@@ -208,6 +311,26 @@
     transform: translateY(0);
   }
 }
+
+@keyframes ambient-drift {
+  0% {
+    transform: translate3d(-1.5%, -1%, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(1.5%, 1%, 0) scale(1.03);
+  }
+}
+
+@keyframes ambient-grain {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-1%, 1%, 0);
+  }
+}
+
+
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {

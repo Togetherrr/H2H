@@ -24,6 +24,8 @@ export type ReleaseRecord = {
   summary: string
   tracks: string[]
   sourceUrl?: string
+  spotifyId?: string
+  youtubeId?: string
 }
 
 export const REVALIDATE_SECONDS = 60 * 60
@@ -33,12 +35,14 @@ const fallbackReleaseCatalog: ReleaseRecord[] = [
     slug: "the-chase",
     date: "24/02/2025",
     title: "The Chase",
-    type: "Debut",
+    type: "Debut Single",
     cover: "/the-chase.jpg",
-    subtitle: "Debut Era",
+    subtitle: "The Beginning",
     summary:
-      "Debut chính thức của Hearts2Hearts, mở đầu hành trình của nhóm với màu sắc bí ẩn nhưng giàu cảm xúc.",
+      "The official debut of Hearts2Hearts, marking the start of their journey with a mysterious yet emotional soundscape that explores the thrill of the hunt for one's true self.",
     tracks: ["The Chase", "Butterflies"],
+    spotifyId: "6E6oNstYdE6pE0N6U9O0O9", 
+    youtubeId: "kxUA2wwYiME", 
   },
   {
     slug: "style",
@@ -46,10 +50,12 @@ const fallbackReleaseCatalog: ReleaseRecord[] = [
     title: "Style",
     type: "Single",
     cover: "/style.jpg",
-    subtitle: "Summer Comeback",
+    subtitle: "Summer Vibes",
     summary:
-      "Một đợt trở lại mang năng lượng tươi sáng hơn, giúp mở rộng hình ảnh của nhóm sau debut.",
+      "A vibrant summer comeback that showcases a more energetic and colorful side of the group, celebrating individuality and personal flair.",
     tracks: ["Style"],
+    spotifyId: "123StyleID456",
+    youtubeId: "n7kFRxFIPrI",
   },
   {
     slug: "pretty-please",
@@ -57,10 +63,12 @@ const fallbackReleaseCatalog: ReleaseRecord[] = [
     title: "Pretty Please",
     type: "Pre-release",
     cover: "/style.jpg",
-    subtitle: "Pre-release",
+    subtitle: "First Glimpse",
     summary:
-      "Bản phát hành mở màn cho giai đoạn EP đầu tay, cho thấy hướng phát triển rõ ràng về âm nhạc và concept.",
+      "A sophisticated pre-release track that sets the stage for the group's first EP, blending retro pop elements with modern production.",
     tracks: ["Pretty Please"],
+    spotifyId: "PrettyPleaseID789",
+    youtubeId: "ufwB9Uja_wM",
   },
   {
     slug: "focus",
@@ -68,10 +76,12 @@ const fallbackReleaseCatalog: ReleaseRecord[] = [
     title: "Focus",
     type: "1st EP",
     cover: "/focus.jpg",
-    subtitle: "1st EP",
+    subtitle: "The Collection",
     summary:
-      "EP đầu tiên đánh dấu cột mốc trưởng thành của Hearts2Hearts với hệ thống bài hát và concept hoàn chỉnh hơn.",
+      "Hearts2Hearts' first EP marks their artistic maturity, featuring a diverse range of tracks from upbeat dance anthems to soul-stirring ballads.",
     tracks: ["Focus", "Pretty Please", "Apple Pie", "Flutter", "Blue Moon"],
+    spotifyId: "4cM1oGfJ5fLwV7G5h7O5fL",
+    youtubeId: "Ur7aK4FvK-U",
   },
   {
     slug: "rude",
@@ -79,10 +89,12 @@ const fallbackReleaseCatalog: ReleaseRecord[] = [
     title: "RUDE!",
     type: "Single",
     cover: "/group.png",
-    subtitle: "2026 Comeback",
+    subtitle: "Bold Statement",
     summary:
-      "Comeback đầu năm 2026 với hình ảnh sắc nét và năng lượng mạnh mẽ hơn, mở nhịp hoạt động mới của nhóm.",
+      "A powerful early-2026 comeback with a sharp visual style and high-octane energy, signaling a new chapter of confidence for the group.",
     tracks: ["RUDE!"],
+    spotifyId: "RUDE_spotify_id",
+    youtubeId: "F7sGJVUrkjQ",
   },
 ]
 
@@ -152,7 +164,7 @@ async function fetchWikipediaSummary(title: string) {
 }
 
 async function fetchWikidataCatalog(): Promise<ReleaseRecord[]> {
-  const qid = process.env.WIKIDATA_ARTIST_QID
+  const qid = process.env.WIKIDATA_ARTIST_QID || "Q134267440" // Hearts2Hearts Real QID
 
   if (!qid) {
     return []

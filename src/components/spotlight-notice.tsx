@@ -7,7 +7,7 @@ import { ALL_NOTICES } from "@/lib/notices"
 import { cn } from "@/lib/utils"
 
 export function SpotlightNotice() {
-  const { t, lang } = useTranslation()
+  const { t } = useTranslation()
 
   // Get top 3 important notices
   const displayNotices = ALL_NOTICES.slice(0, 3)
@@ -15,92 +15,61 @@ export function SpotlightNotice() {
   if (displayNotices.length === 0) return null
 
   return (
-    <div className="w-full max-w-6xl mx-auto mb-12 animate-in fade-in slide-in-from-top-4 duration-1000 print:hidden">
+    <div className="w-full max-w-5xl mx-auto mb-20 animate-in fade-in slide-in-from-top-6 duration-1000 print:hidden px-4">
       {/* Section Header */}
-      <div className="flex items-center justify-between mb-8 px-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FFC2D1] text-[#FF708A] shadow-sm">
-            <Megaphone className="size-4" />
+      <div className="relative z-30 flex items-center justify-between mb-8 px-2">
+        <div className="flex items-center gap-5">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FFF0F5] to-[#FFD1DC] text-[#FF708A] shadow-xl border border-white">
+            <Megaphone className="size-7" />
           </div>
-          <h2 className="text-[13px] font-black uppercase tracking-[0.3em] text-slate-900">
-            {t("notice.allNotices")}
+          <h2 className="section-title">
+            {t("notice.title")}
           </h2>
         </div>
-        
-        {ALL_NOTICES.length > 3 && (
-          <Link 
-            href="/notices"
-            className="group flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-[#FF708A] transition-all hover:text-[#E05670]"
-          >
-            {t("notice.viewMore")}
-            <ArrowRight className="size-3 transition-transform group-hover:translate-x-1" />
-          </Link>
-        )}
+
       </div>
 
-      {/* Grid of 3 Small Notices */}
-      <div className="grid gap-6 md:grid-cols-3">
+      {/* Stack of Narrow Horizontal Notices */}
+      <div className="flex flex-col gap-4">
         {displayNotices.map((notice) => (
-          <div 
+          <a
             key={notice.id}
-            className="group relative flex flex-col rounded-[2rem] border border-white bg-white/50 p-6 shadow-sm backdrop-blur-md transition-all duration-500 hover:-translate-y-2 hover:bg-white hover:shadow-xl"
+            href={notice.link || "#"}
+            target={notice.link?.startsWith('http') ? "_blank" : undefined}
+            rel={notice.link?.startsWith('http') ? "noreferrer" : undefined}
+            className="card-premium group relative z-10 flex items-center gap-6 p-4 md:p-6 !rounded-3xl shadow-pink-200/10 hover:-translate-y-1 cursor-pointer"
           >
-            {notice.isPinned && (
-              <div className="absolute top-4 right-6 flex items-center gap-1 text-[8px] font-black uppercase tracking-tighter text-[#FF708A]">
-                <Sparkles className="size-2.5 fill-current" />
-                {t("notice.pin")}
-              </div>
-            )}
-
-            <div className="flex items-center gap-3 mb-4">
-              <div className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-xl text-white shadow-sm",
-                notice.type === 'comeback' ? "bg-[#FF708A]" : 
-                notice.type === 'company' ? "bg-slate-900" : "bg-[#A2D2FF]"
-              )}>
-                {notice.type === "comeback" ? <ShoppingCart className="size-4" /> : 
-                 notice.type === "company" ? <Megaphone className="size-4" /> : 
-                 <Info className="size-4" />}
-              </div>
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{notice.date.replace(/-/g, '.')}</span>
+            {/* Icon Column */}
+            <div className={cn(
+              "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-[#FF708A] shadow-lg border border-white/20"
+            )}>
+              {notice.type === "comeback" ? <ShoppingCart className="size-6" /> :
+                notice.type === "company" ? <Megaphone className="size-6" /> :
+                  <Info className="size-6" />}
             </div>
 
-            <h3 className="text-[14px] font-black text-slate-950 uppercase tracking-tight leading-tight mb-3 group-hover:text-[#FF708A] transition-colors line-clamp-2">
-              {lang === 'vi' ? notice.title_vi : notice.title_en}
-            </h3>
-
-            <p className="text-[12px] text-slate-600 leading-relaxed mb-6 line-clamp-3">
-              {lang === 'vi' ? notice.content_vi : notice.content_en}
-            </p>
-
-            {notice.link && (
-              <div className="mt-auto pt-4 border-t border-slate-100/50">
-                <a 
-                  href={notice.link}
-                  target={notice.link.startsWith('http') ? "_blank" : undefined}
-                  rel={notice.link.startsWith('http') ? "noreferrer" : undefined}
-                  className="flex items-center justify-between group/link"
-                >
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 group-hover/link:text-[#FF708A] transition-colors">
-                    {lang === 'vi' ? (notice.linkText_vi || t("notice.viewDetail")) : (notice.linkText_en || t("notice.viewDetail"))}
+            {/* Content Column */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-1">
+                <span className="text-[9px] font-black text-white opacity-70 uppercase tracking-widest">{notice.date.replace(/-/g, '.')}</span>
+                {notice.isPinned && (
+                  <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-[#FF708A] bg-white px-2 py-0.5 rounded-full">
+                    <Sparkles className="size-2 fill-current" />
+                    {t("notice.pin")}
                   </span>
-                  <ExternalLink className="size-3.5 text-slate-300 group-hover/link:text-[#FF708A] transition-colors" />
-                </a>
+                )}
               </div>
-            )}
-          </div>
-        ))}
-      </div>
+              <h3 className="text-[15px] md:text-[17px] font-black text-black uppercase tracking-tight leading-tight truncate group-hover:text-white transition-colors">
+                {notice.title_en}
+              </h3>
+            </div>
 
-      {/* Mobile View All Button */}
-      <div className="mt-8 flex justify-center md:hidden">
-        <Link 
-          href="/notices"
-          className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/50 px-8 py-3 text-[11px] font-black uppercase tracking-widest text-slate-600 transition-all hover:bg-white"
-        >
-          {t("notice.viewMore")}
-          <ArrowRight className="size-4" />
-        </Link>
+            {/* Action Column */}
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 border border-white/20 text-black group-hover:bg-white group-hover:text-[#FF708A] transition-all">
+              <ExternalLink className="size-4" />
+            </div>
+          </a>
+        ))}
       </div>
     </div>
   )
