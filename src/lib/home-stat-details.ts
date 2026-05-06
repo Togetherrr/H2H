@@ -28,7 +28,7 @@ export type HomeStatDetailPage = {
   eyebrow: string
   title: string
   summary: string
-  total: string
+  total: number
   totalLabel: string
   sourceLabel: string
   sourceHref: string
@@ -253,7 +253,7 @@ async function getDebutDaysDetail(): Promise<HomeStatDetailPage> {
     title: "Days since debut",
     summary:
       "A timeline-style overview of the group's debut anchor and the releases that followed, designed so you can keep adding future milestones without restructuring the page.",
-    total: daysSinceDebut.toLocaleString(),
+    total: daysSinceDebut,
     totalLabel: "days counted from February 24, 2025",
     sourceLabel: "Wikipedia - Hearts2Hearts",
     sourceHref: "https://en.wikipedia.org/wiki/Hearts2Hearts",
@@ -301,7 +301,7 @@ async function getAlbumProjectsDetail(): Promise<HomeStatDetailPage> {
     title: "Album projects",
     summary:
       "A scalable release index for album-format projects. As more albums, EPs, or similar packages are added, this page can continue listing them without changing the layout.",
-    total: albumProjects.length.toLocaleString(),
+    total: albumProjects.length,
     totalLabel: "album-format projects tracked",
     sourceLabel: "Discography references",
     sourceHref: "https://en.wikipedia.org/wiki/Hearts2Hearts#Discography",
@@ -333,7 +333,7 @@ function getMusicShowWinsDetail(): HomeStatDetailPage {
     title: "Music show wins",
     summary:
       "A two-layer detail page that can scale as new songs win across more programs: first by song, then by show, followed by a complete win log.",
-    total: musicShowWins.length.toLocaleString(),
+    total: musicShowWins.length,
     totalLabel: "weekly music show trophies verified",
     sourceLabel: "Soompi win reports",
     sourceHref: "https://www.soompi.com",
@@ -379,7 +379,7 @@ function getAwardCeremonyWinsDetail(): HomeStatDetailPage {
     title: "Award ceremony wins",
     summary:
       "A clean trophy archive focused on group wins only. The structure supports future growth by grouping first by ceremony and then listing each winning category in full.",
-    total: awardCeremonyWins.length.toLocaleString(),
+    total: awardCeremonyWins.length,
     totalLabel: "group award-ceremony wins tracked",
     sourceLabel: "Wikipedia accolades snapshot",
     sourceHref: "https://en.wikipedia.org/wiki/Hearts2Hearts#Accolades",

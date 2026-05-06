@@ -1,26 +1,27 @@
 import type { Metadata } from "next"
-import { Inter, Montserrat } from "next/font/google"
+import { Baloo_2 } from "next/font/google"
 import { Toaster } from "@/components/ui/sonner"
 import { ClientProvider } from "@/components/client-provider"
 import { NoticeBoard } from "@/components/notice-board"
+import { AmbientLayer } from "@/components/ambient-layer"
 import { getActiveTheme, generateThemeStyle } from "@/lib/theme-service"
 import "./globals.css"
 
-const bodyFont = Inter({
+const bodyFont = Baloo_2({
   subsets: ["latin", "vietnamese"],
   variable: "--font-body",
   weight: ["400", "500", "600", "700"],
 })
 
-const displayFont = Montserrat({
+const displayFont = Baloo_2({
   subsets: ["latin", "vietnamese"],
   variable: "--font-display",
-  weight: ["400", "700", "900"],
+  weight: ["700", "800"],
 })
 
 export const metadata: Metadata = {
   title: "Hearts2Hearts | Official Fan Home",
-  description: "Không gian trải nghiệm dành riêng cho S2U với sắc màu Baby Blue & Baby Pink.",
+  description: "An official fan home for S2U with a Baby Blue and Baby Pink visual theme.",
 }
 
 export default async function RootLayout({
@@ -30,11 +31,12 @@ export default async function RootLayout({
   const themeCss = generateThemeStyle(activeTheme)
 
   return (
-    <html lang="vi" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         {themeCss && <style dangerouslySetInnerHTML={{ __html: themeCss }} />}
       </head>
       <body className={`${bodyFont.variable} ${displayFont.variable} antialiased`} suppressHydrationWarning>
+        <AmbientLayer effects={activeTheme?.config?.effects} />
         <ClientProvider>
           {children}
           <NoticeBoard />

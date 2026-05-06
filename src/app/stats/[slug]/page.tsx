@@ -47,7 +47,7 @@ export default async function StatDetailPage({ params }: StatDetailPageProps) {
 
             <aside className="rounded-[1.5rem] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(230,244,255,0.84))] p-5 shadow-[0_16px_40px_rgba(87,145,188,0.12)]">
               <p className="text-[11px] uppercase tracking-[0.24em] text-sky-700/75">Current total</p>
-              <p className="mt-3 text-5xl font-light tracking-tight text-slate-950">{detail.total}</p>
+              <p className="mt-3 text-5xl font-light tracking-tight text-slate-950">{detail.total.toLocaleString()}</p>
               <p className="mt-2 text-sm text-slate-600">{detail.totalLabel}</p>
 
               <div className="mt-5 rounded-[1.2rem] border border-white/80 bg-white/75 p-4">

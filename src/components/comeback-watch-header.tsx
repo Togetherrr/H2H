@@ -51,7 +51,7 @@ export function ComebackWatchHeader({
   snapshot: HomeStatsSnapshot,
   timeZone?: TimeZone
 }) {
-  const { t, lang } = useTranslation()
+  const { t } = useTranslation()
   const [countdown, setCountdown] = useState<CountdownParts | null>(null)
 
   useEffect(() => {
@@ -70,12 +70,11 @@ export function ComebackWatchHeader({
     ? (() => {
         const parsed = parseIsoDate(releaseAt)
         if (!parsed) return releaseAt
-        const locale = lang === "vi" ? "vi-VN" : "en-GB"
         const options: Intl.DateTimeFormatOptions = {
           month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false,
           timeZone: timeZone === "LOCAL" ? undefined : timeZone === "EDT" ? "America/New_York" : timeZone === "KST" ? "Asia/Seoul" : "UTC"
         }
-        return new Intl.DateTimeFormat(locale, options).format(parsed).toUpperCase() + ` ${timeZone}`
+        return new Intl.DateTimeFormat("en-GB", options).format(parsed).toUpperCase() + ` ${timeZone}`
       })()
     : null
 
@@ -88,66 +87,63 @@ export function ComebackWatchHeader({
 
   return (
     /* Hero: just provides vertical spacing + centering — body::before handles the global overlay */
-    <section className="relative min-h-[80vh] flex flex-col justify-center items-center pt-28 pb-24">
-      <div className="w-full max-w-4xl px-6 flex flex-col items-center text-center">
+    <section className="relative min-h-[75vh] flex flex-col justify-center items-center pt-32 pb-12 px-6">
+      <div className="w-full max-w-6xl flex flex-col items-center text-center">
 
         {/* Status Badge */}
-        <div className="mb-8 flex items-center gap-2 rounded-full border border-white/15 bg-white/8 backdrop-blur-md px-6 py-2.5">
+        <div className="mb-10 flex items-center gap-2 rounded-full border border-white/60 bg-white/40 px-6 py-2.5 shadow-xl backdrop-blur-md">
           <span className="relative flex h-2 w-2">
             <span className={cn(
               "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
-              hasComeback ? "bg-sky-400" : "bg-white/30"
+              hasComeback ? "bg-[#FF708A]" : "bg-slate-400"
             )} />
             <span className={cn(
               "relative inline-flex h-2 w-2 rounded-full",
-              hasComeback ? "bg-sky-400" : "bg-white/30"
+              hasComeback ? "bg-[#FF708A]" : "bg-slate-400"
             )} />
           </span>
-          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/70">
+          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black">
             {hasComeback ? t("home.comeback.active") : t("home.comeback.standby")}
           </span>
         </div>
 
         {/* Album Subtitle */}
-        <p className="text-[12px] font-black tracking-[0.3em] text-sky-300 uppercase mb-4">
+        <p className="text-[14px] font-black tracking-[0.4em] text-[#FF708A] uppercase mb-6 drop-shadow-sm">
           {hasComeback ? `#${(albumTitle as string).replace(/\s+/g, '')}` : t("home.comeback.preparing")}
         </p>
 
         {/* Main Date Display */}
         <h2 className={cn(
-          "font-black tracking-tighter text-4xl leading-none sm:text-6xl lg:text-7xl xl:text-8xl uppercase text-white drop-shadow-2xl",
-          !hasComeback && "italic text-white/60"
+          "font-black tracking-tighter text-5xl leading-none sm:text-7xl lg:text-8xl xl:text-9xl uppercase text-black drop-shadow-[0_10px_25px_rgba(255,255,255,0.4)]",
+          !hasComeback && "italic text-black/30"
         )}>
           {hasComeback ? formattedDate : t("voting.comingSoon")}
         </h2>
 
-        {/* Countdown */}
-        <div className="mt-12 flex items-center justify-center gap-3 sm:gap-8">
+        {/* Countdown - Individual Floating Cards */}
+        <div className="mt-16 grid grid-cols-2 md:flex items-center justify-center gap-4 sm:gap-6">
           {countdownItems.map((item, index) => (
-            <div key={index} className="flex items-center gap-3 sm:gap-8">
-              <div className="flex flex-col items-center">
-                <span className="font-mono font-black text-5xl tracking-tighter sm:text-7xl lg:text-8xl text-white drop-shadow-lg">
+            <div key={index} className="flex flex-col items-center">
+              <div className="flex size-24 sm:size-32 lg:size-40 flex-col items-center justify-center rounded-[2rem] bg-gradient-to-br from-[#FFF0F5] to-[#FFD1DC] border border-white shadow-2xl shadow-pink-500/5">
+                <span className="font-mono font-black text-4xl sm:text-5xl lg:text-7xl tracking-tighter text-black">
                   {pad2(item.value)}
                 </span>
-                <span className="mt-2 text-[9px] font-black tracking-[0.4em] text-sky-300 uppercase">
+                <span className="mt-1 text-[9px] font-black tracking-[0.3em] text-[#FF708A] uppercase">
                   {item.label}
                 </span>
               </div>
-              {index < 3 && (
-                <span className="mb-8 text-3xl font-black text-white/25 sm:text-5xl lg:text-6xl">:</span>
-              )}
             </div>
           ))}
         </div>
 
         {/* Action Buttons */}
         {hasComeback && (
-          <div className="mt-12 flex flex-wrap items-center justify-center gap-6">
+          <div className="mt-16 flex flex-wrap items-center justify-center gap-6">
             <button className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#FF99AC] to-[#FF708A] px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white shadow-xl shadow-pink-500/25 transition-all hover:scale-105 hover:shadow-2xl">
               <ShoppingCart className="size-4" />
               <span>{t("home.comeback.preOrder")}</span>
             </button>
-            <button className="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/8 backdrop-blur-md px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white transition-all hover:bg-white/15 hover:scale-105">
+            <button className="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white transition-all hover:bg-white/25 hover:scale-105">
               <Music className="size-4" />
               {t("home.comeback.preSave")}
             </button>

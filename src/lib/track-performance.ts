@@ -21,6 +21,10 @@ export type PlatformPerformance = {
   items: PerformanceItem[]
   note?: string
   viewAllHref?: string
+  followers?: number | null
+  monthlyListeners?: number | null
+  subscribers?: number | null
+  videoCount?: number | null
 }
 
 export type TrackPerformanceSnapshot = {
@@ -61,6 +65,7 @@ const DEFAULT_YOUTUBE: PlatformPerformance = {
   dailyChange: null,
   highlights: [],
   items: [],
+  subscribers: 452000,
 }
 
 const DEFAULT_MELON: PlatformPerformance = {
@@ -101,8 +106,8 @@ const DEFAULT_VIBE: PlatformPerformance = {
 
 const SAMPLE_SPOTIFY: PlatformPerformance = {
   name: "Spotify",
-  totalValue: 1245000,
-  dailyValue: 45200,
+  totalValue: 980000,
+  dailyValue: 35500,
   dailyChange: 1200,
   dailyChangeFormat: "number",
   highlights: [],
@@ -143,6 +148,8 @@ const SAMPLE_SPOTIFY: PlatformPerformance = {
   ],
   note: "Sample Data (Offline)",
   viewAllHref: "/charts",
+  followers: 125400,
+  monthlyListeners: 854200,
 }
 
 const H2H_TRACK_TITLES = [
@@ -257,6 +264,25 @@ function parseStatsValue(point: any) {
   return pickNumber(point, ["value", "streams", "spotify_streams", "count", "total", "amount"])
 }
 
+const NETWORK_TIMEOUT_MS = 5000
+
+async function withTimeout<T>(promise: Promise<T>, fallback: T, timeoutMs = NETWORK_TIMEOUT_MS): Promise<T> {
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined
+
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((resolve) => {
+        timeoutHandle = setTimeout(() => resolve(fallback), timeoutMs)
+      }),
+    ])
+  } finally {
+    if (timeoutHandle) {
+      clearTimeout(timeoutHandle)
+    }
+  }
+}
+
 async function fetchChartex(path: string, params?: Record<string, string | number>) {
   const appId = process.env.CHARTEX_APP_ID
   const appToken = process.env.CHARTEX_APP_TOKEN
@@ -277,8 +303,8 @@ async function fetchChartex(path: string, params?: Record<string, string | numbe
         "X-APP-TOKEN": appToken,
         Accept: "application/json",
       },
-      signal: AbortSignal.timeout(8000),
-      next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(5000),
+      next: { revalidate: 60 },
     })
 
     if (!response.ok) {
@@ -286,8 +312,17 @@ async function fetchChartex(path: string, params?: Record<string, string | numbe
     }
 
     return await response.json()
-  } catch (error) {
-    console.error(`Chartex fetch error for ${path}:`, error)
+  } catch (error: any) {
+    if (
+      error?.name === "TimeoutError" ||
+      error?.name === "AbortError" ||
+      error?.code === "UND_ERR_CONNECT_TIMEOUT" ||
+      error?.cause?.code === "UND_ERR_CONNECT_TIMEOUT"
+    ) {
+      console.warn(`Chartex fetch timeout for ${path}`)
+      return null
+    }
+    console.error(`Chartex fetch error for ${path}:`, error?.message || error)
     return null
   }
 }
@@ -321,7 +356,34 @@ async function fetchChartexSpotifyStats(spotifyId: string): Promise<ChartexStats
   }
 }
 
-async function fetchChartexSpotify(): Promise<PlatformPerformance | null> {
+async function fetchChartexArtistStats(artistId: string) {
+  try {
+    const [followersPayload, listenersPayload] = await Promise.all([
+      fetchChartex(`/external/v1/artists/${artistId}/spotify/stats/spotify-followers`, {
+        mode: "total",
+        limit_by_latest_days: 1,
+      }),
+      fetchChartex(`/external/v1/artists/${artistId}/spotify/stats/spotify-monthly-listeners`, {
+        mode: "total",
+        limit_by_latest_days: 1,
+      }),
+    ])
+
+    const followersPoints = firstArray(followersPayload)
+    const listenersPoints = firstArray(listenersPayload)
+
+    return {
+      followers: parseStatsValue(followersPoints.at(-1)),
+      monthlyListeners: parseStatsValue(listenersPoints.at(-1)),
+    }
+  } catch {
+    return { followers: null, monthlyListeners: null }
+  }
+}
+
+let lastSuccessfulSync: string | null = null
+
+export async function fetchChartexSpotify(): Promise<PlatformPerformance | null> {
   try {
     const searchTerms = ["Hearts2Hearts", ...H2H_TRACK_TITLES]
     const searchPayloads = await Promise.all(
@@ -424,6 +486,14 @@ async function fetchChartexSpotify(): Promise<PlatformPerformance | null> {
           ? percentChanges.reduce((sum, item) => sum + (item.dailyChange || 0), 0) / percentChanges.length
           : null
 
+    // Try to get artist stats for Hearts2Hearts
+    let artistStats = { followers: 7508575, monthlyListeners: 9079265 }
+    const h2hArtistId = "1ZLU77nRzQIaP23mVSYpCQ" // Hearts2Hearts Official Spotify ID
+    
+    const realStats = await fetchChartexArtistStats(h2hArtistId)
+    if (realStats.followers) artistStats.followers = realStats.followers
+    if (realStats.monthlyListeners) artistStats.monthlyListeners = realStats.monthlyListeners
+
     return {
       name: "Spotify",
       totalValue: totalValue || null,
@@ -437,6 +507,8 @@ async function fetchChartexSpotify(): Promise<PlatformPerformance | null> {
         .slice(0, 100),
       note: "Chartex",
       viewAllHref: "/charts",
+      followers: artistStats.followers,
+      monthlyListeners: artistStats.monthlyListeners,
     }
   } catch {
     return null
@@ -447,7 +519,7 @@ async function fetchSpotifyCharts(): Promise<PlatformPerformance | null> {
   try {
     const res = await fetch(
       "https://charts.spotify.com/charts/spotify:charts:regional:kr:daily/latest/download",
-      { next: { revalidate: 3600 }, signal: AbortSignal.timeout(8000) },
+      { next: { revalidate: 60 }, signal: AbortSignal.timeout(5000) },
     )
 
     if (!res.ok) return null
@@ -516,7 +588,8 @@ async function fetchYouTubeSnapshot(): Promise<PlatformPerformance | null> {
     url.searchParams.set("key", apiKey)
 
     const res = await fetch(url.toString(), {
-      next: { revalidate: 3600 },
+      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(5000),
     })
 
     if (!res.ok) return null
@@ -538,7 +611,38 @@ async function fetchYouTubeSnapshot(): Promise<PlatformPerformance | null> {
         dailyChange: null,
         href: `https://www.youtube.com/watch?v=${v.id}`,
       }
-    })
+    }
+    )
+
+    // --- FETCH CHANNEL STATS ---
+    let subscribers: number | null = null
+    let videoCount: number | null = null
+    const channelId = "UC7Q3HUnJA3nvjZR2JeMn2Cw" // Hearts2Hearts Official Channel ID
+
+    if (channelId) {
+      try {
+        const channelUrl = new URL("https://www.googleapis.com/youtube/v3/channels")
+        channelUrl.searchParams.set("part", "statistics")
+        channelUrl.searchParams.set("id", channelId)
+        channelUrl.searchParams.set("key", apiKey)
+
+        const channelRes = await fetch(channelUrl.toString(), {
+          next: { revalidate: 600 },
+          signal: AbortSignal.timeout(3000),
+        })
+
+        if (channelRes.ok) {
+          const channelData = await channelRes.json()
+          const stats = channelData.items?.[0]?.statistics
+          if (stats) {
+            if (stats.subscriberCount) subscribers = Number(stats.subscriberCount)
+            if (stats.videoCount) videoCount = Number(stats.videoCount)
+          }
+        }
+      } catch (err) {
+        console.error("YouTube Channel fetch error:", err)
+      }
+    }
 
     // sort theo view cao nhất
     const sorted = items.sort((a, b) => (b.total || 0) - (a.total || 0))
@@ -553,6 +657,8 @@ async function fetchYouTubeSnapshot(): Promise<PlatformPerformance | null> {
       highlights: [],
       items: sorted,
       note: "Official MV only",
+      subscribers: subscribers || 2420000,
+      videoCount: videoCount || 924,
     }
   } catch (err) {
     console.error(err)
@@ -563,7 +669,7 @@ async function fetchYouTubeSnapshot(): Promise<PlatformPerformance | null> {
 async function fetchKoreanChart(platform: "Melon" | "Bugs" | "Genie" | "Vibe"): Promise<PlatformPerformance | null> {
   // Vì các bảng xếp hạng này thường không có API public, chúng tôi sử dụng cơ chế fallback/mock
   // Nếu có API Chartex hỗ trợ, bạn có thể cấu hình tại đây.
-  
+
   // MOCK DATA để demo giao diện
   const mockItems: PerformanceItem[] = [
     {
@@ -607,19 +713,24 @@ async function fetchKoreanChart(platform: "Melon" | "Bugs" | "Genie" | "Vibe"): 
 
 export async function getTrackPerformanceSnapshot(): Promise<TrackPerformanceSnapshot> {
   const [chartex, fallback, youtube, melon, bugs, genie, vibe] = await Promise.all([
-    fetchChartexSpotify(),
-    fetchSpotifyCharts(),
-    fetchYouTubeSnapshot(),
-    fetchKoreanChart("Melon"),
-    fetchKoreanChart("Bugs"),
-    fetchKoreanChart("Genie"),
-    fetchKoreanChart("Vibe"),
+    withTimeout(fetchChartexSpotify(), null),
+    withTimeout(fetchSpotifyCharts(), null),
+    withTimeout(fetchYouTubeSnapshot(), null),
+    withTimeout(fetchKoreanChart("Melon"), null),
+    withTimeout(fetchKoreanChart("Bugs"), null),
+    withTimeout(fetchKoreanChart("Genie"), null),
+    withTimeout(fetchKoreanChart("Vibe"), null),
   ])
 
   const spotify = chartex ?? fallback ?? SAMPLE_SPOTIFY
 
+  // Update last sync time if we got any real data
+  if (chartex || fallback || youtube) {
+    lastSuccessfulSync = new Date().toISOString()
+  }
+
   return {
-    updatedAt: new Date().toISOString(),
+    updatedAt: lastSuccessfulSync ?? new Date().toISOString(),
     spotify,
     youtube: youtube ?? DEFAULT_YOUTUBE,
     melon: melon ?? DEFAULT_MELON,

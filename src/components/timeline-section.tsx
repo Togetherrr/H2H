@@ -3,18 +3,24 @@
 /* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Sparkles
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/useTranslation"
-import type { TranslationKey } from "@/i18n/translations"
 import type { TimelineEvent } from "../lib/release-catalog"
 
 type TimelineSectionProps = { events: TimelineEvent[] }
 type YearGroup = { year: string; events: TimelineEvent[] }
-type TStrFn = (key: TranslationKey) => string
+type TStrFn = (key: string) => string
 
-const INITIAL_VISIBLE_YEAR_GROUPS = 4
-const TIMELINE_TYPE_TRANSLATION_KEYS: Partial<Record<string, TranslationKey>> = {
+// --- Helpers ---
+const TIMELINE_TYPE_TRANSLATION_KEYS: Partial<Record<string, string>> = {
   debut: "timeline.type.debut",
   comeback: "timeline.type.comeback",
   "pre-release": "timeline.type.preRelease",
@@ -39,7 +45,7 @@ function groupEventsByYear(events: TimelineEvent[]): YearGroup[] {
   const sorted = [...events].sort((a, b) => parseTimelineDate(a.date) - parseTimelineDate(b.date))
   const grouped = sorted.reduce<Record<string, TimelineEvent[]>>((acc, ev) => {
     const year = getYear(ev.date)
-    ;(acc[year] ??= []).push(ev)
+      ; (acc[year] ??= []).push(ev)
     return acc
   }, {})
 
@@ -50,27 +56,11 @@ function groupEventsByYear(events: TimelineEvent[]): YearGroup[] {
 
 function getTimelineTypeLabel(type: string, tStr: TStrFn) {
   const translationKey = TIMELINE_TYPE_TRANSLATION_KEYS[type.trim().toLowerCase()] ?? "timeline.type.release"
-  return tStr(translationKey)
+  const translated = tStr(translationKey)
+  return translated === translationKey ? type : translated
 }
 
-function formatReleaseCount(
-  count: number,
-  singularLabel: string,
-  pluralLabel: string,
-) {
-  return `${count} ${count > 1 ? pluralLabel : singularLabel}`
-}
-
-const TYPE_PALETTE: Record<string, { bg: string; text: string }> = {
-  debut: { bg: "bg-sky-100", text: "text-sky-600" },
-  comeback: { bg: "bg-sky-100", text: "text-sky-600" },
-  "pre-release": { bg: "bg-slate-100", text: "text-slate-500" },
-  "1st ep": { bg: "bg-sky-100", text: "text-sky-600" },
-  ep: { bg: "bg-sky-100", text: "text-sky-600" },
-  single: { bg: "bg-slate-100", text: "text-slate-500" },
-  album: { bg: "bg-pink-100", text: "text-pink-600" },
-}
-
+// --- Components ---
 function TimelineCard({
   event,
   isNewest,
@@ -82,171 +72,252 @@ function TimelineCard({
   viewLabel: string
   tStr: TStrFn
 }) {
-  const palette = TYPE_PALETTE[event.type.toLowerCase()] ?? { bg: "bg-slate-100", text: "text-slate-600" }
   const typeLabel = getTimelineTypeLabel(event.type, tStr)
 
   return (
-    <li className="w-[280px] shrink-0 snap-start sm:w-[320px]">
-      <div className="mb-4 flex items-center gap-3">
+    <li className="w-[180px] shrink-0 snap-start sm:w-[220px] group/card">
+      <div className="mb-3 flex items-center gap-2.5 px-1">
         <div className={cn(
-          "size-2.5 rounded-full",
-          isNewest ? "bg-sky-400 animate-pulse" : "bg-white/20"
+          "size-1.5 rounded-full transition-all duration-300",
+          isNewest ? "bg-pink-500 animate-pulse ring-2 ring-pink-500/20" : "bg-slate-300"
         )} />
-        <span className="text-[11px] font-black uppercase tracking-widest text-white/40">{event.date}</span>
+        <span className="text-[8px] font-bold uppercase tracking-widest text-slate-400">
+          {event.date}
+        </span>
       </div>
 
       <Link
         href={`/albums/${event.slug}`}
-        className="group block overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-3 backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:border-sky-400/25 hover:bg-white/10 hover:shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
+        className="block relative aspect-square overflow-hidden rounded-[2rem] border border-white/60 bg-white/50 backdrop-blur-md p-1.5 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.08)]"
       >
-        <div className="relative aspect-square overflow-hidden rounded-[1.6rem]">
+        <div className="relative h-full w-full overflow-hidden rounded-[1.5rem]">
           <img
             src={event.cover}
             alt={event.title}
-            className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+            className="h-full w-full object-cover object-center transition-transform duration-700 group-hover/card:scale-110"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-          
-          <div className="absolute top-4 left-4">
-            <span className={cn(
-              "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md",
-              palette.bg,
-              palette.text
-            )}>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity" />
+          <div className="absolute top-2 left-2">
+            <span className="px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest bg-white text-slate-800 border border-slate-100 shadow-sm">
               {typeLabel}
             </span>
           </div>
         </div>
-
-        <div className="p-4">
-          <p className="text-[16px] font-black uppercase tracking-tight text-white group-hover:text-sky-300 transition-colors">{event.title}</p>
-          <div className="mt-4 flex items-center justify-between">
-            <span className="text-[10px] font-bold text-white/40">{viewLabel}</span>
-            <div className="size-8 rounded-full bg-white/8 flex items-center justify-center text-white/40 group-hover:bg-sky-400/20 group-hover:text-sky-300 transition-all">
-              <ArrowRight className="size-4" />
-            </div>
-          </div>
-        </div>
       </Link>
+
+      <div className="mt-3 px-1">
+        <h4 className="text-[12px] font-black uppercase tracking-tight text-slate-900 line-clamp-1 group-hover/card:text-pink-500 transition-colors">
+          {event.title}
+        </h4>
+        <div className="mt-0.5 flex items-center justify-between">
+          <span className="text-[8px] font-bold uppercase tracking-widest text-slate-400">
+            {viewLabel}
+          </span>
+          <ArrowRight className="size-2.5 text-slate-300 group-hover/card:translate-x-1 group-hover/card:text-pink-400 transition-all" />
+        </div>
+      </div>
     </li>
   )
 }
 
-import { ArrowRight, ChevronLeft, ChevronRight, Clock } from "lucide-react"
+export function TimelineSection({ events }: { events: TimelineEvent[] }) {
+  const { t } = useTranslation()
+  const tStr = (key: string) => t(key)
 
-export function TimelineSection({ events }: TimelineSectionProps) {
-  const { t, lang } = useTranslation()
-  const tStr: TStrFn = (key) => {
-    const val = t(key)
-    return Array.isArray(val) ? val.join(", ") : (val as string)
-  }
-
-  const hasEvents = events.length > 0
   const groups = useMemo(() => groupEventsByYear(events), [events])
-  const [visibleYearCount, setVisibleYearCount] = useState(INITIAL_VISIBLE_YEAR_GROUPS)
-  const visibleGroups = useMemo(
-    () => groups.slice(Math.max(0, groups.length - visibleYearCount)),
-    [groups, visibleYearCount],
-  )
-  
-  const railRef = useRef<HTMLDivElement | null>(null)
+  const [activeYear, setActiveYear] = useState("")
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
-  
+
+  const railRef = useRef<HTMLDivElement | null>(null)
+  const yearRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const isManualScrolling = useRef(false)
+
   const latestRelease = useMemo(
     () => [...events].sort((a, b) => parseTimelineDate(b.date) - parseTimelineDate(a.date))[0],
     [events],
   )
 
-  const updateScrollState = () => {
+  const updateScrollState = useCallback(() => {
     const rail = railRef.current
-    if (!rail) return
-    setCanScrollLeft(rail.scrollLeft > 10)
-    setCanScrollRight(rail.scrollLeft + rail.clientWidth < rail.scrollWidth - 10)
-  }
+    if (!rail || isManualScrolling.current) return
 
-  useEffect(() => {
-    updateScrollState()
-    window.addEventListener("resize", updateScrollState)
-    return () => window.removeEventListener("resize", updateScrollState)
-  }, [visibleGroups])
+    setCanScrollLeft(rail.scrollLeft > 20)
+    setCanScrollRight(rail.scrollLeft + rail.clientWidth < rail.scrollWidth - 20)
+
+    const railRect = rail.getBoundingClientRect()
+    // Align detection point slightly to the right of the rail's left edge
+    const detectionPoint = railRect.left + 80 
+
+    for (const group of groups) {
+      const el = yearRefs.current[group.year]
+      if (el) {
+        const rect = el.getBoundingClientRect()
+        if (rect.left <= detectionPoint && rect.right >= detectionPoint) {
+          setActiveYear(group.year)
+          break
+        }
+      }
+    }
+  }, [groups])
+
+  const scrollToYear = (year: string) => {
+    const rail = railRef.current
+    const target = yearRefs.current[year]
+    if (!rail || !target) return
+
+    isManualScrolling.current = true
+    setActiveYear(year)
+    
+    // Smooth scroll to the target's position
+    rail.scrollTo({ left: target.offsetLeft, behavior: "smooth" })
+
+    // Extended guard time to ensure scroll completion before re-enabling detection
+    setTimeout(() => {
+      isManualScrolling.current = false
+      updateScrollState()
+    }, 1000)
+  }
 
   const scroll = (direction: "left" | "right") => {
     const rail = railRef.current
     if (!rail) return
-    const amount = direction === "left" ? -400 : 400
-    rail.scrollBy({ left: amount, behavior: "smooth" })
+    const amount = rail.clientWidth * 0.7
+    rail.scrollBy({ left: direction === "left" ? -amount : amount, behavior: "smooth" })
+    
+    isManualScrolling.current = true
+    setTimeout(() => {
+      isManualScrolling.current = false
+      updateScrollState()
+    }, 1000)
   }
 
+  useEffect(() => {
+    const rail = railRef.current
+    if (rail) {
+      updateScrollState()
+      rail.addEventListener("scroll", updateScrollState, { passive: true })
+      window.addEventListener("resize", updateScrollState)
+      return () => {
+        rail.removeEventListener("scroll", updateScrollState)
+        window.removeEventListener("resize", updateScrollState)
+      }
+    }
+  }, [groups, updateScrollState])
+
+  useEffect(() => {
+    if (groups.length > 0 && !activeYear) {
+      setActiveYear(groups[groups.length - 1].year)
+    }
+  }, [groups, activeYear])
+
+  if (!events.length) return null
+
   return (
-    <section id="timeline" className="reveal-up">
-      <div className="glass-panel rounded-[3rem] p-8 lg:p-12">
-        <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between mb-12">
-          <div className="max-w-xl">
-            <div className="flex items-center gap-3 text-sky-500">
-              <Clock className="size-5" />
-              <p className="text-[10px] font-black uppercase tracking-[0.5em]">{tStr("timeline.label")}</p>
+    <section id="timeline" className="py-16 select-none relative overflow-hidden">
+      <div className="max-w-5xl mx-auto px-4 relative z-10">
+        
+        {/* Compact Header */}
+        <div className="mb-10 relative z-30 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-sky-100 bg-white shadow-sm scale-90 origin-left">
+              <Clock className="size-3.5 text-sky-500" />
+              <p className="text-sky-600 font-black uppercase tracking-widest text-[9px]">
+                {tStr("timeline.label") || "TIMELINE"}
+              </p>
             </div>
-            <h2 className="mt-5 text-4xl uppercase leading-none text-slate-900 sm:text-5xl font-black tracking-tighter">
-              {tStr("timeline.title")}
+            <h2 className="section-title">
+              Annual Discography
             </h2>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => scroll("left")}
-              disabled={!canScrollLeft}
-              className="size-12 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-500 disabled:opacity-30 hover:bg-sky-50 hover:border-sky-200 hover:text-sky-600 transition-all shadow-sm"
-            >
-              <ChevronLeft className="size-5" />
-            </button>
-            <button
-              onClick={() => scroll("right")}
-              disabled={!canScrollRight}
-              className="size-12 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-500 disabled:opacity-30 hover:bg-sky-50 hover:border-sky-200 hover:text-sky-600 transition-all shadow-sm"
-            >
-              <ChevronRight className="size-5" />
-            </button>
-          </div>
-        </header>
+          <div className="flex items-center gap-4">
+            <nav className="flex items-center gap-1 p-1 rounded-full bg-slate-200/40 border border-slate-200 shadow-sm backdrop-blur-md">
+              {groups.map((group) => (
+                <button
+                  key={group.year}
+                  onClick={() => scrollToYear(group.year)}
+                  className={cn(
+                    "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 relative",
+                    activeYear === group.year ? "text-white shadow-xl" : "text-slate-400 hover:text-slate-600"
+                  )}
+                >
+                  {activeYear === group.year && (
+                    <span className="absolute inset-0 bg-slate-900 rounded-full z-0" />
+                  )}
+                  <span className="relative z-10">{group.year}</span>
+                </button>
+              ))}
+            </nav>
 
-        <div
-          ref={railRef}
-          onScroll={updateScrollState}
-          className="flex gap-10 overflow-x-auto [scrollbar-width:none] snap-x pb-8"
-        >
-          {visibleGroups.map((group) => (
-            <div key={group.year} className="flex flex-col gap-8 shrink-0">
-              <div className="flex items-center gap-4">
-                <span className="text-3xl font-black italic text-white/20">{group.year}</span>
-                <div className="h-px w-20 bg-gradient-to-r from-white/15 to-transparent" />
-              </div>
-              
-              <ol className="flex gap-6">
-                {group.events.map((event) => (
-                  <TimelineCard
-                    key={`${event.date}-${event.title}`}
-                    event={event}
-                    isNewest={latestRelease?.slug === event.slug}
-                    viewLabel={tStr("timeline.view")}
-                    tStr={tStr}
-                  />
-                ))}
-              </ol>
+            <div className="flex gap-2">
+              <button
+                onClick={() => scroll("left")}
+                disabled={!canScrollLeft}
+                className="size-10 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-400 disabled:opacity-20 hover:bg-slate-900 hover:text-white transition-all shadow-lg active:scale-90"
+              >
+                <ChevronLeft className="size-5" />
+              </button>
+              <button
+                onClick={() => scroll("right")}
+                disabled={!canScrollRight}
+                className="size-10 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-400 disabled:opacity-20 hover:bg-slate-900 hover:text-white transition-all shadow-lg active:scale-90"
+              >
+                <ChevronRight className="size-5" />
+              </button>
             </div>
-          ))}
+          </div>
         </div>
 
-        {groups.length > visibleYearCount && (
-          <div className="mt-10 pt-10 border-t border-slate-100 text-center">
-            <button
-              onClick={() => setVisibleYearCount(prev => prev + 2)}
-              className="px-10 py-4 rounded-full border border-sky-200 bg-sky-50 text-sky-600 text-[11px] font-black uppercase tracking-widest hover:bg-sky-500 hover:text-white hover:border-sky-500 transition-all"
-            >
-              {tStr("timeline.showMoreYears")}
-            </button>
+        {/* Scaled-down Card Layout */}
+        <div className="card-premium p-6 md:p-10 relative overflow-hidden">
+          <div
+            ref={railRef}
+            className="relative flex gap-20 overflow-x-auto [scrollbar-width:none] snap-x snap-mandatory pb-2 scroll-px-10"
+          >
+            {groups.map((group) => (
+              <div 
+                key={group.year} 
+                ref={el => { yearRefs.current[group.year] = el }}
+                className="flex flex-col gap-8 shrink-0 snap-start"
+              >
+                <div className="flex items-center gap-5">
+                  <div className="flex items-center justify-center px-5 py-2.5 rounded-2xl bg-slate-950 text-white shadow-2xl">
+                    <span className="text-lg font-black tracking-tighter">{group.year}</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-900/80">
+                      Season Collection
+                    </p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-pink-500/60">
+                      {group.events.length} Masterpieces
+                    </p>
+                  </div>
+                </div>
+                
+                <ol className="flex gap-12">
+                  {group.events.map((event) => (
+                    <TimelineCard
+                      key={`${event.date}-${event.title}`}
+                      event={event}
+                      isNewest={latestRelease?.slug === event.slug}
+                      viewLabel={tStr("timeline.view") || "DISCOVER"}
+                      tStr={tStr}
+                    />
+                  ))}
+                </ol>
+              </div>
+            ))}
           </div>
-        )}
+
+          <div className="mt-12 flex items-center justify-between border-t border-black/5 pt-8 opacity-30">
+             <div className="flex items-center gap-3">
+               <Sparkles className="size-4 text-pink-400" />
+               <span className="text-[9px] font-black uppercase tracking-widest text-slate-600">Official H2H Catalog</span>
+             </div>
+             <img src="/logo-remove.png" alt="H2H" className="h-6 grayscale opacity-20" />
+          </div>
+        </div>
       </div>
     </section>
   )

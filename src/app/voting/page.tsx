@@ -2,27 +2,17 @@ import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 import { votingGuideContent } from "@/lib/voting-guide"
 import { VotingPageClient } from "@/app/voting/voting-page-client"
-import { getTranslation, normalizeLanguage } from "@/i18n/translations"
-import { headers } from "next/headers"
+import { t } from "@/i18n/translations"
 import { ArrowUp } from "lucide-react"
 
-export async function generateMetadata({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
-  const { lang: queryLang } = await searchParams
-  const lang = normalizeLanguage(queryLang)
-  const t = (key: any) => getTranslation(lang, key)
-  
+export async function generateMetadata() {
   return {
     title: `${t("voting.title")} | Hearts2Hearts`,
     description: t("voting.subtitle"),
   }
 }
 
-export default async function VotingPage({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
-  const { lang: queryLang } = await searchParams
-  const cookieLang = (await headers()).get("cookie")?.match(/lang=([^;]+)/)?.[1]
-  const lang = normalizeLanguage(queryLang || cookieLang)
-  const t = (key: any) => getTranslation(lang, key)
-
+export default async function VotingPage() {
   return (
     <main id="top" className="relative min-h-screen selection:bg-[#FFC2D1]/30">
       <Navbar />
@@ -43,10 +33,10 @@ export default async function VotingPage({ searchParams }: { searchParams: Promi
           <div className="mb-10 grid gap-10 lg:grid-cols-[1fr_auto]">
             <div className="space-y-6">
               <h1 className="text-title text-5xl leading-[0.95] sm:text-6xl lg:text-7xl">
-                <span>{(t("voting.title") as string).split("&")[0]} &</span>
+                <span>{t("voting.title").split("&")[0]} &</span>
                 <br />
                 <span className="text-gradient">
-                  {(t("voting.title") as string).split("&")[1]?.trim()}
+                  {t("voting.title").split("&")[1]?.trim()}
                 </span>
               </h1>
 
@@ -107,7 +97,7 @@ export default async function VotingPage({ searchParams }: { searchParams: Promi
           <div className="border-t border-white/60" />
         </header>
 
-        <VotingPageClient lang={lang} />
+        <VotingPageClient />
 
         {/* Join Team Section */}
         <section id="join-team" className="mt-20 reveal-up delay-3">
