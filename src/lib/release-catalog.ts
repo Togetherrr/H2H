@@ -29,6 +29,10 @@ export type ReleaseRecord = {
 }
 
 export const REVALIDATE_SECONDS = 60 * 60
+const WIKIDATA_TIMEOUT_MS = 1500
+const WIKIPEDIA_TIMEOUT_MS = 900
+
+let lastGoodCatalog: ReleaseRecord[] | null = null
 
 const fallbackReleaseCatalog: ReleaseRecord[] = [
   {
@@ -148,12 +152,16 @@ type WikidataBinding = {
 async function fetchWikipediaSummary(title: string) {
   const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`
 
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), WIKIPEDIA_TIMEOUT_MS)
+
   const response = await fetch(url, {
+    signal: controller.signal,
     next: { revalidate: REVALIDATE_SECONDS },
     headers: {
       Accept: "application/json",
     },
-  })
+  }).finally(() => clearTimeout(timeout))
 
   if (!response.ok) {
     return ""
@@ -182,13 +190,17 @@ ORDER BY ?releaseDate
 `
 
   const endpoint = `https://query.wikidata.org/sparql?format=json&query=${encodeURIComponent(query)}`
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), WIKIDATA_TIMEOUT_MS)
+
   const response = await fetch(endpoint, {
+    signal: controller.signal,
     next: { revalidate: REVALIDATE_SECONDS },
     headers: {
       Accept: "application/sparql-results+json",
       "User-Agent": "H2H-Timeline/1.0 (Next.js; contact: local-project)",
     },
-  })
+  }).finally(() => clearTimeout(timeout))
 
   if (!response.ok) {
     return []
@@ -211,7 +223,12 @@ ORDER BY ?releaseDate
         const date = formatDateDDMMYYYY(binding.releaseDate?.value ?? "")
         const type = binding.instanceLabel?.value ?? "Release"
         const year = getYearFromDate(date)
-        const summary = await fetchWikipediaSummary(title)
+        let summary = ""
+        try {
+          summary = await fetchWikipediaSummary(title)
+        } catch {
+          summary = ""
+        }
 
         return {
           slug: toSlug(title),
@@ -239,8 +256,17 @@ ORDER BY ?releaseDate
 }
 
 export const getReleaseCatalog = cache(async () => {
-  const wikiCatalog = await fetchWikidataCatalog()
-  return wikiCatalog.length > 0 ? wikiCatalog : fallbackReleaseCatalog
+  try {
+    const wikiCatalog = await fetchWikidataCatalog()
+    if (wikiCatalog.length > 0) {
+      lastGoodCatalog = wikiCatalog
+      return wikiCatalog
+    }
+  } catch {
+    // ignore
+  }
+
+  return lastGoodCatalog?.length ? lastGoodCatalog : fallbackReleaseCatalog
 })
 
 export async function getReleaseBySlug(slug: string) {

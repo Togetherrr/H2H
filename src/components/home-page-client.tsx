@@ -320,7 +320,7 @@ export function HomePageClient({
               <Star className="size-5 fill-current" />
             </div>
             <p className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-500">
-              {t("footer.copyright").replace("{year}", currentYear.toString())}
+              {t("footer.copyright")}
             </p>
             <p className="text-[11px] text-slate-400 max-w-2xl mx-auto leading-relaxed">
               {t("footer.disclaimer")}

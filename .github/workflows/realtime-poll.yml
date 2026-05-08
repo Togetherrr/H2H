@@ -1,0 +1,30 @@
+name: Realtime Poll
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call realtime poll endpoint
+        env:
+          CRON_TARGET_URL: ${{ vars.H2H_APP_URL }}
+          H2H_CRON_SECRET: ${{ secrets.H2H_CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_TARGET_URL" ]; then
+            echo "Missing repository variable H2H_APP_URL"
+            exit 1
+          fi
+
+          if [ -z "$H2H_CRON_SECRET" ]; then
+            echo "Missing repository secret H2H_CRON_SECRET"
+            exit 1
+          fi
+
+          curl --fail --silent --show-error --max-time 120 \
+            -H "x-cron-secret: $H2H_CRON_SECRET" \
+            "$CRON_TARGET_URL/api/realtime/poll"

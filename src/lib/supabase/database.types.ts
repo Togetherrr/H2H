@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -14,6 +14,113 @@ export type Database = {
   }
   public: {
     Tables: {
+      h2h_item_snapshots: {
+        Row: {
+          created_at: string
+          daily_kworb: number | null
+          id: string
+          item_id: string
+          total: number
+          ts: string
+        }
+        Insert: {
+          created_at?: string
+          daily_kworb?: number | null
+          id?: string
+          item_id: string
+          total: number
+          ts: string
+        }
+        Update: {
+          created_at?: string
+          daily_kworb?: number | null
+          id?: string
+          item_id?: string
+          total?: number
+          ts?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "h2h_item_snapshots_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "h2h_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      h2h_items: {
+        Row: {
+          cover_url: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          platform_id: string
+          release_date: string | null
+          source_updated_at: string | null
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          platform_id: string
+          release_date?: string | null
+          source_updated_at?: string | null
+          title?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          platform_id?: string
+          release_date?: string | null
+          source_updated_at?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      media_assets: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          delete_url: string | null
+          id: string
+          name: string
+          size: number | null
+          type: string | null
+          url: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          delete_url?: string | null
+          id?: string
+          name: string
+          size?: number | null
+          type?: string | null
+          url: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          delete_url?: string | null
+          id?: string
+          name?: string
+          size?: number | null
+          type?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
       members: {
         Row: {
           bio_short: string | null
@@ -317,6 +424,33 @@ export type Database = {
           sort_order?: number
           updated_at?: string
           url?: string
+        }
+        Relationships: []
+      }
+      themes: {
+        Row: {
+          config: Json
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
         }
         Relationships: []
       }
