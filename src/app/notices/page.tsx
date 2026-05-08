@@ -33,7 +33,7 @@ export default function NoticesPage() {
         {/* Header Section */}
         <div className="mb-20">
           <Link 
-            href="/"
+            href="/home"
             className="group inline-flex items-center gap-2 mb-10 text-[11px] font-black uppercase tracking-[0.3em] text-black hover:text-[#FF708A] transition-colors"
           >
             <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" />
@@ -115,7 +115,7 @@ export default function NoticesPage() {
       <footer className="section-shell pb-12 mt-16">
         <div className="card-premium !rounded-[2.5rem] p-10 text-center">
           <p className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-500">
-            {t("footer.copyright").replace("{year}", "2026")}
+            {t("footer.copyright")}
           </p>
         </div>
       </footer>

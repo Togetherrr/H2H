@@ -31,7 +31,7 @@ export default async function StatDetailPage({ params }: StatDetailPageProps) {
     <main className="min-h-screen bg-[linear-gradient(180deg,#e9f7ff_0%,#f6fbff_48%,#edf8ff_100%)] px-5 py-8 sm:px-8 lg:px-10">
       <div className="mx-auto w-full max-w-6xl">
         <Link
-          href="/"
+          href="/home"
           className="inline-flex items-center rounded-full border border-white/70 bg-white/70 px-4 py-2 text-xs uppercase tracking-[0.2em] text-sky-700 transition hover:bg-white"
         >
           Back to home

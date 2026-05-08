@@ -14,14 +14,38 @@ type YouTubeSearchItem = {
 
 export const runtime = "nodejs"
 
+type YouTubeVideosListItem = {
+  id?: string
+  contentDetails?: {
+    duration?: string
+  }
+}
+
+type YouTubeVideosListResponse = {
+  items?: YouTubeVideosListItem[]
+}
+
 type CachedVideos = {
   items: YouTubeSearchItem[]
+  eligibleItems?: YouTubeSearchItem[]
   fetchedAt: number
 }
 
 let cachedChannelId: string | null = null
 let cachedVideos: CachedVideos | null = null
 const CACHE_TTL_MS = 1000 * 60 * 10
+const MIN_VIDEO_SECONDS = 60
+
+function parseIso8601DurationSeconds(duration: string) {
+  // Examples: PT59S, PT1M2S, PT1H3M4S
+  const match = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(duration)
+  if (!match) return null
+  const hours = match[1] ? Number(match[1]) : 0
+  const minutes = match[2] ? Number(match[2]) : 0
+  const seconds = match[3] ? Number(match[3]) : 0
+  if ([hours, minutes, seconds].some((n) => Number.isNaN(n))) return null
+  return hours * 3600 + minutes * 60 + seconds
+}
 
 async function fetchWithTimeout(
   input: RequestInfo | URL,
@@ -112,9 +136,11 @@ export async function GET() {
 
   const now = Date.now()
   let items: YouTubeSearchItem[] = []
+  let cachedEligible: YouTubeSearchItem[] | undefined
 
   if (cachedVideos && now - cachedVideos.fetchedAt < CACHE_TTL_MS) {
     items = cachedVideos.items
+    cachedEligible = cachedVideos.eligibleItems
   } else {
     try {
       const response = await fetchWithTimeout(url, { next: { revalidate: 300 } }, 8000)
@@ -135,6 +161,7 @@ export async function GET() {
     } catch {
       if (cachedVideos?.items.length) {
         items = cachedVideos.items
+        cachedEligible = cachedVideos.eligibleItems
       } else if (fallbackVideoId) {
         return NextResponse.json({
           videoId: fallbackVideoId,
@@ -164,7 +191,65 @@ export async function GET() {
     )
   }
 
-  const randomItem = items[Math.floor(Math.random() * items.length)]
+  // Filter out Shorts / very short videos by checking duration.
+  // Search API doesn't support a strict "> 60s" filter, so we call videos.list once for the batch.
+  const videoIds = items.map((item) => item.id?.videoId).filter(Boolean) as string[]
+  let eligibleItems = cachedEligible && cachedEligible.length ? cachedEligible : items
+
+  if ((!cachedEligible || cachedEligible.length === 0) && videoIds.length) {
+    try {
+      const detailsUrl = new URL("https://www.googleapis.com/youtube/v3/videos")
+      detailsUrl.searchParams.set("part", "contentDetails")
+      detailsUrl.searchParams.set("id", videoIds.join(","))
+      detailsUrl.searchParams.set("key", apiKey)
+
+      const detailsResponse = await fetchWithTimeout(detailsUrl, { next: { revalidate: 300 } }, 8000)
+
+      if (detailsResponse.ok) {
+        const details = (await detailsResponse.json()) as YouTubeVideosListResponse
+        const eligibleIds = new Set(
+          (details.items ?? [])
+            .map((it) => {
+              const dur = it.contentDetails?.duration
+              if (!it.id || !dur) return null
+              const seconds = parseIso8601DurationSeconds(dur)
+              if (seconds === null) return null
+              return seconds > MIN_VIDEO_SECONDS ? it.id : null
+            })
+            .filter(Boolean) as string[]
+        )
+        const filtered = items.filter((item) => item.id?.videoId && eligibleIds.has(item.id.videoId))
+        if (filtered.length > 0) {
+          eligibleItems = filtered
+          if (cachedVideos && cachedVideos.items === items) {
+            cachedVideos.eligibleItems = filtered
+          }
+        }
+      }
+    } catch {
+      // If duration lookup fails, fall back to the unfiltered list.
+    }
+  }
+
+  if (eligibleItems.length === 0) {
+    if (fallbackVideoId) {
+      return NextResponse.json({
+        videoId: fallbackVideoId,
+        title: "Hearts2Hearts",
+        url: `https://www.youtube.com/watch?v=${fallbackVideoId}`,
+        thumbnail: null,
+      })
+    }
+    return NextResponse.json(
+      {
+        error: "empty_filtered",
+        message: `No videos longer than ${MIN_VIDEO_SECONDS}s found for this channel.`,
+      },
+      { status: 404 }
+    )
+  }
+
+  const randomItem = eligibleItems[Math.floor(Math.random() * eligibleItems.length)]
   const videoId = randomItem.id?.videoId
   const title = randomItem.snippet?.title ?? "Hearts2Hearts"
   const thumbnail =

@@ -17,7 +17,7 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
   return (
     <main className="min-h-screen selection:bg-[#A2D2FF]/30">
       <div className="section-shell pt-32 lg:pt-40 pb-12 lg:pb-24">
-        <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-slate-100 bg-white px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-slate-500 shadow-sm transition hover:bg-[#FFC2D1] hover:text-white hover:border-transparent">
+        <Link href="/home" className="inline-flex items-center gap-2 rounded-full border border-slate-100 bg-white px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-slate-500 shadow-sm transition hover:bg-[#FFC2D1] hover:text-white hover:border-transparent">
           <ArrowLeft className="h-4 w-4" />
           {t("common.backToHome")}
         </Link>

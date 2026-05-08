@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Music2, Youtube, ArrowLeft, TrendingUp, TrendingDown, Clock, Activity, ExternalLink } from "lucide-react"
 import Link from "next/link"
-import { getTrackPerformanceSnapshot } from "@/lib/track-performance"
+import { getRealtimeSnapshotFromDb } from "@/lib/realtime/db-snapshot"
 import { Navbar } from "@/components/navbar"
 import { cn } from "@/lib/utils"
 import type { PerformanceItem } from "@/lib/track-performance"
@@ -177,7 +177,7 @@ function MetricCard({
 export default async function ChartsPage({ searchParams }: ChartsPageProps) {
   const { platform } = await searchParams
 
-  const snapshot = await getTrackPerformanceSnapshot()
+  const snapshot = await getRealtimeSnapshotFromDb()
 
   const activePlatforms = platform
     ? [platform]
@@ -277,6 +277,11 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
               )}>
                 {platform ? (platform === "korea" ? "SOUTH KOREA" : platformConfigs[platform].title) : "HEARTS2HEARTS"}
               </h1>
+                  {snapshot.sources.note ? (
+                    <p className="max-w-2xl rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-rose-500">
+                      {snapshot.sources.note}
+                    </p>
+                  ) : null}
             </div>
           </div>
         </div>
@@ -455,12 +460,12 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                       <>
                         <MetricCard
                           label="Spotify Follower"
-                          value={config.followers || 0}
+                          value={config.followers ?? null}
                           platform="spotify"
                         />
                         <MetricCard
                           label="Spotify Monthly Listener"
-                          value={config.monthlyListeners || 0}
+                          value={config.monthlyListeners ?? null}
                           platform="spotify"
                         />
                       </>
@@ -470,12 +475,12 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                       <>
                         <MetricCard
                           label="YouTube Subscriber"
-                          value={config.subscribers || 0}
+                          value={config.subscribers ?? null}
                           platform="youtube"
                         />
                         <MetricCard
                           label="YouTube Videos"
-                          value={config.videoCount || 0}
+                          value={config.videoCount ?? null}
                           platform="youtube"
                         />
                       </>

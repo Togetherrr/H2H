@@ -17,7 +17,7 @@ export default function ChartsPage() {
       try {
         // In this branch, we might need a real endpoint or a server action
         // For now, we fetch from a potential API route or mock it
-        const res = await fetch("/api/stats/performance", { cache: "no-store" })
+        const res = await fetch("/api/stats/performance")
         if (res.ok) {
           const data = await res.json()
           setSnapshot(data)
@@ -47,7 +47,7 @@ export default function ChartsPage() {
     <main className="min-h-screen sky-page bg-[#f0f9ff] px-5 py-12 sm:px-8 lg:px-10">
       <div className="mx-auto w-full max-w-7xl">
         <Link
-          href="/"
+          href="/home"
           className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/70 px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-sky-700 transition hover:bg-white hover:text-sky-900 shadow-sm"
         >
           <ArrowLeft className="size-3" />

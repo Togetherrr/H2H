@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react"
 import Image from "next/image"
-import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
 import { Clock, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/useTranslation"
 import { createClient } from "@/lib/supabase/client"
+import { AppLink } from "@/components/app-link"
 
 export type TimeZone = "KST" | "EDT" | "UTC" | "LOCAL"
 
@@ -125,7 +125,7 @@ function HeaderAccountButton() {
   )
 
   return (
-    <Link
+    <AppLink
       href={headerAccount?.href ?? "/login"}
       className="flex items-center rounded-full border border-slate-200 bg-slate-50 p-1 shadow-sm transition hover:border-sky-300 hover:bg-white"
     >
@@ -151,19 +151,31 @@ function HeaderAccountButton() {
       ) : (
         <span className="px-6 py-2.5 text-[11px] font-black uppercase tracking-widest text-slate-600">{t("header.login")}</span>
       )}
-    </Link>
+    </AppLink>
   )
 }
 
 function HeaderNavLink({ href, label }: { href: string; label: string }) {
+  if (href.startsWith("#")) {
+    return (
+      <a
+        href={href}
+        className="relative group text-[11px] font-black tracking-[0.2em] text-slate-500 transition-colors hover:text-sky-500 uppercase"
+      >
+        {label}
+        <span className="absolute -bottom-1 left-0 h-[2px] w-0 bg-sky-400 transition-all duration-300 group-hover:w-full" />
+      </a>
+    )
+  }
+
   return (
-    <Link
+    <AppLink
       href={href}
       className="relative group text-[11px] font-black tracking-[0.2em] text-slate-500 transition-colors hover:text-sky-500 uppercase"
     >
       {label}
       <span className="absolute -bottom-1 left-0 h-[2px] w-0 bg-sky-400 transition-all duration-300 group-hover:w-full" />
-    </Link>
+    </AppLink>
   )
 }
 
@@ -176,7 +188,7 @@ export function Navbar({
 }) {
   const { t } = useTranslation()
   const pathname = usePathname()
-  const isHome = pathname === "/"
+  const isHome = pathname === "/home"
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -184,11 +196,11 @@ export function Navbar({
   }, [])
 
   const navItems = [
-    { href: isHome ? "#comeback" : "/#comeback", label: t("stats.comeback.eyebrow") },
-    { href: isHome ? "#performance" : "/#performance", label: t("header.nav.performance") },
-    { href: isHome ? "#concept" : "/#concept", label: t("header.nav.concept") },
-    { href: isHome ? "#moments" : "/#moments", label: t("header.nav.moments") },
-    { href: isHome ? "#join" : "/#join", label: t("header.nav.join") },
+    { href: isHome ? "#comeback" : "/home#comeback", label: t("stats.comeback.eyebrow") },
+    { href: isHome ? "#performance" : "/home#performance", label: t("header.nav.performance") },
+    { href: isHome ? "#concept" : "/home#concept", label: t("header.nav.concept") },
+    { href: isHome ? "#moments" : "/home#moments", label: t("header.nav.moments") },
+    { href: isHome ? "#join" : "/home#join", label: t("header.nav.join") },
     { href: "/voting", label: t("header.nav.voting") },
   ]
 
@@ -196,14 +208,14 @@ export function Navbar({
     <header className="fixed inset-x-0 top-4 z-50 flex justify-center px-4 sm:px-6">
       <div className="flex h-16 w-full max-w-[1400px] items-center justify-between rounded-full border border-slate-200 bg-white/95 px-6 py-2 shadow-lg shadow-black/5 backdrop-blur-xl transition-all hover:bg-white hover:border-sky-200">
         <div className="flex items-center gap-6">
-          <Link href="/" className="group flex items-center gap-3">
+          <AppLink href="/home" className="group flex items-center gap-3">
             <div className="relative h-9 w-9 overflow-hidden rounded-full border-2 border-sky-100 bg-gradient-to-br from-sky-200 to-pink-100 shadow-sm transition-transform group-hover:scale-110">
               <Image src="/logo-official-removebg-.png" alt="Logo" width={36} height={36} className="h-full w-full object-cover" />
             </div>
             <p className="hidden xl:block text-[11px] font-black uppercase tracking-[0.3em] text-slate-800">
               {t("header.brand")}
             </p>
-          </Link>
+          </AppLink>
 
           <nav className="hidden items-center gap-6 xl:flex">
             {navItems.map((item) => (

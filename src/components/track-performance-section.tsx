@@ -305,6 +305,7 @@ function PlatformStatsBar({
 export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionProps) {
   const { t } = useTranslation()
   const [mounted, setMounted] = useState(false)
+  const [liveSnapshot, setLiveSnapshot] = useState(snapshot)
   const [activePlatform, setActivePlatform] = useState<PlatformTab>("spotify")
   const [koreaPage, setKoreaPage] = useState(1)
 
@@ -312,18 +313,47 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
     setMounted(true)
   }, [])
 
-  const formattedUpdatedAt = mounted
-    ? new Date(snapshot.updatedAt).toLocaleDateString("en-US", {
+  useEffect(() => {
+    setLiveSnapshot(snapshot)
+  }, [snapshot])
+  useEffect(() => {
+    if (!mounted) return
+    let cancelled = false
+
+    async function load() {
+      try {
+        const res = await fetch("/api/track-performance", { cache: "no-store" })
+        if (!res.ok) return
+        const data = (await res.json()) as TrackPerformanceSnapshot
+        if (cancelled) return
+        setLiveSnapshot(data)
+      } catch {
+        // keep placeholder
+      }
+    }
+
+    // ✅ Luôn fetch data mới nhất từ DB sau khi mount
+    // không phụ thuộc vào isSample
+    void load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [mounted])
+
+  const updatedAtDate = mounted && liveSnapshot.updatedAt ? new Date(liveSnapshot.updatedAt) : null
+  const formattedUpdatedAt = updatedAtDate && !Number.isNaN(updatedAtDate.getTime())
+    ? updatedAtDate.toLocaleDateString("en-US", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     })
-    : "..."
+    : null
 
   const activePlatformData =
-    activePlatform === "korea" ? null : snapshot[activePlatform as "spotify" | "youtube"]
+    activePlatform === "korea" ? null : liveSnapshot[activePlatform as "spotify" | "youtube"]
 
   const koreaChartGroups = [
     {
@@ -430,6 +460,16 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
           <h2 className="section-title text-black">
             {t("home.performance.liveTracking").trim()}
           </h2>
+          {formattedUpdatedAt ? (
+            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">
+              {t("performance.updatedAt")} {formattedUpdatedAt}
+            </p>
+          ) : null}
+          {liveSnapshot.sources.note ? (
+            <p className="max-w-2xl rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-rose-500">
+              {liveSnapshot.sources.note}
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -552,15 +592,24 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
 
             {/* ── Stats bar (total / daily / change) ── */}
             {activePlatformData && (
-              <PlatformStatsBar
-                platform={activePlatform as "spotify" | "youtube"}
-                totalValue={activePlatformData.totalValue}
-                dailyValue={activePlatformData.dailyValue}
-                dailyChange={activePlatformData.dailyChange}
-                dailyChangeFormat={activePlatformData.dailyChangeFormat}
-                mounted={mounted}
-                t={t}
-              />
+              <>
+                <PlatformStatsBar
+                  platform={activePlatform as "spotify" | "youtube"}
+                  totalValue={activePlatformData.totalValue}
+                  dailyValue={activePlatformData.dailyValue}
+                  dailyChange={activePlatformData.dailyChange}
+                  dailyChangeFormat={activePlatformData.dailyChangeFormat}
+                  mounted={mounted}
+                  t={t}
+                />
+
+                {/* ✅ Thêm đoạn này */}
+                {mounted && activePlatformData.note && (
+                  <p className="mb-6 -mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-black/30 text-right px-1">
+                    {activePlatformData.note}
+                  </p>
+                )}
+              </>
             )}
 
             {/* Track table header */}
@@ -615,6 +664,6 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
         )}
       </div>
 
-    </section>
+    </section >
   )
 }

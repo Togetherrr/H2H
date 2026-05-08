@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import Link from "next/link"
 import {
   CalendarDays,
@@ -329,27 +330,75 @@ function DebutVideoModal({
   onRetry: () => void
   errorMessage: string | null
 }) {
+  const PREVIEW_SECONDS = 60
+  const [previewPlaying, setPreviewPlaying] = useState(false)
+  const [mountIframe, setMountIframe] = useState(false)
+
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
     if (isOpen) document.addEventListener("keydown", handleKey)
     return () => document.removeEventListener("keydown", handleKey)
   }, [isOpen, onClose])
 
+  useEffect(() => {
+    if (!isOpen) {
+      setPreviewPlaying(false)
+      setMountIframe(false)
+      return
+    }
+    if (status !== "ready" || !video?.videoId) {
+      setPreviewPlaying(false)
+      setMountIframe(false)
+      return
+    }
+
+    // Let the modal paint first to reduce perceived jank, then mount the iframe.
+    setPreviewPlaying(true)
+    setMountIframe(false)
+
+    const raf = requestAnimationFrame(() => {
+      setMountIframe(true)
+    })
+
+    const t = setTimeout(() => {
+      setPreviewPlaying(false)
+      setMountIframe(false)
+    }, PREVIEW_SECONDS * 1000)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      clearTimeout(t)
+    }
+  }, [isOpen, status, video?.videoId])
+
   if (!isOpen) return null
 
-  return (
+  return createPortal((
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300" />
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300" />
       <div
         className="relative w-full max-w-2xl bg-gradient-to-br from-[#1a0a10] to-[#0a0a1a] rounded-3xl overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.6)] border border-white/10 animate-in zoom-in-95 duration-300"
         onClick={e => e.stopPropagation()}
       >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-colors"
-        >
-          <X className="size-5" />
-        </button>
+        {/* Close button is rendered outside the player area to avoid iframe click-capture issues */}
+        <div className="absolute top-4 right-4 z-[99999] pointer-events-none">
+          <button
+            type="button"
+            onPointerDown={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onClose()
+            }}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onClose()
+            }}
+            className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-colors"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
 
         <div className="px-8 pt-8 pb-4">
           <div className="flex items-center gap-3 mb-2">
@@ -362,7 +411,7 @@ function DebutVideoModal({
             </div>
           </div>
           <p className="text-white/40 text-[13px]">
-            Fresh pick every time you open the modal. Close it and open again for a new video.
+            Opens instantly with a cached pick. Tap “Another random” for a new one.
           </p>
         </div>
 
@@ -375,45 +424,82 @@ function DebutVideoModal({
             className="absolute inset-0 opacity-10"
             style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.3) 2px, rgba(255,255,255,0.3) 4px)" }}
           />
-          {status === "ready" && video ? (
-            <iframe
-              title={video.title}
-              src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&mute=1&playsinline=1&rel=0`}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="relative z-10 h-full w-full"
-            />
-          ) : (
-            <div className="relative z-10 flex h-full w-full flex-col items-center justify-center gap-4">
-              {video?.thumbnail && (
-                <div className="absolute inset-0 bg-cover bg-center opacity-70" style={{ backgroundImage: `url(${video.thumbnail})` }} />
-              )}
-              <div className="absolute inset-0 bg-black/40" />
+          <div className="relative z-10 flex h-full w-full flex-col items-center justify-center gap-4">
+            {mountIframe && previewPlaying && status === "ready" && video?.videoId ? (
+              <iframe
+                title={video.title}
+                key={`${video.videoId}-preview`}
+                loading="eager"
+                src={`https://www.youtube-nocookie.com/embed/${video.videoId}?autoplay=1&mute=1&playsinline=1&rel=0&controls=0&modestbranding=1&start=0&end=${PREVIEW_SECONDS}`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="absolute inset-0 h-full w-full pointer-events-none"
+              />
+            ) : video?.thumbnail ? (
+              <img
+                src={video.thumbnail}
+                alt={video?.title ?? "YouTube preview"}
+                className="absolute inset-0 h-full w-full object-cover opacity-80"
+                loading="eager"
+              />
+            ) : null}
+
+            {/* Clickable layer to open YouTube (disabled while iframe preview is playing) */}
+            {video?.url && !previewPlaying && (
+              <a
+                href={video.url}
+                target="_blank"
+                rel="noreferrer"
+                className="absolute inset-0 z-10"
+                aria-label="Open on YouTube"
+              />
+            )}
+            <div className="absolute inset-0 bg-black/45" />
+            {!mountIframe && (
               <div className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full bg-white/10 border border-white/20 backdrop-blur-sm">
-                <Play className="size-8 text-white/60 ml-1" />
+                <Play className="size-8 text-white/70 ml-1" />
               </div>
-              <p className="relative z-10 text-white/70 text-[12px] font-medium text-center px-8">
-                {status === "loading" ? "Loading a random video..." : "No video yet. Try another or open the channel."}
+            )}
+            <p className="relative z-10 text-white/80 text-[12px] font-medium text-center px-8">
+              {status === "loading"
+                ? "Loading..."
+                : status === "ready" && video
+                  ? "Open on YouTube to keep watching."
+                  : "No video yet. Try another or open the channel."}
+            </p>
+            {status === "error" && (
+              <p className="relative z-10 text-[#FF708A]/80 text-[11px] font-semibold text-center px-10">
+                {errorMessage || "Please check the YouTube API configuration."}
               </p>
-              {status === "error" && (
-                <p className="relative z-10 text-[#FF708A]/80 text-[11px] font-semibold text-center px-10">
-                  {errorMessage || "Please check the YouTube API configuration."}
-                </p>
-              )}
-              <div className="relative z-10 flex items-center gap-3">
-                <a href={YOUTUBE_CHANNEL_URL} target="_blank" rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/20">
-                  View channel
+            )}
+            <div className="relative z-10 flex items-center gap-3">
+              {video?.url ? (
+                <a
+                  href={video.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#FF708A]/25 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-[#FF708A]/35"
+                >
+                  Watch on YouTube
                 </a>
-                {status === "error" && (
-                  <button onClick={onRetry}
-                    className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/20">
-                    Try again
-                  </button>
-                )}
-              </div>
+              ) : (
+                <a
+                  href={YOUTUBE_CHANNEL_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#FF708A]/25 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-[#FF708A]/35"
+                >
+                  Open channel
+                </a>
+              )}
+              <button
+                onClick={onRetry}
+                className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/20"
+              >
+                Another random
+              </button>
             </div>
-          )}
+          </div>
           <div className="absolute inset-0 bg-gradient-to-br from-amber-900/20 to-pink-900/20 pointer-events-none" />
         </div>
 
@@ -426,21 +512,15 @@ function DebutVideoModal({
             ))}
           </div>
           <div className="flex items-center gap-2">
-            {video?.url && (
-              <a href={video.url} target="_blank" rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/20">
-                Watch on YouTube
-              </a>
-            )}
-            <button onClick={onRetry}
-              className="inline-flex items-center gap-2 rounded-full bg-[#FF708A]/20 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-[#FF708A]/30">
-              Another random
-            </button>
+            <a href={YOUTUBE_CHANNEL_URL} target="_blank" rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/20">
+              View channel
+            </a>
           </div>
         </div>
       </div>
     </div>
-  )
+  ), document.body)
 }
 
 // ─── Main Section ─────────────────────────────────────────────────────────────
@@ -455,6 +535,33 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
   const [videoStatus, setVideoStatus] = useState<VideoStatus>("idle")
   const [randomVideo, setRandomVideo] = useState<RandomVideo | null>(null)
   const [videoError, setVideoError] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Reduce initial latency when opening the YouTube modal.
+    const links: Array<{ rel: string; href: string; crossOrigin?: string }> = [
+      { rel: "preconnect", href: "https://www.youtube-nocookie.com" },
+      { rel: "preconnect", href: "https://i.ytimg.com" },
+      { rel: "preconnect", href: "https://www.google.com" },
+      { rel: "dns-prefetch", href: "https://www.youtube-nocookie.com" },
+      { rel: "dns-prefetch", href: "https://i.ytimg.com" },
+      { rel: "dns-prefetch", href: "https://www.google.com" },
+    ]
+
+    const added: HTMLLinkElement[] = []
+    for (const { rel, href, crossOrigin } of links) {
+      if (document.querySelector(`link[rel="${rel}"][href="${href}"]`)) continue
+      const el = document.createElement("link")
+      el.rel = rel
+      el.href = href
+      if (crossOrigin) el.crossOrigin = crossOrigin
+      document.head.appendChild(el)
+      added.push(el)
+    }
+
+    return () => {
+      for (const el of added) el.remove()
+    }
+  }, [])
 
   useEffect(() => {
     setMounted(true)
@@ -563,8 +670,10 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
 
   useEffect(() => {
     if (!videoModalOpen) return
-    void fetchRandomVideo(0, !randomVideo)
-  }, [videoModalOpen, fetchRandomVideo, randomVideo])
+    if (!randomVideo || videoStatus !== "ready") {
+      void fetchRandomVideo(0, !randomVideo)
+    }
+  }, [videoModalOpen, fetchRandomVideo, randomVideo, videoStatus])
 
   useEffect(() => {
     if (!randomVideo && videoStatus === "idle") {
@@ -572,12 +681,12 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
     }
   }, [fetchRandomVideo, randomVideo, videoStatus])
 
-  const handleDebutVideoOpen = () => setVideoModalOpen(true)
+  const handleDebutVideoOpen = () => {
+    if (!randomVideo && videoStatus === "idle") void fetchRandomVideo(0, false)
+    setVideoModalOpen(true)
+  }
   const handleDebutVideoClose = () => {
     setVideoModalOpen(false)
-    setVideoStatus("idle")
-    setRandomVideo(null)
-    setVideoError(null)
   }
 
   return (
@@ -760,6 +869,12 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
               <button
                 key={card.key}
                 onClick={handleDebutVideoOpen}
+                onPointerEnter={() => {
+                  if (!randomVideo && videoStatus === "idle") void fetchRandomVideo(0, false)
+                }}
+                onFocus={() => {
+                  if (!randomVideo && videoStatus === "idle") void fetchRandomVideo(0, false)
+                }}
                 className={cn(
                   "group relative flex flex-col justify-between overflow-hidden rounded-[3rem] p-6 border border-white/60 shadow-xl transition-all duration-700 hover:-translate-y-2 hover:shadow-[0_40px_80px_rgba(0,0,0,0.12)] cursor-pointer text-left w-full",
                   isDebutCard ? "md:p-14" : "md:p-8",

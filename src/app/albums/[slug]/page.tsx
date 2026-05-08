@@ -51,7 +51,7 @@ export default async function AlbumDetailPage({ params }: AlbumPageProps) {
       <div className="max-w-7xl mx-auto px-6 pt-32 lg:pt-40 pb-24 relative z-10">
         {/* Navigation Breadcrumb */}
         <Link 
-          href="/" 
+          href="/home" 
           className="group inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-md px-6 py-3 text-[11px] font-black uppercase tracking-widest text-white shadow-xl transition-all hover:bg-white hover:text-slate-900 mb-12"
         >
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
