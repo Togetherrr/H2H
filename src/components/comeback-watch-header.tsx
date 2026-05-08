@@ -91,7 +91,7 @@ export function ComebackWatchHeader({
       <div className="w-full max-w-6xl flex flex-col items-center text-center">
 
         {/* Status Badge */}
-        <div className="mb-10 flex items-center gap-2 rounded-full border border-white/60 bg-white/40 px-6 py-2.5 shadow-xl backdrop-blur-md">
+        <div className="mb-10 flex items-center gap-2 rounded-full border border-white/60 bg-white/40 px-6 py-2.5 shadow-xl backdrop-blur-md animate-glow-sky">
           <span className="relative flex h-2 w-2">
             <span className={cn(
               "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
@@ -102,20 +102,22 @@ export function ComebackWatchHeader({
               hasComeback ? "bg-[#FF708A]" : "bg-slate-400"
             )} />
           </span>
-          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black">
+          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-700">
             {hasComeback ? t("home.comeback.active") : t("home.comeback.standby")}
           </span>
         </div>
 
         {/* Album Subtitle */}
-        <p className="text-[14px] font-black tracking-[0.4em] text-[#FF708A] uppercase mb-6 drop-shadow-sm">
+        <p className="text-[14px] font-black tracking-[0.4em] uppercase mb-6 drop-shadow-[0_1px_4px_rgba(0,0,0,0.2)]" style={{ color: hasComeback ? '#FF708A' : '#1e3a5f' }}>
           {hasComeback ? `#${(albumTitle as string).replace(/\s+/g, '')}` : t("home.comeback.preparing")}
         </p>
 
         {/* Main Date Display */}
         <h2 className={cn(
-          "font-black tracking-tighter text-5xl leading-none sm:text-7xl lg:text-8xl xl:text-9xl uppercase text-black drop-shadow-[0_10px_25px_rgba(255,255,255,0.4)]",
-          !hasComeback && "italic text-black/30"
+          "font-black tracking-tighter text-5xl leading-none sm:text-7xl lg:text-8xl xl:text-9xl uppercase drop-shadow-[0_4px_16px_rgba(0,0,0,0.18)]",
+          hasComeback
+            ? "text-black drop-shadow-[0_10px_25px_rgba(255,255,255,0.4)]"
+            : "italic text-slate-600/60"
         )}>
           {hasComeback ? formattedDate : t("voting.comingSoon")}
         </h2>
@@ -123,7 +125,16 @@ export function ComebackWatchHeader({
         {/* Countdown - Individual Floating Cards */}
         <div className="mt-16 grid grid-cols-2 md:flex items-center justify-center gap-4 sm:gap-6">
           {countdownItems.map((item, index) => (
-            <div key={index} className="flex flex-col items-center">
+            <div
+              key={index}
+              className={[
+                "flex flex-col items-center",
+                index === 0 ? "animate-float" :
+                index === 1 ? "animate-float-delay-1" :
+                index === 2 ? "animate-float-delay-2" :
+                              "animate-float-delay-3"
+              ].join(" ")}
+            >
               <div className="flex size-24 sm:size-32 lg:size-40 flex-col items-center justify-center rounded-[2rem] bg-gradient-to-br from-[#FFF0F5] to-[#FFD1DC] border border-white shadow-2xl shadow-pink-500/5">
                 <span className="font-mono font-black text-4xl sm:text-5xl lg:text-7xl tracking-tighter text-black">
                   {pad2(item.value)}
