@@ -10,6 +10,7 @@ import { TimelineSection } from "@/components/timeline-section"
 import { ComebackWatchHeader } from "@/components/comeback-watch-header"
 import { SpotlightNotice } from "@/components/spotlight-notice"
 import { Navbar, type TimeZone } from "@/components/navbar"
+import { NoticeBoard } from "@/components/notice-board"
 import { useTranslation } from "@/hooks/useTranslation"
 import { Users, Building2, Disc, MapPin, Calendar, HeartPulse, Palette, Hash } from "lucide-react"
 
@@ -328,6 +329,7 @@ export function HomePageClient({
           </div>
         </div>
       </footer>
+      <NoticeBoard />
     </main>
   )
 }
