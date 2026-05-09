@@ -31,13 +31,13 @@ export function SpotlightNotice() {
 
       {/* Stack of Narrow Horizontal Notices */}
       <div className="flex flex-col gap-4">
-        {displayNotices.map((notice) => (
+        {displayNotices.map((notice, i) => (
           <a
             key={notice.id}
             href={notice.link || "#"}
             target={notice.link?.startsWith('http') ? "_blank" : undefined}
             rel={notice.link?.startsWith('http') ? "noreferrer" : undefined}
-            className="card-premium group relative z-10 flex items-center gap-6 p-4 md:p-6 !rounded-3xl shadow-pink-200/10 hover:-translate-y-1 cursor-pointer"
+            className={`card-premium group relative z-10 flex items-center gap-6 p-4 md:p-6 !rounded-3xl shadow-pink-200/10 hover:-translate-y-1 cursor-pointer slide-in-left ${i === 1 ? 'slide-delay-1' : i === 2 ? 'slide-delay-2' : ''}`}
           >
             {/* Icon Column */}
             <div className={cn(
@@ -59,7 +59,7 @@ export function SpotlightNotice() {
                   </span>
                 )}
               </div>
-              <h3 className="text-[15px] md:text-[17px] font-black text-black uppercase tracking-tight leading-tight truncate group-hover:text-white transition-colors">
+              <h3 className="text-[15px] md:text-[17px] font-black text-black uppercase tracking-tight leading-tight truncate group-hover:text-[#D94F6A] transition-colors">
                 {notice.title_en}
               </h3>
             </div>
