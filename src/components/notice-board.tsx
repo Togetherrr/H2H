@@ -21,13 +21,13 @@ export function NoticeBoard() {
   const recentNotices = ALL_NOTICES.slice(0, 3)
 
   return (
-    <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-6 print:hidden">
+    <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-6 print:hidden pointer-events-none">
       {/* The Board */}
       <div 
         className={cn(
           "w-[calc(100vw-3.5rem)] sm:w-96 overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] origin-bottom-right",
           isOpen 
-            ? "scale-100 opacity-100 translate-y-0" 
+            ? "scale-100 opacity-100 translate-y-0 pointer-events-auto" 
             : "scale-90 opacity-0 translate-y-10 pointer-events-none"
         )}
       >
@@ -83,7 +83,7 @@ export function NoticeBoard() {
                 
                 {ALL_NOTICES.length > 3 && (
                   <div className="py-2 text-center">
-                    <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/5 text-[10px] font-black uppercase tracking-[0.2em] text-[#FF708A]">
+                     <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/5 text-[10px] font-black uppercase tracking-[0.2em] text-[#FF708A]">
                       <Plus className="size-3" />
                       {`+${ALL_NOTICES.length - 3} MORE UPDATES`}
                     </span>
@@ -110,9 +110,9 @@ export function NoticeBoard() {
       </div>
 
       {/* Floating Toggle Button */}
-      <div className="relative">
+      <div className="relative pointer-events-auto">
         {!isOpen && hasNew && (
-           <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 whitespace-nowrap px-4 py-2 rounded-xl bg-black text-white text-[10px] font-black uppercase tracking-widest shadow-xl animate-in fade-in slide-in-from-right-4 duration-500 hidden sm:block">
+           <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 whitespace-nowrap px-4 py-2 rounded-xl bg-black text-white text-[10px] font-black uppercase tracking-widest shadow-xl animate-in fade-in slide-in-from-right-4 duration-500 hidden sm:block pointer-events-none">
               NEW UPDATES
               <div className="absolute top-1/2 -translate-y-1/2 -right-1 w-2 h-2 bg-black rotate-45" />
            </div>
@@ -134,7 +134,7 @@ export function NoticeBoard() {
           </div>
           
           {!isOpen && (
-            <span className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#FF708A] text-[11px] font-black text-white ring-4 ring-white shadow-lg">
+            <span className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#FF708A] text-[11px] font-black text-white ring-4 ring-white shadow-lg pointer-events-none">
               {ALL_NOTICES.length}
             </span>
           )}

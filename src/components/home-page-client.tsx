@@ -20,7 +20,7 @@ import type { GroupOfficialProfile } from "@/lib/group-official-profile"
 import type { HomeStatsSnapshot } from "@/lib/home-stats"
 import type { TrackPerformanceSnapshot } from "@/lib/track-performance"
 
-type OfficialLink = { name: string; href: string; note: string }
+type OfficialLink = { id?: string; name: string; href: string; note: string; platform?: string }
 
 type OfficialLinkMeta = {
   icon: any
@@ -146,8 +146,61 @@ function MemberCardNew({ member }: { member: MemberProfile }) {
   )
 }
 
-function OfficialLinkCard({ label, url, note, icon: Icon }: { label: string; url: string; note: string; icon: any }) {
-  const meta = officialLinkMeta[label] ?? officialLinkMeta.X
+const AVAILABLE_ICONS = [
+  { id: "Youtube", slug: "youtube" },
+  { id: "Instagram", slug: "instagram" },
+  { id: "X", slug: "x" },
+  { id: "Facebook", slug: "facebook" },
+  { id: "Tiktok", slug: "tiktok" },
+  { id: "Weverse", slug: "weverse" },
+  { id: "Weibo", slug: "sinaweibo" },
+  { id: "Bilibili", slug: "bilibili" },
+  { id: "Spotify", slug: "spotify" },
+  { id: "Music", slug: "applemusic" },
+  { id: "Link", slug: "linktree" },
+]
+
+function renderBrandIcon(iconId: string | null | undefined, className: string = "size-5") {
+  if (!iconId) return <ArrowRight className={className} />
+  
+  const isWeverse = iconId.toLowerCase() === "weverse"
+  if (isWeverse) {
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 512 512">
+        <defs>
+          <linearGradient id="weverse-a" gradientUnits="userSpaceOnUse"/>
+          <linearGradient id="weverse-b" x2="1" gradientTransform="scale(461.56)rotate(42.582 -.07 .17)" href="#weverse-a">
+            <stop stopColor="#000120"/>
+            <stop offset="1" stopColor="#000120"/>
+          </linearGradient>
+        </defs>
+        <path fillRule="evenodd" d="M89.8 0h332.4C471.8 0 512 40.2 512 89.8v332.4c0 49.6-40.2 89.8-89.8 89.8H89.8C40.2 512 0 471.8 0 422.2V89.8C0 40.2 40.2 0 89.8 0" style={{fill: "url(#weverse-b)"}}/>
+        <path fillRule="evenodd" d="M75.3 172.1s12-7.2 17.8-9.9 11.5-4.9 16.9-6.6l3.8-1.2q1.9-.5 3.9-1 1.9-.5 3.9-.9 1.9-.4 3.9-.8c5-.8 9.6-1.3 14-1.5 4.3-.1 8.3 0 12 .4s7 1.1 9.9 1.9c2.8.8 5.3 1.8 7.3 2.8.6.3 1.4.7 2.3 1.4q1.5.9 3.3 2.4l1 .8q.5.4.9.9.5.4 1 .9l.9.9 1 1.2 1 1.2q.4.6.9 1.2.4.7.9 1.3.4.8.9 1.5.4.8.9 1.5.4.8.9 1.6l.8 1.6q.3.8.7 1.6.4 1 .7 2 .4.9.7 1.9t.5 2q.3 1 .5 2c.6 2.9.9 6.1 1 9.6q0 5.25-.9 11.4l-1.3 8-1.2 7.9-1.2 7.9-1.3 7.9-1.2 8-1.3 7.9-1.2 7.9-1.3 7.9q-.1 1.2-.3 2.4-.1 1.2-.3 2.4l-.2 2.4-.2 2.4q-.4 4.5-.5 8.3 0 3.9.3 7.2.4 3.2 1.1 5.9.7 2.6 1.8 4.6 1.2 2 2.8 3.3.3.3.8.6.4.3.9.6.4.2.9.4.5.3 1 .4 2 .7 4.5.7 2.2 0 4.8-.7c1.8-.5 3.6-1.3 5.5-2.3 1.9-1.1 3.9-2.5 5.9-4.2s4-3.7 5.9-6.1c2-2.4 3.9-5.2 5.7-8.5q2.7-4.8 5.1-10.9 2.3-6.1 4.2-13.7c1.2-5 2.3-10.5 3-16.6l1.4-10.5 1.4-10.5 1.3-10.5 1.4-10.5 1.3-10.5 1.4-10.5 1.4-10.5 1.3-10.5H302l-1.8 13.5-1.7 13.5-1.7 13.5-1.7 13.4-1.8 13.5-1.7 13.5-1.7 13.5-1.7 13.4q-.7 5.4-1.1 10-.3 4.5-.3 8.3 0 3.7.3 6.7.4 3.1 1.1 5.4t1.8 4q1.1 1.6 2.6 2.7.3.3.7.5.4.3.8.5.5.2.9.3.4.2.9.3 1.8.5 4 .5c1.6 0 3.5-.3 5.4-.8 1.9-.6 3.9-1.5 5.9-2.8s4.1-2.9 6.2-5 4.2-4.5 6.3-7.5 4.1-6.4 6.1-10.4 3.8-8.5 5.6-13.5c1.8-5.1 3.4-10.8 4.9-17.1s2.8-13.2 3.9-20.8q.2-1.1.3-2.3.2-1.1.3-2.2.2-1.2.3-2.3.2-1.1.3-2.3.5-4.4.8-8.6t.5-8.3q.1-4.1.1-8.2v-4.1q-.1-1-.1-2.1 0-1-.1-2 0-1.1-.1-2.1 0-1.1-.1-2.1 0-1.1-.1-2.2-.1-1-.2-2.1-.3-4.3-.8-8.8-.1-1.2-.2-2.3-.2-1.2-.3-2.4-.2-1.1-.3-2.3t-.3-2.4h63.2c.2 1.2.3 2.8.4 5 .2 2.1.3 4.7.5 7.6.3 2.9.6 6.2 1 9.7q.2 1.3.4 2.7l.4 2.8q.3 1.4.5 2.7l.6 2.8c.8 3.8 1.9 7.7 3.2 11.6 1.4 4 3 7.9 5.1 11.7 2 3.8 4.4 7.5 7.3 10.9l2.2 2.6q1.2 1.3 2.5 2.5 1.2 1.2 2.5 2.3t2.7 2.1l-1.5 11.7-1.6 11.6-1.5 11.6-1.6 11.6q-2.9-1.1-5.8-2.5-2.8-1.4-5.5-3.1-2.8-1.6-5.3-3.5-2.6-1.8-5-3.9l-1.6-1.4-1.6-1.4q-.7-.8-1.5-1.5-.7-.8-1.5-1.5c-2.2 8.9-4.9 17.1-8 24.6-3.1 7.6-6.6 14.4-10.5 20.6s-8 11.7-12.5 16.7q-1.7 1.8-3.4 3.5t-3.5 3.4l-3.6 3.2-3.8 3q-1.9 1.4-3.8 2.7t-3.8 2.5q-2 1.3-4 2.4t-4.1 2.1q-2 1.1-4.1 2t-4.2 1.7q-2.1.9-4.2 1.6t-4.3 1.4c-5.7 1.7-11.6 3-17.5 3.8q-2.2.3-4.5.5-2.2.3-4.5.4-2.2.2-4.5.2-2.2.1-4.5.1-6.1 0-11.5-.7-5.5-.7-10.2-2-1.2-.3-2.3-.6l-2.2-.8q-1.2-.4-2.3-.8-1-.4-2.1-.9l-2-1q-1-.5-1.9-1-1-.5-1.9-1.1l-1.8-1.2q-.9-.6-1.7-1.2t-1.6-1.3q-.8-.6-1.6-1.3t-1.5-1.4-1.4-1.5q-.7-.7-1.3-1.5-.6-.7-1.3-1.5-.6-.8-1.1-1.6-.6-.9-1.1-1.7-.6-.8-1.1-1.7-.4-.9-.9-1.8-.5-.8-.9-1.7-.4-1-.8-1.9t-.7-1.9q-.4-.9-.7-1.9-.3-.9-.5-1.9c-3.2 4.7-6.5 8.8-10 12.3q-1.3 1.3-2.6 2.5t-2.6 2.3q-1.3 1.2-2.7 2.2-1.4 1.1-2.9 2.1-1.3 1-2.6 1.8-1.3.9-2.7 1.7t-2.8 1.5q-1.4.8-2.8 1.5-1.2.6-2.5 1.1-1.3.6-2.6 1.1l-2.6 1q-1.3.5-2.6.9-1.2.4-2.3.7-1.2.4-2.3.7-1.2.3-2.3.5-1.2.3-2.3.5-.9.2-1.9.4-.9.2-1.8.3t-1.9.3l-1.8.2c-2.1.2-3.8.3-4.9.3h-1.8q-8.1 0-15.1-1.5-6.9-1.5-12.7-4.5-1.4-.7-2.7-1.5-1.4-.8-2.7-1.7t-2.5-1.9l-2.4-2q-4.5-4.2-7.9-9.7-3.4-5.4-5.6-11.8-2.2-6.5-3.2-13.9-1-7.5-.9-15.7.1-8.3 1.3-17.3l1.3-8.2 1.4-8.2 1.3-8.2 1.3-8.2 1.3-8.2 1.3-8.2 1.3-8.2 1.3-8.2q.1-2.2-.3-3.9-.3-1.6-1-2.8-.2-.3-.4-.5-.2-.3-.4-.5-.2-.3-.4-.5t-.5-.4q-.2-.2-.5-.4-.2-.1-.5-.3-.3-.1-.6-.3-.2-.1-.5-.2l-.6-.2q-.3-.1-.6-.1l-.6-.2q-.2 0-.5-.1h-.6q-.3 0-.6-.1H114l-2.2.2q-1 .2-1.7.4-1.6.5-3.1.9-.8.3-1.5.5-.7.3-1.4.5l-1.4.6q-.7.2-1.4.5l-2.8 1.2q-1.3.7-2.7 1.4c-1 .5-20.5-38.3-20.5-38.3" fill="#00C7BB"/>
+      </svg>
+    )
+  }
+
+  const curated = AVAILABLE_ICONS.find(i => i.id.toLowerCase() === iconId.toLowerCase())
+  const slug = curated ? curated.slug : iconId.toLowerCase().trim().replace(/\s+/g, "-")
+  
+  const src = `https://cdn.simpleicons.org/${slug}`
+
+  return (
+    <img 
+      key={src}
+      src={src} 
+      alt={iconId}
+      className={className}
+      loading="lazy"
+    />
+  )
+}
+
+function OfficialLinkCard({ label, url, note, metaKey }: { label: string; url: string; note: string; metaKey: string }) {
+  const normalizedKey = metaKey.toLowerCase().replace(/[^a-z0-9]/g, "")
+  const meta = Object.entries(officialLinkMeta).find(
+    ([k]) => k.toLowerCase().replace(/[^a-z0-9]/g, "") === normalizedKey
+  )?.[1] ?? officialLinkMeta.X
 
   return (
     <Link
@@ -162,7 +215,7 @@ function OfficialLinkCard({ label, url, note, icon: Icon }: { label: string; url
       <div className="relative flex items-start justify-between gap-3">
         {/* Icon */}
         <div className={`flex size-11 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110 group-hover:shadow-md ${meta.iconBg}`}>
-          <Icon className={`size-5 transition-colors ${meta.iconColor}`} />
+          {renderBrandIcon(metaKey, "size-5 object-contain")}
         </div>
 
         {/* Arrow */}
@@ -313,9 +366,9 @@ export function HomePageClient({
             {/* Section header */}
             <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div className="space-y-3">
-                <div className="pill-pink w-fit">
-                  <Heart className="size-3.5 fill-current" />
-                  <span>{t("concept.official")}</span>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-pink-200 bg-white/70 backdrop-blur-sm shadow-sm w-fit">
+                  <Heart className="size-3.5 text-pink-500 fill-pink-500" />
+                  <span className="text-pink-600 font-black uppercase tracking-widest text-[9px]">{t("concept.official")}</span>
                 </div>
                 <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-slate-900">
                   Stay Connected
@@ -333,16 +386,26 @@ export function HomePageClient({
             </div>
 
             {/* 2-column card grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {officialLinks.map((item) => (
-                <OfficialLinkCard
-                  key={item.name}
-                  label={item.name}
-                  url={item.href}
-                  note={item.note}
-                  icon={officialLinkMeta[item.name]?.icon ?? ArrowRight}
-                />
-              ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {officialLinks.map((item, index) => {
+                // Determine the correct meta mapping key (try platform, then note, then name)
+                const metaKey = (item as any).platform || item.note || item.name
+                const normalizedKey = metaKey.toLowerCase().replace(/[^a-z0-9]/g, "")
+                const meta = Object.entries(officialLinkMeta).find(
+                  ([k]) => k.toLowerCase().replace(/[^a-z0-9]/g, "") === normalizedKey
+                )?.[1] ?? officialLinkMeta.X
+
+                return (
+                  <OfficialLinkCard
+                    key={item.id ?? `link-${index}`}
+                    label={item.name}
+                    url={item.href}
+                    note={item.note}
+                    metaKey={metaKey}
+                    icon={meta.icon ?? ArrowRight}
+                  />
+                )
+              })}
             </div>
           </div>
         </div>
