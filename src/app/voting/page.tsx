@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 import { votingGuideContent } from "@/lib/voting-guide"
-import { VotingPageClient } from "@/app/voting/voting-page-client"
+import VotingPageClient from "./voting-page-client"
 import { t } from "@/i18n/translations"
 import { ArrowUp } from "lucide-react"
 
@@ -15,9 +15,14 @@ export async function generateMetadata() {
 export default async function VotingPage() {
   return (
     <main id="top" className="relative min-h-screen selection:bg-[#FFC2D1]/30">
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute left-[-10%] top-[-10%] size-[520px] rounded-full bg-[#A2D2FF]/10 blur-[120px]" />
+        <div className="absolute bottom-[-12%] right-[-10%] size-[520px] rounded-full bg-[#FFC2D1]/12 blur-[120px]" />
+      </div>
+
       <Navbar />
 
-      <div className="section-shell pt-32 lg:pt-48 pb-12 lg:pb-24">
+      <div className="section-shell pt-32 lg:pt-48 pb-24">
         <header className="reveal-up">
           {/* ── Eyebrow ── */}
           <div className="mb-6 flex items-center gap-3">
@@ -32,10 +37,10 @@ export default async function VotingPage() {
           {/* ── Main title + Quick Links row ── */}
           <div className="mb-10 grid gap-10 lg:grid-cols-[1fr_auto]">
             <div className="space-y-6">
-              <h1 className="text-title text-5xl leading-[0.95] sm:text-6xl lg:text-7xl">
+              <h1 className="text-5xl font-black uppercase tracking-tighter text-black leading-[0.92] sm:text-6xl lg:text-8xl">
                 <span>{t("voting.title").split("&")[0]} &</span>
                 <br />
-                <span className="text-gradient">
+                <span>
                   {t("voting.title").split("&")[1]?.trim()}
                 </span>
               </h1>

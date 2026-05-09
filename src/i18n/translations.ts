@@ -70,7 +70,7 @@ const strings: Record<string, string> = {
   "performance.topTracks": "Top 5 tracks",
   "performance.topVideos": "Top 5 videos",
   "performance.viewAll": "View all",
-  "performance.empty": "No track data returned from this source yet.",
+  "performance.empty": "No realtime data available from this source yet.",
 
   // Concept Section
   "concept.official": "Official links",
@@ -140,7 +140,7 @@ const strings: Record<string, string> = {
   "charts.vibe.title": "Vibe Chart",
   "charts.analyzed": "Tracks Analyzed",
   "charts.analyzed.video": "Videos Analyzed",
-  "charts.empty": "No data available.",
+  "charts.empty": "No realtime data available.",
   "charts.rank": "Rank",
   "charts.total": "Total",
   "charts.daily": "Daily",
@@ -214,8 +214,8 @@ const strings: Record<string, string> = {
   "album.viewSource": "View source on Wikidata",
 
   // Footer
-  "footer.copyright": "© {year} Hearts2Hearts · Unofficial Fan Project",
-  "footer.disclaimer": "This is an independent fan encyclopedia. All trademarks belong to their respective owners.",
+  "footer.copyright": "Non-commercial fan project · All trademarks, logos, and related assets belong to their respective owners.",
+  "footer.disclaimer": "This site is an independent fan resource provided for informational purposes only.",
 
   // Notice Board
   "notice.title": "Pin Board",
@@ -238,7 +238,7 @@ const strings: Record<string, string> = {
   "records.dataSource": "Data source",
   "records.openSource": "Open",
   "records.loading": "Loading…",
-  "records.copyright": "© 2026 Hearts2Hearts Fan Home — All data sourced from public records.",
+  "records.copyright": "Non-commercial fan project · Information presented here is for reference only and subject to the rights of their respective owners.",
 }
 
 /**

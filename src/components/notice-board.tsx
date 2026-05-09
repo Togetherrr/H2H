@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { Pin, X, ExternalLink, Megaphone, ShoppingCart, Info, ArrowRight, Plus } from "lucide-react"
-import Link from "next/link"
 import { useTranslation } from "@/hooks/useTranslation"
 import { ALL_NOTICES } from "@/lib/notices"
 import { cn } from "@/lib/utils"
+import { AppLink } from "@/components/app-link"
 
 export function NoticeBoard() {
   const { t } = useTranslation()
@@ -59,7 +59,7 @@ export function NoticeBoard() {
             {recentNotices.length > 0 ? (
               <>
                 {recentNotices.map((notice) => (
-                  <Link 
+                  <AppLink
                     key={notice.id}
                     href="/notices"
                     onClick={() => setIsOpen(false)}
@@ -78,7 +78,7 @@ export function NoticeBoard() {
                     <h4 className="text-[15px] font-black text-black group-hover:text-[#FF708A] transition-colors line-clamp-2 leading-tight">
                       {notice.title_en}
                     </h4>
-                  </Link>
+                  </AppLink>
                 ))}
                 
                 {ALL_NOTICES.length > 3 && (
@@ -98,14 +98,14 @@ export function NoticeBoard() {
           </div>
 
           {/* Footer */}
-          <Link 
+          <AppLink
             href="/notices"
             onClick={() => setIsOpen(false)}
             className="flex items-center justify-center gap-3 p-8 text-[13px] font-black uppercase tracking-[0.3em] text-white bg-[#FF708A] hover:bg-black transition-all shadow-lg active:scale-95"
           >
             <span>{t("notice.viewAll")}</span>
             <ArrowRight className="size-4 transition-transform group-hover:translate-x-2" />
-          </Link>
+          </AppLink>
         </div>
       </div>
 

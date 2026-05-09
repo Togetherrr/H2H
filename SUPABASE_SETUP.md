@@ -31,6 +31,9 @@ Schema nay se tao:
 - `timeline_events`
 - `social_links`
 
+Neu ban muon hien thi Spotify/YouTube realtime theo rolling 24h (TOTAL / DAILY / DAILY CHANGE), chay them migration:
+- `supabase/migrations/20260507_add_realtime_snapshots.sql`
+
 Dong thoi no cung tao:
 - trigger tao `profiles` tu dong khi user dang nhap lan dau
 - enum role `user/admin`
@@ -81,6 +84,46 @@ Trong Supabase dashboard:
 - `Project Settings > API`: lay URL, keys va xem API config
 
 ## Ghi chu
+
+### Realtime snapshots (poll 5 phut)
+
+- Set env/secret:
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `H2H_CRON_SECRET`
+  - `CHARTEX_APP_ID`
+  - `CHARTEX_APP_TOKEN`
+  - `H2H_YOUTUBE_API_KEY`
+  - `H2H_YOUTUBE_VIDEO_IDS`
+- Set repository variable:
+  - `H2H_APP_URL` = URL deploy chinh, vi du `https://your-app.vercel.app`
+- Cron co san trong repo:
+  - `.github/workflows/realtime-poll.yml`
+- Workflow se goi:
+  - `GET /api/realtime/poll` voi header `x-cron-secret: <H2H_CRON_SECRET>` moi 5 phut
+- UI/API doc du lieu rolling 24h:
+  - `GET /api/realtime/summary?type=spotify_track`
+  - `GET /api/realtime/summary?type=youtube_video`
+
+Neu ban dung GitHub Actions, chi can:
+1. Tao repository variable `H2H_APP_URL`
+2. Tao repository secret `H2H_CRON_SECRET`
+3. Bat workflow `Realtime Poll`
+
+### Kiem tra local khong can deploy
+
+Neu ban chua deploy, van co the check ngay tren may local:
+
+1. Chay dev server:
+  - `bun run dev`
+2. Dat `H2H_CRON_SECRET` trong `.env.local`.
+3. Goi poll local:
+  - `bun run realtime:poll:local`
+4. Neu dev server khong o port 3000, set them `REALTIME_POLL_BASE_URL`, vi du:
+  - `REALTIME_POLL_BASE_URL=http://localhost:3002 bun run realtime:poll:local`
+
+Script nay se goi:
+- `GET /api/realtime/poll?dryRun=1` voi header `x-cron-secret`
+- in ra JSON response de ban biet snapshot co duoc upsert hay khong
 
 Landing page van public. User chi can dang nhap khi dung tinh nang can tai khoan, va `/admin` chi mo cho role `admin`.
 

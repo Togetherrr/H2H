@@ -25,7 +25,7 @@ export function Sidebar({
     <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-800 bg-slate-950 pb-6 pt-8 backdrop-blur-xl">
       <div className="px-6">
         <Link
-          href="/"
+          href="/home"
           className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 transition hover:bg-slate-800 hover:text-white"
         >
           <ArrowLeft className="size-4" />

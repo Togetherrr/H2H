@@ -10,6 +10,7 @@ import { TimelineSection } from "@/components/timeline-section"
 import { ComebackWatchHeader } from "@/components/comeback-watch-header"
 import { SpotlightNotice } from "@/components/spotlight-notice"
 import { Navbar, type TimeZone } from "@/components/navbar"
+import { NoticeBoard } from "@/components/notice-board"
 import { useTranslation } from "@/hooks/useTranslation"
 import { Users, Building2, Disc, MapPin, Calendar, HeartPulse, Palette, Hash } from "lucide-react"
 
@@ -420,7 +421,7 @@ export function HomePageClient({
               <Star className="size-5 fill-current" />
             </div>
             <p className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-500">
-              {t("footer.copyright").replace("{year}", currentYear.toString())}
+              {t("footer.copyright")}
             </p>
             <p className="text-[11px] text-slate-400 max-w-2xl mx-auto leading-relaxed">
               {t("footer.disclaimer")}
@@ -428,6 +429,7 @@ export function HomePageClient({
           </div>
         </div>
       </footer>
+      <NoticeBoard />
     </main>
   )
 }

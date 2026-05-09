@@ -2,7 +2,6 @@ import type { Metadata } from "next"
 import { Baloo_2 } from "next/font/google"
 import { Toaster } from "@/components/ui/sonner"
 import { ClientProvider } from "@/components/client-provider"
-import { NoticeBoard } from "@/components/notice-board"
 import { AmbientLayer } from "@/components/ambient-layer"
 import { getActiveTheme, generateThemeStyle } from "@/lib/theme-service"
 import "./globals.css"
@@ -39,7 +38,7 @@ export default async function RootLayout({
         <AmbientLayer effects={activeTheme?.config?.effects} />
         <ClientProvider>
           {children}
-          <NoticeBoard />
+
         </ClientProvider>
         <Toaster position="top-right" richColors closeButton />
       </body>

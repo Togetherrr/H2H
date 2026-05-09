@@ -309,7 +309,7 @@ function RecordDetailContent({
         <div className="section-shell relative z-10">
           {/* Back link */}
           <Link
-            href="/#records"
+            href="/home#records"
             className="group inline-flex items-center gap-2.5 mb-10 px-4 py-2 rounded-full bg-white/40 backdrop-blur-md border border-white/60 shadow-sm text-[10px] font-black uppercase tracking-[0.3em] text-black/50 hover:text-[#FF708A] hover:bg-white/80 transition-all"
             style={{
               opacity: heroVisible ? 1 : 0,
