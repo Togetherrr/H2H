@@ -34,14 +34,22 @@ function AppIcon({ imageSrc, name }: { imageSrc?: string; name: string }) {
   return (
     <div className="relative group-hover:scale-105 transition-transform duration-500">
       <div className="h-16 w-16 rounded-[2rem] bg-gradient-to-br from-[#FFC2D1] to-[#A2D2FF] p-[2px] shadow-sm">
-        <div className="flex h-full w-full items-center justify-center rounded-[1.9rem] bg-white overflow-hidden">
+        <div className="relative flex h-full w-full items-center justify-center rounded-[1.9rem] bg-white overflow-hidden">
           {imageSrc ? (
-            <Image src={imageSrc} alt={name} className="h-full w-full object-cover" />
+            <Image
+              src={imageSrc}
+              alt={name}
+              fill
+              className="object-cover"
+            />
           ) : (
-            <span className="text-lg font-black text-[#FF708A]">{name.slice(0, 2).toUpperCase()}</span>
+            <span className="text-lg font-black text-[#FF708A]">
+              {name.slice(0, 2).toUpperCase()}
+            </span>
           )}
         </div>
       </div>
+
       <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-[#FF708A] border-4 border-white shadow-sm" />
     </div>
   )
