@@ -1,65 +1,41 @@
-import { HomePageClient } from "@/components/home-page-client"
-import { officialLinks as staticOfficialLinks } from "@/lib/home-content"
-import { getFilmFrames, getTimelineEvents } from "../lib/release-catalog"
-import { memberProfiles as staticMemberProfiles } from "@/lib/member-profiles"
-import { hearts2heartsOfficialProfile } from "@/lib/group-official-profile"
-import { getHomeStatsSnapshot } from "@/lib/home-stats"
-import { getTrackPerformanceSnapshot } from "@/lib/track-performance"
+"use client"
 
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { LineupReveal } from "@/components/lineup-reveal"
+import { AnimatePresence, motion } from "framer-motion"
 
-import { createClient } from "@/lib/supabase/server"
-import { hasSupabaseEnv } from "@/lib/supabase/env"
+export default function LandingPage() {
+  const router = useRouter()
+  const [isIntroDone, setIsIntroDone] = useState(false)
 
-export default async function HomePage() {
-  const [timelineEvents, filmFrames, homeStatsSnapshot, trackPerformanceSnapshot] = await Promise.all([
-    getTimelineEvents(),
-    getFilmFrames(4),
-    getHomeStatsSnapshot(hearts2heartsOfficialProfile.debutDate),
-    getTrackPerformanceSnapshot(),
-  ])
-  let memberProfiles = staticMemberProfiles
-  let officialLinks = staticOfficialLinks
+  useEffect(() => {
+    router.prefetch("/home")
+  }, [router])
 
-  if (hasSupabaseEnv()) {
-    const supabase = await createClient()
-    
-    // Fetch members if needed
-    const { data: dbMembers } = await supabase.from("members").select("*").order("sort_order", { ascending: true })
-    if (dbMembers && dbMembers.length > 0) {
-      memberProfiles = dbMembers.map((m: any) => ({
-        slug: m.slug,
-        name: m.stage_name,
-        position: (m.positions && m.positions.length > 0) ? m.positions[0] : (m.position || m.role || "Member"),
-        image: m.profile_image_url || "",
-        intro: m.intro || m.bio_short || "",
-        keywords: [],
-        sourceName: "Official",
-        sourceUrl: "#",
-      }))
-    }
-
-    // Fetch official links
-    const { data: dbLinks } = await supabase.from("social_links").select("*").order("sort_order", { ascending: true })
-    if (dbLinks && dbLinks.length > 0) {
-      officialLinks = dbLinks.map((l) => ({
-        id: l.id,
-        name: l.label,
-        href: l.url,
-        note: l.note || "", 
-        platform: l.note || undefined, 
-      }))
-    }
+  const handleIntroComplete = () => {
+    setIsIntroDone(true)
+    // Chuyển hướng ngay lập tức sang Home
+    router.replace("/home")
   }
 
   return (
-    <HomePageClient
-      filmFrames={filmFrames}
-      timelineEvents={timelineEvents}
-      memberProfiles={memberProfiles}
-      officialLinks={officialLinks}
-      officialProfile={hearts2heartsOfficialProfile}
-      homeStatsSnapshot={homeStatsSnapshot}
-      trackPerformanceSnapshot={trackPerformanceSnapshot}
-    />
+    // Đổi bg sang trắng/sky nhạt để tiệp màu với Intro mới
+    <main className="min-h-[100dvh] relative bg-white overflow-hidden">
+      <AnimatePresence mode="wait">
+        {!isIntroDone ? (
+          <LineupReveal key="intro" onComplete={handleIntroComplete} />
+        ) : (
+          <motion.div
+            key="out"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: 0.3 }} // Chuyển cảnh nhanh hơn
+            className="fixed inset-0 z-[1000] bg-white"
+          />
+        )}
+      </AnimatePresence>
+    </main>
   )
 }
+

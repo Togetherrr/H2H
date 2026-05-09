@@ -391,10 +391,6 @@ export function HomePageClient({
               {officialLinks.map((item, index) => {
                 // Determine the correct meta mapping key (try platform, then note, then name)
                 const metaKey = (item as any).platform || item.note || item.name
-                const normalizedKey = metaKey.toLowerCase().replace(/[^a-z0-9]/g, "")
-                const meta = Object.entries(officialLinkMeta).find(
-                  ([k]) => k.toLowerCase().replace(/[^a-z0-9]/g, "") === normalizedKey
-                )?.[1] ?? officialLinkMeta.X
 
                 return (
                   <OfficialLinkCard
@@ -403,7 +399,6 @@ export function HomePageClient({
                     url={item.href}
                     note={item.note}
                     metaKey={metaKey}
-                    icon={meta.icon ?? ArrowRight}
                   />
                 )
               })}
