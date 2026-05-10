@@ -3,6 +3,10 @@ const strings: Record<string, string> = {
   // Header
   "header.brand": "Hearts2Hearts",
   "header.tagline": "For S2U",
+  "header.nav.profile": "Profile",
+  "header.nav.career": "Career",
+  "header.nav.album": "Album",
+  "header.nav.social": "Social",
   "header.nav.concept": "Concept",
   "header.nav.moments": "Moments",
   "header.nav.join": "Join",
