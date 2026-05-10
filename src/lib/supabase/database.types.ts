@@ -531,6 +531,76 @@ export type Database = {
           },
         ]
       }
+   voting_apps: {
+        Row: {
+          id: string
+          name: string
+          category: string
+          program_name: string | null
+          logo_url: string | null
+          currencies: string[] | null
+          collection_methods: string[] | null
+          android_url: string | null
+          ios_url: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          category: string
+          program_name?: string | null
+          logo_url?: string | null
+          currencies?: string[] | null
+          collection_methods?: string[] | null
+          android_url?: string | null
+          ios_url?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          category?: string
+          program_name?: string | null
+          logo_url?: string | null
+          currencies?: string[] | null
+          collection_methods?: string[] | null
+          android_url?: string | null
+          ios_url?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      app_strategies: {
+        Row: {
+          id: string
+          app_id: string
+          content: string
+          order_num: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          app_id: string
+          content: string
+          order_num: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          app_id?: string
+          content?: string
+          order_num?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_strategies_app_id_fkey"
+            columns: ["app_id"]
+            referencedRelation: "voting_apps"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

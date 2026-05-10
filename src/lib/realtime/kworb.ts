@@ -64,11 +64,7 @@ export async function fetchKworbSpotify(): Promise<PlatformPerformance | null> {
             console.warn("KWORB: HTML snippet:", html.slice(0, 500))
             return null
         }
-        if (items.length === 0) {
-            console.warn("KWORB: parsed 0 tracks — HTML structure may have changed")
-            console.warn("KWORB: HTML snippet:", html.slice(0, 500))
-            return null
-        }
+
 
         console.log(`KWORB: parsed ${items.length} tracks`)
 

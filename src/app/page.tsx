@@ -10,32 +10,46 @@ export default function LandingPage() {
   const [isIntroDone, setIsIntroDone] = useState(false)
 
   useEffect(() => {
+    // prefetch trang home để trình duyệt nạp sẵn dữ liệu và ảnh nền
     router.prefetch("/home")
   }, [router])
 
   const handleIntroComplete = () => {
     setIsIntroDone(true)
-    // Chuyển hướng ngay lập tức sang Home
-    router.replace("/home")
+    // chuyển hướng sau khi hiệu ứng fade-out đã bắt đầu
+    setTimeout(() => {
+      router.replace("/home")
+    }, 100) 
   }
 
   return (
-    // Đổi bg sang trắng/sky nhạt để tiệp màu với Intro mới
-    <main className="min-h-[100dvh] relative bg-white overflow-hidden">
+    /* mình sử dụng style giống hệt globals.css của bạn 
+       để tạo sự đồng nhất ngay từ lớp nền của landing page 
+    */
+    <main className="min-h-[100dvh] relative bg-[#1a2238] overflow-hidden">
       <AnimatePresence mode="wait">
-        {!isIntroDone ? (
-          <LineupReveal key="intro" onComplete={handleIntroComplete} />
-        ) : (
-          <motion.div
-            key="out"
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 0 }}
-            transition={{ duration: 0.3 }} // Chuyển cảnh nhanh hơn
-            className="fixed inset-0 z-[1000] bg-white"
-          />
-        )}
-      </AnimatePresence>
+  {!isIntroDone ? (
+    <LineupReveal key="intro" onComplete={handleIntroComplete} />
+  ) : (
+    /* Sử dụng các class Tailwind để khớp hoàn toàn với globals.css:
+       - bg-[#1a2238]: Màu nền chính
+       - bg-[url('/background.jpg')]: Ảnh nền album art
+       - bg-cover, bg-center, bg-fixed, bg-no-repeat: Các thuộc tính hiển thị
+    */
+    <motion.div
+      key="out"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="fixed inset-0 z-[1000] bg-[#1a2238] bg-[url('/background.jpg')] bg-cover bg-center bg-fixed bg-no-repeat"
+    />
+  )}
+</AnimatePresence>
+      <style jsx global>{`
+        @media (prefers-reduced-motion: reduce) {
+          * { animation: none !important; transition: none !important; }
+        }
+      `}</style>
     </main>
   )
 }
-
