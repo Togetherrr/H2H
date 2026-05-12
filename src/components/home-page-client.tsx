@@ -176,7 +176,7 @@ function MemberDetailModal({
       setMountedTabs(["profile"])
       setHeroLoaded(false)
     }
-  }, [isOpen, member?.slug])
+  }, [isOpen, member])
 
   if (!member) return null
 
