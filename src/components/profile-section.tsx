@@ -1,8 +1,7 @@
 "use client"
 
-/* eslint-disable @next/next/no-img-element */
-
 import Link from "next/link"
+import Image from "next/image"
 import { User, Sparkles } from "lucide-react"
 import { useTranslation } from "@/hooks/useTranslation"
 import type { MemberProfile } from "@/lib/member-profiles"
@@ -52,7 +51,13 @@ export function ProfileSection({ memberProfiles, officialProfile }: ProfileSecti
               <div className="shrink-0 relative group/logo">
                 <div className="absolute -inset-3 bg-sky-400/15 rounded-[2.5rem] blur-2xl opacity-0 group-hover/logo:opacity-100 transition-opacity duration-700" />
                 <div className="relative size-40 rounded-[2rem] bg-white/40 p-6 backdrop-blur-xl border border-white/60 shadow-inner flex items-center justify-center transition-transform duration-700 group-hover/logo:scale-105">
-                  <img src={officialProfile.logoAsset} alt="Logo" className="h-full w-full object-contain" />
+                  <Image
+                    src={officialProfile.logoAsset}
+                    alt="Logo"
+                    fill
+                    sizes="160px"
+                    className="object-contain"
+                  />
                 </div>
               </div>
 
@@ -101,10 +106,14 @@ export function ProfileSection({ memberProfiles, officialProfile }: ProfileSecti
                   >
                     {/* Member Image Card - Giữ nguyên logic UI của bạn */}
                     <div className="relative aspect-[3/4] overflow-hidden rounded-[2rem] border border-white/60 bg-white/50 shadow-sm transition-all duration-500 group-hover/member:-translate-y-2 group-hover/member:shadow-xl group-hover/member:border-sky-200">
-                      <img
+                      <Image
                         src={member.image}
                         alt={member.name}
-                        className="h-full w-full object-cover transition-transform duration-700 group-hover/member:scale-110"
+                        fill
+                        sizes="(min-width: 1024px) 220px, (min-width: 640px) 25vw, 50vw"
+                        quality={75}
+                        priority={index < 2}
+                        className="object-cover transition-transform duration-700 group-hover/member:scale-110"
                       />
 
                       {/* Keywords Overlay - Giữ nguyên logic UI của bạn */}

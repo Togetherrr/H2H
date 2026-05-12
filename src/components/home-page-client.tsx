@@ -1,8 +1,9 @@
 "use client"
 
 /* eslint-disable @next/next/no-img-element */
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { ArrowRight, Facebook, Heart, Instagram, Music2, Star, Twitter, Youtube, Users2, X, Cake, Zap, Ruler, Droplets, Globe, Quote, Sparkles, BookOpen, Trophy, Fingerprint, Music, Smile, MapPin, Users } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Dialog, DialogContent, DialogOverlay, DialogPortal, DialogTitle } from "@radix-ui/react-dialog"
@@ -122,17 +123,22 @@ function FactRow({ title, value, icon: Icon }: { title: string; value: React.Rea
   )
 }
 
-function MemberCardNew({ member, onClick }: { member: MemberProfile; onClick: () => void }) {
+function MemberCardNew({ member, onClick, priority }: { member: MemberProfile; onClick: () => void; priority?: boolean }) {
   return (
     <button
       onClick={onClick}
       className="group relative flex flex-col items-center bg-white/40 hover:bg-white/70 backdrop-blur-md rounded-[2rem] p-3 shadow-sm border border-white/60 transition-all duration-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-sky-200/30 w-full"
     >
       <div className="relative w-full aspect-[4/5] max-w-[120px] md:max-w-[140px] overflow-hidden rounded-[1.5rem] mb-3 transition-transform duration-500 group-hover:scale-105 group-hover:-rotate-1 border-[4px] border-white shadow-sm">
-        <img
+        <Image
           src={member.image}
           alt={member.name}
-          className="h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-108"
+          fill
+          sizes="(min-width: 1024px) 140px, (min-width: 768px) 120px, 45vw"
+          quality={75}
+          priority={priority}
+          unoptimized
+          className="object-cover object-top transition-transform duration-700 group-hover:scale-108"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-sky-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       </div>
@@ -160,6 +166,18 @@ function MemberDetailModal({
   isOpen: boolean;
   onClose: () => void
 }) {
+  const [activeTab, setActiveTab] = useState("profile")
+  const [mountedTabs, setMountedTabs] = useState<string[]>(["profile"])
+  const [heroLoaded, setHeroLoaded] = useState(false)
+
+  useEffect(() => {
+    if (isOpen && member) {
+      setActiveTab("profile")
+      setMountedTabs(["profile"])
+      setHeroLoaded(false)
+    }
+  }, [isOpen, member?.slug])
+
   if (!member) return null
 
   const profileItems = [
@@ -187,12 +205,34 @@ function MemberDetailModal({
 
             {/* Left side: Cinematic Image */}
             <div className="relative w-full md:w-[35%] aspect-[4/5] md:aspect-auto overflow-hidden bg-slate-900">
-              <img
-                src={member.image}
-                alt={member.name}
-                className="h-full w-full object-cover object-top"
+              <div
+                className={`absolute inset-0 bg-gradient-to-br from-pink-200/30 via-sky-200/20 to-slate-900 transition-opacity duration-500 ${heroLoaded ? "opacity-0" : "opacity-100"}`}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+              <div
+                className={`absolute -top-16 -right-16 size-40 rounded-full bg-pink-200/40 blur-3xl transition-opacity duration-700 ${heroLoaded ? "opacity-0" : "opacity-100"}`}
+              />
+              <div
+                className={`absolute bottom-12 left-10 size-28 rounded-full bg-sky-200/40 blur-3xl transition-opacity duration-700 ${heroLoaded ? "opacity-0" : "opacity-100"}`}
+              />
+              <div
+                className={`absolute inset-0 bg-gradient-to-br from-sky-200/80 via-sky-300/70 to-sky-200/60 transition-opacity duration-[1400ms] ${heroLoaded ? "opacity-30" : "opacity-100"}`}
+              />
+              <motion.div
+                key={member.slug}
+                className="absolute inset-0"
+                initial={{ opacity: 0.5, scale: 1.03 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              >
+                <img
+                  src={member.image}
+                  alt={member.name}
+                  className={`h-full w-full object-cover object-top transition-opacity duration-[1400ms] ${heroLoaded ? "opacity-100" : "opacity-0"}`}
+                  onLoad={() => setHeroLoaded(true)}
+                  onError={() => setHeroLoaded(true)}
+                />
+              </motion.div>
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/20 to-transparent" />
 
               <div className="absolute bottom-10 left-10 right-10">
                 <motion.div
@@ -232,7 +272,14 @@ function MemberDetailModal({
 
             {/* Right side: Multi-tab Content */}
             <div className="flex-1 flex flex-col bg-white overflow-hidden">
-              <Tabs defaultValue="profile" className="flex flex-col h-full">
+              <Tabs
+                value={activeTab}
+                onValueChange={(value) => {
+                  setActiveTab(value)
+                  setMountedTabs((prev) => (prev.includes(value) ? prev : [...prev, value]))
+                }}
+                className="flex flex-col h-full"
+              >
                 <div className="px-8 md:px-12 pt-8 flex items-center justify-between border-b border-slate-100">
                   <TabsList className="flex gap-8 flex-1">
                     <TabsTrigger value="profile" className={tabClass}>Profile</TabsTrigger>
@@ -252,144 +299,152 @@ function MemberDetailModal({
                   <AnimatePresence mode="wait">
                     {/* PROFILE TAB */}
                     <TabsContent key="profile" value="profile" className="outline-none focus:ring-0">
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="space-y-8"
-                      >
-                        <div className="grid grid-cols-2 gap-y-8 gap-x-8">
-                          {profileItems.map((item, idx) => (
-                            <div key={`profile-${idx}`} className="flex items-start gap-4">
-                              <div className="size-10 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center text-sky-500 shrink-0">
-                                <item.icon className="size-5" />
+                      {mountedTabs.includes("profile") && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="space-y-8"
+                        >
+                          <div className="grid grid-cols-2 gap-y-8 gap-x-8">
+                            {profileItems.map((item, idx) => (
+                              <div key={`profile-${idx}`} className="flex items-start gap-4">
+                                <div className="size-10 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center text-sky-500 shrink-0">
+                                  <item.icon className="size-5" />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{item.label}</span>
+                                  <p className="text-[15px] font-bold text-slate-900 leading-tight">{item.value}</p>
+                                </div>
                               </div>
-                              <div className="flex flex-col gap-1">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{item.label}</span>
-                                <p className="text-[15px] font-bold text-slate-900 leading-tight">{item.value}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </motion.div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
                     </TabsContent>
 
                     {/* STORY TAB */}
                     <TabsContent key="story" value="story" className="outline-none focus:ring-0">
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-10"
-                      >
-                        <section>
-                          <div className="flex items-center gap-3 mb-6">
-                            <Quote className="size-5 text-pink-500" />
-                            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Personal Biography</h3>
-                          </div>
-                          <div className="rounded-3xl bg-white p-8 border border-slate-100 shadow-sm">
-                            <p className="text-lg font-medium leading-relaxed text-slate-700 italic">
-                              &quot;{member.detail?.bio || member.intro}&quot;
-                            </p>
-                          </div>
-                        </section>
-
-                        {member.roleModel && (
+                      {mountedTabs.includes("story") && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="space-y-10"
+                        >
                           <section>
                             <div className="flex items-center gap-3 mb-6">
-                              <Trophy className="size-5 text-amber-500" />
-                              <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Inspiration & Role Model</h3>
+                              <Quote className="size-5 text-pink-500" />
+                              <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Personal Biography</h3>
                             </div>
-                            <div className="flex items-center gap-5 p-6 rounded-3xl bg-amber-50/50 border border-amber-100/50">
-                              <div className="size-12 rounded-2xl bg-white flex items-center justify-center text-amber-600 shadow-sm border border-amber-100">
-                                <Star className="size-6 fill-current" />
-                              </div>
-                              <p className="text-[16px] font-black text-amber-900 uppercase tracking-tight">{member.roleModel}</p>
+                            <div className="rounded-3xl bg-white p-8 border border-slate-100 shadow-sm">
+                              <p className="text-lg font-medium leading-relaxed text-slate-700 italic">
+                                &quot;{member.detail?.bio || member.intro}&quot;
+                              </p>
                             </div>
                           </section>
-                        )}
-                      </motion.div>
+
+                          {member.roleModel && (
+                            <section>
+                              <div className="flex items-center gap-3 mb-6">
+                                <Trophy className="size-5 text-amber-500" />
+                                <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Inspiration & Role Model</h3>
+                              </div>
+                              <div className="flex items-center gap-5 p-6 rounded-3xl bg-amber-50/50 border border-amber-100/50">
+                                <div className="size-12 rounded-2xl bg-white flex items-center justify-center text-amber-600 shadow-sm border border-amber-100">
+                                  <Star className="size-6 fill-current" />
+                                </div>
+                                <p className="text-[16px] font-black text-amber-900 uppercase tracking-tight">{member.roleModel}</p>
+                              </div>
+                            </section>
+                          )}
+                        </motion.div>
+                      )}
                     </TabsContent>
 
                     {/* TRIVIA TAB */}
                     <TabsContent key="trivia" value="trivia" className="outline-none focus:ring-0">
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-10"
-                      >
-                        <section>
-                          <div className="flex items-center gap-3 mb-6">
-                            <Zap className="size-5 text-sky-500" />
-                            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Highlights & Fun Facts</h3>
-                          </div>
-                          <div className="grid gap-3">
-                            {(member.funFacts || member.detail?.highlights || []).map((fact: string, idx: number) => (
-                              <div key={`fact-${idx}`} className="flex items-start gap-4 p-5 rounded-2xl bg-white border border-slate-100 shadow-sm hover:border-sky-200 transition-all">
-                                <span className="flex size-6 items-center justify-center rounded-lg bg-sky-50 text-[10px] font-black text-sky-600 shrink-0 border border-sky-100">
-                                  {idx + 1}
-                                </span>
-                                <p className="text-[14px] font-bold text-slate-700 leading-relaxed">{fact}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </section>
+                      {mountedTabs.includes("trivia") && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="space-y-10"
+                        >
+                          <section>
+                            <div className="flex items-center gap-3 mb-6">
+                              <Zap className="size-5 text-sky-500" />
+                              <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Highlights & Fun Facts</h3>
+                            </div>
+                            <div className="grid gap-3">
+                              {(member.funFacts || member.detail?.highlights || []).map((fact: string, idx: number) => (
+                                <div key={`fact-${idx}`} className="flex items-start gap-4 p-5 rounded-2xl bg-white border border-slate-100 shadow-sm hover:border-sky-200 transition-all">
+                                  <span className="flex size-6 items-center justify-center rounded-lg bg-sky-50 text-[10px] font-black text-sky-600 shrink-0 border border-sky-100">
+                                    {idx + 1}
+                                  </span>
+                                  <p className="text-[14px] font-bold text-slate-700 leading-relaxed">{fact}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </section>
 
-                        <div className="grid grid-cols-2 gap-6">
-                          {member.character && (
-                            <section>
-                              <div className="flex items-center gap-3 mb-4">
-                                <Smile className="size-4 text-pink-500" />
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Character</h3>
-                              </div>
-                              <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm text-center">
-                                <p className="text-[14px] font-black uppercase text-slate-900">{member.character}</p>
-                              </div>
-                            </section>
-                          )}
-                          {member.nicknames && member.nicknames.length > 0 && (
-                            <section>
-                              <div className="flex items-center gap-3 mb-4">
-                                <Hash className="size-4 text-sky-500" />
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Nicknames</h3>
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                {(member.nicknames || []).map((n, idx) => (
-                                  <span key={`nick-${idx}`} className="px-3 py-1 rounded-lg bg-white border border-slate-100 text-[11px] font-bold text-slate-600 shadow-sm">{n}</span>
-                                ))}
-                              </div>
-                            </section>
-                          )}
-                        </div>
-                      </motion.div>
+                          <div className="grid grid-cols-2 gap-6">
+                            {member.character && (
+                              <section>
+                                <div className="flex items-center gap-3 mb-4">
+                                  <Smile className="size-4 text-pink-500" />
+                                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Character</h3>
+                                </div>
+                                <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm text-center">
+                                  <p className="text-[14px] font-black uppercase text-slate-900">{member.character}</p>
+                                </div>
+                              </section>
+                            )}
+                            {member.nicknames && member.nicknames.length > 0 && (
+                              <section>
+                                <div className="flex items-center gap-3 mb-4">
+                                  <Hash className="size-4 text-sky-500" />
+                                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Nicknames</h3>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {(member.nicknames || []).map((n, idx) => (
+                                    <span key={`nick-${idx}`} className="px-3 py-1 rounded-lg bg-white border border-slate-100 text-[11px] font-bold text-slate-600 shadow-sm">{n}</span>
+                                  ))}
+                                </div>
+                              </section>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
                     </TabsContent>
 
                     {/* FAVORITES TAB */}
                     <TabsContent key="favorites" value="favorites" className="outline-none focus:ring-0">
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-8"
-                      >
-                        <div className="flex items-center gap-3 mb-2">
-                          <Heart className="size-5 text-red-500 fill-red-500" />
-                          <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Favorite Things</h3>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {member.favorites && Object.entries(member.favorites).map(([key, value], idx) => (
-                            <div key={`fav-${idx}`} className="p-6 rounded-3xl bg-white border border-slate-100 shadow-sm flex flex-col gap-2 hover:border-pink-200 transition-all">
-                              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{key}</span>
-                              <p className="text-[15px] font-bold text-slate-900">
-                                {Array.isArray(value) ? value.join(", ") : value}
-                              </p>
-                            </div>
-                          ))}
-                          {(!member.favorites || Object.keys(member.favorites).length === 0) && (
-                            <div className="col-span-2 py-12 text-center text-slate-400 italic text-sm">
-                              No favorites recorded yet.
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
+                      {mountedTabs.includes("favorites") && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="space-y-8"
+                        >
+                          <div className="flex items-center gap-3 mb-2">
+                            <Heart className="size-5 text-red-500 fill-red-500" />
+                            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Favorite Things</h3>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {member.favorites && Object.entries(member.favorites).map(([key, value], idx) => (
+                              <div key={`fav-${idx}`} className="p-6 rounded-3xl bg-white border border-slate-100 shadow-sm flex flex-col gap-2 hover:border-pink-200 transition-all">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{key}</span>
+                                <p className="text-[15px] font-bold text-slate-900">
+                                  {Array.isArray(value) ? value.join(", ") : value}
+                                </p>
+                              </div>
+                            ))}
+                            {(!member.favorites || Object.keys(member.favorites).length === 0) && (
+                              <div className="col-span-2 py-12 text-center text-slate-400 italic text-sm">
+                                No favorites recorded yet.
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
                     </TabsContent>
                   </AnimatePresence>
                 </div>
@@ -522,6 +577,12 @@ export function HomePageClient({
   const [selectedMember, setSelectedMember] = useState<MemberProfile | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
+  useEffect(() => {
+    if (!selectedMember?.image) return
+    const img = new window.Image()
+    img.src = selectedMember.image
+  }, [selectedMember?.image])
+
   const handleMemberClick = (member: MemberProfile) => {
     setSelectedMember(member)
     setIsModalOpen(true)
@@ -545,145 +606,188 @@ export function HomePageClient({
 
       {/* ── SECTION PROFILE (GIAO DIỆN MỚI) ── */}
       {/* ── SECTION PROFILE (GIAO DIỆN MỚI) ── */}
-      <section id="profile" className="section-shell select-none relative overflow-hidden">
-        {/* Profile Content Card */}
-        <div className="card-premium shimmer-border p-6 md:p-10 relative overflow-hidden">
-          {/* Background blobs - Standardized */}
-          <div className="absolute top-0 right-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 size-96 bg-sky-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" />
+      <motion.section
+        id="profile"
+        className="py-16 select-none relative overflow-hidden"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        {/* Profile Content Card wrapped in a standard 5xl container */}
+        <div className="max-w-5xl mx-auto px-4 relative z-10">
+          <div className="card-premium shimmer-border p-6 md:p-10 relative overflow-hidden">
+            {/* Background blobs - Standardized */}
+            <div className="absolute top-0 right-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 size-96 bg-sky-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" />
 
-          <div className="relative z-10">
-            {/* Header - Moved Inside */}
-            <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-              <div className="space-y-3">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-pink-200 bg-white/70 backdrop-blur-sm shadow-sm w-fit">
-                  <Star className="size-3.5 text-pink-500 fill-pink-500" />
-                  <p className="text-pink-600 font-black uppercase tracking-widest text-[9px]">
-                    {t("concept.official")}
-                  </p>
-                </div>
-                <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-slate-900">
-                  Profile
-                </h2>
-              </div>
-            </div>
-
-            <div className="mb-12">
-              <div className="rounded-[3.5rem] bg-white/40 backdrop-blur-md p-6 lg:p-8 border border-white/60 shadow-inner">
-                <div className="flex flex-col lg:flex-row gap-10 items-start">
-                  <div className="flex flex-col items-center justify-center shrink-0 w-full lg:w-auto pt-4">
-                    <div className="aspect-square size-36 lg:size-48 rounded-[3rem] bg-white/60 backdrop-blur-md p-6 shadow-sm flex items-center justify-center border border-white/80 transition-transform hover:rotate-3 duration-500 relative mb-4">
-                      <img src={officialProfile.logoAsset} alt="Logo" className="w-full h-full object-contain relative z-10 drop-shadow-md" />
-                    </div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-600 text-center bg-white/60 px-4 py-1.5 rounded-full border border-white/80 shadow-sm">
-                      Source: SM Entertainment
+            <div className="relative z-10">
+              {/* Header - Moved Inside */}
+              <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+                <div className="space-y-3">
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-pink-200 bg-white/70 backdrop-blur-sm shadow-sm w-fit">
+                    <Star className="size-3.5 text-pink-500 fill-pink-500" />
+                    <p className="text-pink-600 font-black uppercase tracking-widest text-[9px]">
+                      {t("concept.official")}
                     </p>
                   </div>
+                  <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-slate-900">
+                    Profile
+                  </h2>
+                </div>
+              </div>
 
-                  <div className="flex-1 w-full flex flex-col gap-6 bg-white/30 backdrop-blur-md rounded-[2.5rem] p-6 lg:p-8 border border-white/60 shadow-inner">
-                    <div className="border-b-2 border-pink-200/50 pb-5">
-                      <h3 className="text-4xl md:text-5xl font-black text-slate-950 tracking-tighter uppercase leading-tight flex items-end gap-3 flex-wrap">
-                        {officialProfile.groupName}
-                        <span className="text-2xl md:text-3xl text-slate-500/80 font-bold tracking-normal">(하츠투하츠)</span>
-                      </h3>
-                      <p className="text-[12px] font-black text-pink-500 uppercase tracking-widest mt-2 ml-1">Official Profile</p>
+              <div className="mb-12">
+                <div className="rounded-[3.5rem] bg-white/40 backdrop-blur-md p-6 lg:p-8 border border-white/60 shadow-inner">
+                  <div className="flex flex-col lg:flex-row gap-10 items-start">
+                    <div className="flex flex-col items-center justify-center shrink-0 w-full lg:w-auto pt-4">
+                      <div className="aspect-square size-36 lg:size-48 rounded-[3rem] bg-white/60 backdrop-blur-md p-6 shadow-sm flex items-center justify-center border border-white/80 transition-transform hover:rotate-3 duration-500 relative mb-4">
+                        <Image
+                          src={officialProfile.logoAsset}
+                          alt="Logo"
+                          fill
+                          sizes="(min-width: 1024px) 192px, 144px"
+                          className="object-contain relative z-10 drop-shadow-md"
+                        />
+                      </div>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-600 text-center bg-white/60 px-4 py-1.5 rounded-full border border-white/80 shadow-sm">
+                        Source: SM Entertainment
+                      </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-                      <FactRow title={t("moments.fact.company")} value={officialProfile.company} icon={Building2} />
-                      <FactRow title={t("moments.fact.labels")} value={officialProfile.labels} icon={Disc} />
-                      <FactRow title={t("moments.fact.origin")} value={officialProfile.origin} icon={MapPin} />
-                      <FactRow title={t("moments.fact.debut")} value={officialProfile.debutDate} icon={Calendar} />
-                      <FactRow title={t("moments.fact.members")} value={officialProfile.membersCount} icon={Users2} />
-                      <FactRow title={t("moments.fact.fandom")} value={officialProfile.fandomName} icon={HeartPulse} />
+                    <div className="flex-1 w-full flex flex-col gap-6 bg-white/30 backdrop-blur-md rounded-[2.5rem] p-6 lg:p-8 border border-white/60 shadow-inner">
+                      <div className="border-b-2 border-pink-200/50 pb-5">
+                        <h3 className="text-4xl md:text-5xl font-black text-slate-950 tracking-tighter uppercase leading-tight flex items-end gap-3 flex-wrap">
+                          {officialProfile.groupName}
+                          <span className="text-2xl md:text-3xl text-slate-500/80 font-bold tracking-normal">(하츠투하츠)</span>
+                        </h3>
+                        <p className="text-[12px] font-black text-pink-500 uppercase tracking-widest mt-2 ml-1">Official Profile</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+                        <FactRow title={t("moments.fact.company")} value={officialProfile.company} icon={Building2} />
+                        <FactRow title={t("moments.fact.labels")} value={officialProfile.labels} icon={Disc} />
+                        <FactRow title={t("moments.fact.origin")} value={officialProfile.origin} icon={MapPin} />
+                        <FactRow title={t("moments.fact.debut")} value={officialProfile.debutDate} icon={Calendar} />
+                        <FactRow title={t("moments.fact.members")} value={officialProfile.membersCount} icon={Users2} />
+                        <FactRow title={t("moments.fact.fandom")} value={officialProfile.fandomName} icon={HeartPulse} />
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="pt-10 border-t border-white/30">
-              <div className="text-center mb-8">
-                <h3 className="text-3xl font-black uppercase text-slate-950 tracking-tighter">{t("concept.members.title")}</h3>
-                <p className="text-[12px] font-black uppercase tracking-[0.4em] text-pink-600/80 mt-2">HEARTS2HEARTS ROSTER</p>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-6 max-w-4xl mx-auto">
-                {memberProfiles.map((member, i) => (
-                  <div key={member.slug} className={`card-enter card-enter-${Math.min(i + 1, 7)}`}>
-                    <MemberCardNew
-                      member={member}
-                      onClick={() => handleMemberClick(member)}
-                    />
-                  </div>
-                ))}
+              <div className="pt-10 border-t border-white/30">
+                <div className="text-center mb-8">
+                  <h3 className="text-3xl font-black uppercase text-slate-950 tracking-tighter">{t("concept.members.title")}</h3>
+                  <p className="text-[12px] font-black uppercase tracking-[0.4em] text-pink-600/80 mt-2">HEARTS2HEARTS ROSTER</p>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-6 max-w-4xl mx-auto">
+                  {memberProfiles.map((member, i) => (
+                    <div key={member.slug} className={`card-enter card-enter-${Math.min(i + 1, 7)}`}>
+                      <MemberCardNew
+                        member={member}
+                        onClick={() => handleMemberClick(member)}
+                        priority={i < 2}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      <div id="career">
+      <motion.div
+        id="career"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+      >
         <TimelineSection events={timelineEvents} />
-      </div>
+      </motion.div>
 
-      <div id="album">
+      <motion.div
+        id="album"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+      >
         <HomeStatsSection snapshot={homeStatsSnapshot} />
-      </div>
+      </motion.div>
 
-      <div id="performance">
+      <motion.div
+        id="performance"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+      >
         <TrackPerformanceSection snapshot={trackPerformanceSnapshot} />
-      </div>
+      </motion.div>
 
       {/* ── OFFICIAL LINKS ── */}
-      <section id="social" className="section-shell">
-        <div className="card-premium shimmer-border p-6 md:p-10 relative overflow-hidden">
-          {/* Background blobs */}
-          <div className="absolute top-0 right-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 size-96 bg-sky-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" />
+      <motion.section
+        id="social"
+        className="py-16 select-none relative overflow-hidden"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        <div className="max-w-5xl mx-auto px-4 relative z-10">
+          <div className="card-premium shimmer-border p-6 md:p-10 relative overflow-hidden">
+            {/* Background blobs */}
+            <div className="absolute top-0 right-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 size-96 bg-sky-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" />
 
-          <div className="relative z-10">
-            {/* Section header */}
-            <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div className="space-y-3">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-pink-200 bg-white/70 backdrop-blur-sm shadow-sm w-fit">
-                  <Heart className="size-3.5 text-pink-500 fill-pink-500" />
-                  <span className="text-pink-600 font-black uppercase tracking-widest text-[9px]">{t("concept.official")}</span>
+            <div className="relative z-10">
+              {/* Section header */}
+              <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div className="space-y-3">
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-pink-200 bg-white/70 backdrop-blur-sm shadow-sm w-fit">
+                    <Heart className="size-3.5 text-pink-500 fill-pink-500" />
+                    <span className="text-pink-600 font-black uppercase tracking-widest text-[9px]">{t("concept.official")}</span>
+                  </div>
+                  <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-slate-900">
+                    Stay Connected
+                  </h2>
+                  <p className="text-[13px] text-slate-500 font-medium max-w-sm leading-relaxed">
+                    Follow H2H across all platforms and never miss a moment.
+                  </p>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-slate-900">
-                  Stay Connected
-                </h2>
-                <p className="text-[13px] text-slate-500 font-medium max-w-sm leading-relaxed">
-                  Follow H2H across all platforms and never miss a moment.
-                </p>
+                <div className="hidden sm:flex items-center gap-2 shrink-0 self-end">
+                  <Star className="size-4 text-pink-400 fill-current" />
+                  <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
+                    {officialLinks.length} Platforms
+                  </span>
+                </div>
               </div>
-              <div className="hidden sm:flex items-center gap-2 shrink-0 self-end">
-                <Star className="size-4 text-pink-400 fill-current" />
-                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
-                  {officialLinks.length} Platforms
-                </span>
-              </div>
-            </div>
 
-            {/* 2-column card grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {officialLinks.map((item, index) => {
-                const metaKey = (item as any).platform || item.note || item.name
-                return (
-                  <OfficialLinkCard
-                    key={item.id && item.id !== "" ? item.id : `link-${index}`}
-                    label={item.name}
-                    url={item.href}
-                    note={item.note}
-                    metaKey={metaKey}
-                  />
-                )
-              })}
+              {/* 2-column card grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {officialLinks.map((item, index) => {
+                  const metaKey = (item as any).platform || item.note || item.name
+                  return (
+                    <OfficialLinkCard
+                      key={item.id && item.id !== "" ? item.id : `link-${index}`}
+                      label={item.name}
+                      url={item.href}
+                      note={item.note}
+                      metaKey={metaKey}
+                    />
+                  )
+                })}
+              </div>
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      <footer className="section-shell pb-12">
+      <footer className="max-w-5xl mx-auto px-4 pb-12">
         <div className="card-premium shimmer-border !rounded-[2.5rem] p-10 text-center relative overflow-hidden">
           {/* Background blobs */}
           <div className="absolute top-0 right-0 size-96 bg-pink-200/10 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" />
