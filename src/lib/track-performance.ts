@@ -73,6 +73,21 @@ const DEFAULT_YOUTUBE: PlatformPerformance = {
   videoCount: null,
 }
 
+const YOUTUBE_CACHE_TTL_MS = 5 * 60 * 1000
+const isDebug = process.env.NODE_ENV !== "production"
+const logDebug = (...args: unknown[]) => {
+  if (isDebug) {
+    console.log(...args)
+  }
+}
+
+let youtubeCache:
+  | {
+      fetchedAt: number
+      data: PlatformPerformance
+    }
+  | null = null
+
 /* =========================================================
    PLACEHOLDER (dùng khi chưa load xong)
 ========================================================= */
@@ -104,12 +119,16 @@ async function fetchJsonWithTimeout(url: string, timeoutMs: number) {
 }
 
 export async function fetchYouTubeVideos(): Promise<PlatformPerformance | null> {
+  if (youtubeCache && Date.now() - youtubeCache.fetchedAt < YOUTUBE_CACHE_TTL_MS) {
+    return youtubeCache.data
+  }
+
   const apiKey = process.env.H2H_YOUTUBE_API_KEY
   const rawVideoIds = process.env.H2H_YOUTUBE_VIDEO_IDS
 
   if (!apiKey || !rawVideoIds) {
     console.warn("YOUTUBE: Missing H2H_YOUTUBE_API_KEY or H2H_YOUTUBE_VIDEO_IDS")
-    return null
+    return youtubeCache?.data ?? null
   }
 
   const videoIds = rawVideoIds
@@ -142,11 +161,14 @@ export async function fetchYouTubeVideos(): Promise<PlatformPerformance | null> 
     url.searchParams.set("key", apiKey)
 
     const payload = await fetchJsonWithTimeout(url.toString(), 8000)
+    if (!payload) {
+      return youtubeCache?.data ?? null
+    }
     const rows = (payload?.items ?? []) as YouTubeVideoRow[]
     allRows.push(...rows)
   }
 
-  if (allRows.length === 0) return null
+  if (allRows.length === 0) return youtubeCache?.data ?? null
 
   const items: PerformanceItem[] = allRows
     .map((row) => {
@@ -178,9 +200,9 @@ export async function fetchYouTubeVideos(): Promise<PlatformPerformance | null> 
     })
     .filter(Boolean) as PerformanceItem[]
 
-  if (items.length === 0) return null
+  if (items.length === 0) return youtubeCache?.data ?? null
 
-  return {
+  const payload: PlatformPerformance = {
     name: "YouTube",
     totalValue: items.reduce((sum, item) => sum + (item.total || 0), 0),
     dailyValue: null,
@@ -189,6 +211,15 @@ export async function fetchYouTubeVideos(): Promise<PlatformPerformance | null> 
     items,
     note: "YouTube API",
   }
+
+  youtubeCache = {
+    fetchedAt: Date.now(),
+    data: payload,
+  }
+
+  logDebug("YOUTUBE: cached", payload.items.length, "items")
+
+  return payload
 }
 
 /* =========================================================

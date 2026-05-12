@@ -32,7 +32,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {themeCss && <style dangerouslySetInnerHTML={{ __html: themeCss }} />}
+        {themeCss && <style suppressHydrationWarning dangerouslySetInnerHTML={{ __html: themeCss }} />}
       </head>
       <body className={`${bodyFont.variable} ${displayFont.variable} antialiased`} suppressHydrationWarning>
         <AmbientLayer effects={activeTheme?.config?.effects} />

@@ -265,23 +265,9 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
     setLiveSnapshot(snapshot)
   }, [snapshot])
 
+  // Fetching data on client is redundant since we have snapshot from SSR/ISR
   useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        const res = await fetch("/api/track-performance", { cache: "no-store" })
-        if (!res.ok) { setMounted(true); return }
-        const data = (await res.json()) as TrackPerformanceSnapshot
-        if (cancelled) return
-        setLiveSnapshot(data)
-      } catch {
-        // giữ SSR data
-      } finally {
-        if (!cancelled) setMounted(true)
-      }
-    }
-    void load()
-    return () => { cancelled = true }
+    setMounted(true)
   }, [])
 
   // ✅ Bỏ check mounted — hiện ngay từ SSR data

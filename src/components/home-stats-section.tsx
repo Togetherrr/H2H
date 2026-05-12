@@ -1,10 +1,9 @@
 "use client"
 
-/* eslint-disable @next/next/no-img-element */
-
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import Link from "next/link"
+import Image from "next/image"
 import {
   CalendarDays,
   Radio,
@@ -288,7 +287,7 @@ function FilmStrip() {
       <div className="flex h-full animate-marquee items-center gap-6 py-6 px-12">
         {images.map((src, idx) => (
           <div key={idx} className="relative aspect-[4/5] h-3/4 flex-shrink-0 overflow-hidden rounded-lg border-[6px] border-white/40 bg-slate-800 shadow-xl rotate-1 group-hover:rotate-0 transition-transform duration-500">
-            <img src={src} alt="Nostalgic Moment" className="h-full w-full object-cover" />
+            <Image src={src} alt="Nostalgic Moment" fill className="object-cover" />
             <div className="absolute top-0 bottom-0 left-0 w-2 flex flex-col justify-around py-2">
               {[...Array(6)].map((_, i) => <div key={i} className="w-1 h-1 rounded-sm bg-white/20 mx-auto" />)}
             </div>
@@ -436,11 +435,12 @@ function DebutVideoModal({
                 className="absolute inset-0 h-full w-full pointer-events-none"
               />
             ) : video?.thumbnail ? (
-              <img
+              <Image
                 src={video.thumbnail}
                 alt={video?.title ?? "YouTube preview"}
-                className="absolute inset-0 h-full w-full object-cover opacity-80"
-                loading="eager"
+                fill
+                className="object-cover opacity-80"
+                priority
               />
             ) : null}
 

@@ -1,5 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
-
+import Image from "next/image"
 import type { FilmFrame } from "../lib/release-catalog"
 
 type FilmStripProps = {
@@ -30,9 +29,11 @@ export function FilmStrip({ frames, showHeader = true, className }: FilmStripPro
                 <article key={`${frame.label}-${segment}`} className="film-frame group">
                   <div className="film-hole-row film-hole-row-top" aria-hidden="true" />
                   <div className="film-image-shell overflow-hidden">
-                    <img
+                    <Image
                       src={frame.src}
                       alt={frame.alt}
+                      width={400}
+                      height={250}
                       className="h-full w-full object-contain transition-transform duration-700 group-hover:scale-110"
                     />
                   </div>

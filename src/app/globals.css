@@ -66,6 +66,9 @@
     background-position: center center;
     background-attachment: fixed;
     background-repeat: no-repeat;
+    @media (pointer: coarse) {
+      background-attachment: scroll;
+    }
     position: relative;
   }
 
@@ -79,6 +82,9 @@
         rgba(15, 23, 42, 0.12) 50%,
         rgba(20, 40, 100, 0.22) 100%);
     backdrop-filter: blur(10px);
+    @media (pointer: coarse) {
+      backdrop-filter: none;
+    }
     pointer-events: none;
     z-index: 0;
   }

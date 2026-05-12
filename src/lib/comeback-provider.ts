@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createStaticClient } from "@/lib/supabase/static"
 
 export type HomeStatSource = {
   label: string
@@ -52,7 +52,7 @@ function getUpcomingComebackFromEnv(): UpcomingComeback | null {
 
 async function getUpcomingComebackFromSupabase(): Promise<UpcomingComeback | null> {
   try {
-    await createClient()
+    createStaticClient()
   } catch {
     return null
   }

@@ -3,8 +3,27 @@ import type { PlatformPerformance, PerformanceItem } from "@/lib/track-performan
 const KWORB_URL =
     "https://kworb.net/spotify/artist/1ZLU77nRzQIaP23mVSYpCQ_songs.html"
 
+const KWORB_CACHE_TTL_MS = 5 * 60 * 1000
+const isDebug = process.env.NODE_ENV !== "production"
+const logDebug = (...args: unknown[]) => {
+    if (isDebug) {
+        console.log(...args)
+    }
+}
+
+let kworbCache:
+    | {
+          fetchedAt: number
+          data: PlatformPerformance
+      }
+    | null = null
+
 export async function fetchKworbSpotify(): Promise<PlatformPerformance | null> {
     try {
+        if (kworbCache && Date.now() - kworbCache.fetchedAt < KWORB_CACHE_TTL_MS) {
+            return kworbCache.data
+        }
+
         const res = await fetch(KWORB_URL, {
             headers: {
                 "User-Agent":
@@ -19,7 +38,7 @@ export async function fetchKworbSpotify(): Promise<PlatformPerformance | null> {
 
         if (!res.ok) {
             console.warn("KWORB: fetch failed", res.status)
-            return null
+            return kworbCache?.data ?? null
         }
 
         const html = await res.text()
@@ -61,14 +80,12 @@ export async function fetchKworbSpotify(): Promise<PlatformPerformance | null> {
 
         if (items.length === 0) {
             console.warn("KWORB: parsed 0 tracks — HTML structure may have changed")
-            console.warn("KWORB: HTML snippet:", html.slice(0, 500))
-            return null
+            logDebug("KWORB: HTML snippet:", html.slice(0, 500))
+            return kworbCache?.data ?? null
         }
 
-
-        console.log(`KWORB: parsed ${items.length} tracks`)
-
-        return {
+        logDebug(`KWORB: parsed ${items.length} tracks`)
+        const payload: PlatformPerformance = {
             name: "Spotify",
             totalValue: items.reduce((s, i) => s + (i.total ?? 0), 0),
             dailyValue: items.reduce((s, i) => s + (i.daily ?? 0), 0),
@@ -78,8 +95,15 @@ export async function fetchKworbSpotify(): Promise<PlatformPerformance | null> {
             note: lastUpdated ? `Kworb • Updated ${lastUpdated}` : "Kworb",
             viewAllHref: "/charts",
         }
+
+        kworbCache = {
+            fetchedAt: Date.now(),
+            data: payload,
+        }
+
+        return payload
     } catch (err: any) {
         console.warn("KWORB: error", err?.message)
-        return null
+        return kworbCache?.data ?? null
     }
 }
