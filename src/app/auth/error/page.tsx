@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic"
 import Link from "next/link"
 
 const messages: Record<string, { title: string; description: string }> = {

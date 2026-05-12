@@ -76,9 +76,12 @@ const rules: Rule[] = [
       if (ignoreRule(ctx.content, 2)) return []
       const results: Issue[] = []
       if (ctx.filePath.includes("src/app") && ctx.fileName === "page.tsx") {
-        const hasISR = /export\s+const\s+revalidate\s*=/.test(ctx.codeOnly)
-        const isDynamic = /export\s+const\s+dynamic\s*=\s*["']force-dynamic["']/.test(ctx.codeOnly)
-        const usesCookies = /createClient\(/.test(ctx.codeOnly) && ctx.content.includes("@/lib/supabase/server")
+        const isClient = ctx.content.includes('"use client"') || ctx.content.includes("'use client'")
+        if (isClient) return []
+
+        const hasISR = /export\s+const\s+revalidate\s*=/.test(ctx.content)
+        const isDynamic = /export\s+const\s+dynamic\s*=\s*["']force-dynamic["']/.test(ctx.content)
+        const usesCookies = /createClient\(/.test(ctx.content) && ctx.content.includes("@/lib/supabase/server")
 
         if (!hasISR && !isDynamic) {
           results.push({ ruleId: 2, severity: "ERROR", message: "Missing ISR/Dynamic config.", filePath: ctx.filePath })
@@ -157,8 +160,9 @@ const rules: Rule[] = [
 function auditFile(filePath: string) {
   try {
     const content = readFileSync(filePath, "utf-8")
+    const normalizedFilePath = filePath.replace(/\\/g, "/")
     const ctx: AuditContext = {
-      filePath,
+      filePath: normalizedFilePath,
       fileName: basename(filePath),
       content,
       codeOnly: getCodeOnly(content)
