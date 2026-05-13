@@ -2,19 +2,29 @@
 
 import { createClient } from "@/lib/supabase/client"
 
-// ─── Types (Đã cập nhật để khớp với Migration và database.types.ts) ──────────
+export type VotingRound = {
+  id: string
+  app_id: string
+  round_name: string
+  start_at: string
+  end_at: string
+  display_timezone: string | null
+  is_active: boolean
+  created_at: string
+}
 
 export type VotingApp = {
   id: string
   name: string
   category: string
-  program_name: string | null         // Cột mới vừa thêm vào migration
+  program_name: string | null
   logo_url: string | null
-  currencies: string[] | null         // postgres _text → string[]
+  currencies: string[] | null
   collection_methods: string[] | null
   android_url: string | null
   ios_url: string | null
   created_at: string
+  voting_rounds?: VotingRound[]
 }
 
 export type AppStrategy = {
@@ -24,12 +34,6 @@ export type AppStrategy = {
   content: string
 }
 
-// ─── Queries ─────────────────────────────────────────────────────────────────
-
-/**
- * Lấy tất cả voting apps theo category (music_shows, awards...),
- * kèm strategies của từng app để hiển thị trên Card.
- */
 export async function getVotingAppsByCategory(category: string): Promise<{
   apps: VotingApp[]
   strategies: AppStrategy[]
@@ -37,8 +41,7 @@ export async function getVotingAppsByCategory(category: string): Promise<{
 }> {
   const supabase = createClient()
 
-  // 1. Fetch apps - select("*") sẽ tự động lấy cả cột program_name mới
-  const { data: apps, error: appsError } = await supabase
+  const { data: appsData, error: appsError } = await supabase
     .from("voting_apps")
     .select("*")
     .eq("category", category)
@@ -48,12 +51,35 @@ export async function getVotingAppsByCategory(category: string): Promise<{
     return { apps: [], strategies: [], error: appsError.message }
   }
 
-  if (!apps || apps.length === 0) {
+  const apps = (appsData ?? []) as VotingApp[]
+
+  if (apps.length === 0) {
     return { apps: [], strategies: [], error: null }
   }
 
-  // 2. Fetch strategies cho các app vừa lấy (1 query duy nhất để tối ưu)
-  const appIds = apps.map((a: VotingApp) => a.id)
+  const appIds = apps.map((app) => app.id)
+
+  const { data: roundsDataRaw, error: roundsError } = await (supabase as any)
+    .from("voting_rounds")
+    .select("*")
+    .in("app_id", appIds)
+    .order("start_at", { ascending: true })
+
+  const roundsData = roundsDataRaw as VotingRound[] | null
+
+  const roundsByApp = new Map<string, VotingRound[]>()
+  if (roundsData) {
+    for (const round of roundsData) {
+      const existing = roundsByApp.get(round.app_id) ?? []
+      existing.push(round)
+      roundsByApp.set(round.app_id, existing)
+    }
+  }
+
+  const appsWithRounds: VotingApp[] = apps.map((app) => ({
+    ...app,
+    voting_rounds: roundsByApp.get(app.id) ?? [],
+  }))
 
   const { data: strategies, error: strategiesError } = await supabase
     .from("app_strategies")
@@ -61,10 +87,17 @@ export async function getVotingAppsByCategory(category: string): Promise<{
     .in("app_id", appIds)
     .order("order_num", { ascending: true })
 
-  if (strategiesError) {
-    // Nếu lỗi khi lấy strategy, vẫn trả về apps nhưng strategies rỗng
-    return { apps, strategies: [], error: strategiesError.message }
+  if (roundsError) {
+    return { apps: appsWithRounds, strategies: [], error: roundsError.message }
   }
 
-  return { apps, strategies: strategies ?? [], error: null }
+  if (strategiesError) {
+    return { apps: appsWithRounds, strategies: [], error: strategiesError.message }
+  }
+
+  return {
+    apps: appsWithRounds,
+    strategies: strategies ?? [],
+    error: null,
+  }
 }

@@ -601,6 +601,83 @@ export type Database = {
           }
         ]
       }
+      guide_steps: {
+        Row: {
+          id: string
+          app_id: string
+          step_num: number
+          title: string | null
+          description: string | null
+          image_url: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          app_id: string
+          step_num: number
+          title?: string | null
+          description?: string | null
+          image_url?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          app_id?: string
+          step_num?: number
+          title?: string | null
+          description?: string | null
+          image_url?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guide_steps_app_id_fkey"
+            columns: ["app_id"]
+            referencedRelation: "voting_apps"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      voting_rounds: {
+        Row: {
+          id: string
+          app_id: string
+          round_name: string
+          start_at: string
+          end_at: string
+          display_timezone: string | null
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          app_id: string
+          round_name: string
+          start_at: string
+          end_at: string
+          display_timezone?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          app_id?: string
+          round_name?: string
+          start_at?: string
+          end_at?: string
+          display_timezone?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voting_rounds_app_id_fkey"
+            columns: ["app_id"]
+            referencedRelation: "voting_apps"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

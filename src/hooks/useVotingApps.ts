@@ -5,9 +5,8 @@ import {
   getVotingAppsByCategory,
   type VotingApp,
   type AppStrategy,
+  type VotingRound,
 } from "@/lib/supabase/voting-service";
-
-// ─── shape mà votingappcard nhận vào ────────────────────────────────────────
 
 export type MappedApp = {
   id: string;
@@ -19,18 +18,17 @@ export type MappedApp = {
   iosHref: string | undefined;
   guideHref: string;
   sections: { title: string; items: string[] }[];
+  rounds: VotingRound[];
 };
 
 function mapToCardProps(app: VotingApp, strategies: AppStrategy[]): MappedApp {
-  // lọc chiến thuật tương ứng với app này và sắp xếp theo thứ tự
   const appStrategies = strategies
-    .filter((s) => s.app_id === app.id)
+    .filter((strategy) => strategy.app_id === app.id)
     .sort((a, b) => a.order_num - b.order_num);
 
   return {
     id: app.id,
     name: app.name,
-    // ưu tiên program_name (ví dụ: INKIGAYO), nếu null thì dùng category (ví dụ: MUSIC SHOWS)
     badge: (app.program_name || app.category).replace(/_/g, " ").toUpperCase(),
     categoryId: app.category,
     iconImageSrc: app.logo_url ?? undefined,
@@ -40,12 +38,11 @@ function mapToCardProps(app: VotingApp, strategies: AppStrategy[]): MappedApp {
     sections: [
       { title: "currencies", items: app.currencies ?? [] },
       { title: "collection", items: app.collection_methods ?? [] },
-      { title: "strategy",   items: appStrategies.map((s) => s.content) },
+      { title: "strategy", items: appStrategies.map((strategy) => strategy.content) },
     ],
+    rounds: app.voting_rounds ?? [],
   };
 }
-
-// ─── hook ────────────────────────────────────────────────────────────────────
 
 export function useVotingApps(category: string) {
   const [apps, setApps] = useState<MappedApp[]>([]);
@@ -57,19 +54,16 @@ export function useVotingApps(category: string) {
     setLoading(true);
     setError(null);
 
-    getVotingAppsByCategory(category).then(
-      ({ apps: raw, strategies, error: err }) => {
-        if (cancelled) return;
-        
-        if (err) {
-          setError(err);
-        } else {
-          // chuyển đổi dữ liệu thô từ supabase sang dạng card có thể hiển thị
-          setApps(raw.map((app) => mapToCardProps(app, strategies)));
-        }
-        setLoading(false);
-      },
-    );
+    getVotingAppsByCategory(category).then(({ apps: raw, strategies, error: err }) => {
+      if (cancelled) return;
+
+      if (err) {
+        setError(err);
+      } else {
+        setApps(raw.map((app) => mapToCardProps(app, strategies)));
+      }
+      setLoading(false);
+    });
 
     return () => {
       cancelled = true;
