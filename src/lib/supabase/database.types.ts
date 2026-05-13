@@ -397,6 +397,137 @@ export type Database = {
           },
         ]
       }
+      voting_apps: {
+        Row: {
+          id: string
+          name: string
+          category: string | null
+          program_name: string | null
+          logo_url: string | null
+          currencies: string[] | null
+          collection_methods: string[] | null
+          android_url: string | null
+          ios_url: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          category?: string | null
+          program_name?: string | null
+          logo_url?: string | null
+          currencies?: string[] | null
+          collection_methods?: string[] | null
+          android_url?: string | null
+          ios_url?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          category?: string | null
+          program_name?: string | null
+          logo_url?: string | null
+          currencies?: string[] | null
+          collection_methods?: string[] | null
+          android_url?: string | null
+          ios_url?: string | null
+          created_at?: string
+        }
+      }
+      app_strategies: {
+        Row: {
+          id: string
+          app_id: string
+          order_num: number
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          app_id: string
+          order_num: number
+          content: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          app_id?: string
+          order_num?: number
+          content?: string
+          created_at?: string
+        }
+      }
+      guide_steps: {
+        Row: {
+          id: string
+          app_id: string
+          step_num: number
+          title: string | null
+          description: string | null
+          image_url: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          app_id: string
+          step_num: number
+          title?: string | null
+          description?: string | null
+          image_url?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          app_id?: string
+          step_num?: number
+          title?: string | null
+          description?: string | null
+          image_url?: string | null
+          created_at?: string
+        }
+      }
+      voting_rounds: {
+        Row: {
+          id: string
+          app_id: string
+          round_name: string
+          start_at: string
+          end_at: string
+          display_timezone: string | null
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          app_id: string
+          round_name: string
+          start_at: string
+          end_at: string
+          display_timezone?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          app_id?: string
+          round_name?: string
+          start_at?: string
+          end_at?: string
+          display_timezone?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+ 
+        Relationships: [
+          {
+            foreignKeyName: "voting_rounds_app_id_fkey"
+            columns: ["app_id"]
+            referencedRelation: "voting_apps"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
