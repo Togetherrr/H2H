@@ -1,7 +1,6 @@
 "use client"
 
-/* eslint-disable @next/next/no-img-element */
-
+import Image from "next/image"
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
@@ -125,9 +124,11 @@ function TimelineCard({
         )}
       >
         {event.cover ? (
-          <img
+          <Image
             src={event.cover}
             alt={event.title}
+            width={160}
+            height={160}
             className="h-full w-full object-cover object-center"
           />
         ) : (
@@ -326,107 +327,112 @@ export function TimelineSection({ events }: { events: TimelineEvent[] }) {
   if (!events.length) return null
 
   return (
-    <section id="timeline" className="py-16 select-none">
-      <div className="max-w-5xl mx-auto px-4">
+    <section id="timeline" className="py-16 select-none relative overflow-hidden">
+      <div className="max-w-5xl mx-auto px-4 relative z-10">
+        <div className="card-premium shimmer-border p-6 md:p-10 relative overflow-hidden">
+          {/* Background blobs - Standardized */}
+          <div className="absolute top-0 right-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 size-96 bg-sky-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" />
 
-        {/* ── Header ── */}
-        <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-5">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-sky-200 bg-white/70 backdrop-blur-sm">
-              <Clock className="size-3.5 text-sky-500" />
-              <span className="text-sky-600 font-black uppercase tracking-widest text-[9px]">
-                {tStr("timeline.label") || "Timeline"}
-              </span>
+          <div className="relative z-10">
+            {/* ── Header ── */}
+            <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-5">
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-pink-200 bg-white/70 backdrop-blur-sm shadow-sm">
+                  <Clock className="size-3.5 text-pink-500 fill-pink-500" />
+                  <span className="text-pink-600 font-black uppercase tracking-widest text-[9px]">
+                    {tStr("timeline.label") || "Timeline"}
+                  </span>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-slate-900">
+                  Discography
+                </h2>
+              </div>
+
+              <div className="relative z-10 flex items-center gap-3 w-full md:w-auto">
+                {/* Year pill nav */}
+                <nav className="flex items-center gap-1 p-1 rounded-full bg-white/60 border border-sky-200/60 backdrop-blur-sm overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex-1 md:flex-none">
+                  {groups.map((group) => (
+                    <button
+                      key={group.year}
+                      onClick={() => scrollToYear(group.year)}
+                      className={cn(
+                        "px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-widest transition-all duration-200 shrink-0",
+                        activeYear === group.year
+                          ? "bg-slate-900 text-white shadow-sm"
+                          : "text-sky-600 hover:text-slate-900 hover:bg-white/70"
+                      )}
+                    >
+                      {group.year}
+                    </button>
+                  ))}
+                </nav>
+
+                {/* Scroll arrows */}
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => scroll("left")}
+                    disabled={!canScrollLeft}
+                    aria-label="Scroll left"
+                    className="size-8 rounded-full border border-sky-200 bg-white/70 backdrop-blur-sm flex items-center justify-center text-sky-600 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all active:scale-95"
+                  >
+                    <ChevronLeft className="size-3.5" />
+                  </button>
+                  <button
+                    onClick={() => scroll("right")}
+                    disabled={!canScrollRight}
+                    aria-label="Scroll right"
+                    className="size-8 rounded-full border border-sky-200 bg-white/70 backdrop-blur-sm flex items-center justify-center text-sky-600 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all active:scale-95"
+                  >
+                    <ChevronRight className="size-3.5" />
+                  </button>
+                </div>
+              </div>
             </div>
-            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-slate-900">
-              Discography
-            </h2>
-          </div>
 
-          <div className="relative z-10 flex items-center gap-3 w-full md:w-auto">
-            {/* Year pill nav */}
-            <nav className="flex items-center gap-1 p-1 rounded-full bg-white/60 border border-sky-200/60 backdrop-blur-sm overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex-1 md:flex-none">
-              {groups.map((group) => (
-                <button
-                  key={group.year}
-                  onClick={() => scrollToYear(group.year)}
-                  className={cn(
-                    "px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-widest transition-all duration-200 shrink-0",
-                    activeYear === group.year
-                      ? "bg-slate-900 text-white shadow-sm"
-                      : "text-sky-600 hover:text-slate-900 hover:bg-white/70"
-                  )}
+            {/* ── Card rail container ── */}
+            <div className="relative rounded-[1.75rem] border border-white/70 bg-white/40 backdrop-blur-xl shadow-lg overflow-hidden">
+              <div className="px-8 md:px-12 pt-10 pb-6 relative">
+                {/* Scroll fade hints */}
+                <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 z-10 bg-gradient-to-r from-white/50 to-transparent" />
+                <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 z-10 bg-gradient-to-l from-white/70 to-transparent" />
+
+                <div
+                  ref={railRef}
+                  className="flex gap-10 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x pb-4 scroll-px-8"
                 >
-                  {group.year}
-                </button>
-              ))}
-            </nav>
+                  {groups.map((group) => (
+                    <YearSection
+                      key={group.year}
+                      group={group}
+                      latestSlug={latestRelease?.slug}
+                      tStr={tStr}
+                      yearRef={(el) => {
+                        yearRefs.current[group.year] = el
+                      }}
+                    />
+                  ))}
+                </div>
 
-            {/* Scroll arrows */}
-            <div className="flex gap-1.5">
-              <button
-                onClick={() => scroll("left")}
-                disabled={!canScrollLeft}
-                aria-label="Scroll left"
-                className="size-8 rounded-full border border-sky-200 bg-white/70 backdrop-blur-sm flex items-center justify-center text-sky-600 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all active:scale-95"
-              >
-                <ChevronLeft className="size-3.5" />
-              </button>
-              <button
-                onClick={() => scroll("right")}
-                disabled={!canScrollRight}
-                aria-label="Scroll right"
-                className="size-8 rounded-full border border-sky-200 bg-white/70 backdrop-blur-sm flex items-center justify-center text-sky-600 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all active:scale-95"
-              >
-                <ChevronRight className="size-3.5" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Card rail container ── */}
-        <div className="relative rounded-[1.75rem] border border-white/70 bg-white/40 backdrop-blur-xl shadow-lg overflow-hidden">
-
-          <div className="px-8 md:px-12 pt-10 pb-6 relative">
-            {/* Scroll fade hints */}
-            <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 z-10 bg-gradient-to-r from-white/50 to-transparent" />
-            <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 z-10 bg-gradient-to-l from-white/70 to-transparent" />
-
-            <div
-              ref={railRef}
-              className="flex gap-10 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x pb-4 scroll-px-8"
-            >
-              {groups.map((group) => (
-                <YearSection
-                  key={group.year}
-                  group={group}
-                  latestSlug={latestRelease?.slug}
-                  tStr={tStr}
-                  yearRef={(el) => {
-                    yearRefs.current[group.year] = el
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Footer strip */}
-            <div className="mt-2 pt-5 border-t border-sky-200/50 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sky-600/70">
-                <Disc3 className="size-3.5" />
-                <span className="text-[9px] font-black uppercase tracking-[.2em]">
-                  Official Catalog
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 text-sky-600/70">
-                <Sparkles className="size-3" />
-                <span className="text-[9px] font-bold uppercase tracking-widest">
-                  {events.length} releases
-                </span>
+                {/* Footer strip */}
+                <div className="mt-2 pt-5 border-t border-sky-200/50 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sky-600/70">
+                    <Disc3 className="size-3.5" />
+                    <span className="text-[9px] font-black uppercase tracking-[.2em]">
+                      Official Catalog
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-sky-600/70">
+                    <Sparkles className="size-3" />
+                    <span className="text-[9px] font-bold uppercase tracking-widest">
+                      {events.length} releases
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-
       </div>
     </section>
   )

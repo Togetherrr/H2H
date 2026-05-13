@@ -265,23 +265,9 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
     setLiveSnapshot(snapshot)
   }, [snapshot])
 
+  // Fetching data on client is redundant since we have snapshot from SSR/ISR
   useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        const res = await fetch("/api/track-performance", { cache: "no-store" })
-        if (!res.ok) { setMounted(true); return }
-        const data = (await res.json()) as TrackPerformanceSnapshot
-        if (cancelled) return
-        setLiveSnapshot(data)
-      } catch {
-        // giữ SSR data
-      } finally {
-        if (!cancelled) setMounted(true)
-      }
-    }
-    void load()
-    return () => { cancelled = true }
+    setMounted(true)
   }, [])
 
   // ✅ Bỏ check mounted — hiện ngay từ SSR data
@@ -364,189 +350,188 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
   const displayedKoreaGroups = koreaChartGroups.filter(g => g.page === koreaPage)
 
   return (
-    <section id="performance" className="reveal-up">
-      {/* Section header */}
-      <div className="mb-12 flex flex-col gap-8 md:flex-row md:items-end md:justify-between max-w-5xl mx-auto">
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="pill-base border border-sky-100 bg-white">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sky-400" />
-              <Activity className="size-3.5 text-sky-500" />
-              <p className="text-sky-600 font-black uppercase tracking-widest text-[10px]">
-                {t("performance.label")}
-              </p>
-            </div>
-          </div>
-          <h2 className="section-title text-black">
-            {t("home.performance.liveTracking").trim()}
-          </h2>
-          {/* ✅ Bỏ check mounted */}
-          {formattedUpdatedAt ? (
-            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400" suppressHydrationWarning>
-              {t("performance.updatedAt")} {formattedUpdatedAt}
-            </p>
-          ) : null}
-          {liveSnapshot.sources.note ? (
-            <p className="max-w-2xl rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-rose-500">
-              {liveSnapshot.sources.note}
-            </p>
-          ) : null}
-        </div>
-      </div>
+    <section id="performance" className="reveal-up py-16 select-none relative overflow-hidden">
+      <div className="max-w-5xl mx-auto relative z-10">
+        <div className="card-premium shimmer-border p-6 md:p-10 relative overflow-hidden">
+          {/* Background blobs - Standardized */}
+          <div className="absolute top-0 right-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 size-96 bg-sky-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" />
 
-      <div className="mb-8 flex flex-wrap gap-3 max-w-5xl mx-auto">
-        <PlatformTabButton variant="spotify" active={activePlatform === "spotify"} onClick={() => setActivePlatform("spotify")}>
-          <div className="flex size-4 items-center justify-center rounded-sm bg-black overflow-hidden shrink-0">
-            <img src="/spotify.png" alt="Spotify" className="h-full w-full object-cover" />
-          </div>
-          {t("performance.spotify")}
-        </PlatformTabButton>
-        <PlatformTabButton variant="youtube" active={activePlatform === "youtube"} onClick={() => setActivePlatform("youtube")}>
-          <img src="/Youtube.png" alt="YouTube" className="h-4 w-4 object-contain" />
-          {t("performance.youtube")}
-        </PlatformTabButton>
-        <PlatformTabButton variant="korea" active={activePlatform === "korea"} onClick={() => setActivePlatform("korea")}>
-          <div className="flex size-4 items-center justify-center rounded-sm bg-emerald-500 text-[8px] font-bold text-white">KR</div>
-          {t("performance.korea")}
-        </PlatformTabButton>
-      </div>
-
-      {/* Main container */}
-      <div className="max-w-5xl mx-auto">
-        {activePlatform === "korea" ? (
-          <div className="card-premium p-6 lg:p-10 !rounded-[3rem]">
-            <div className="mb-10 flex items-center justify-between">
-              <div className="flex items-center gap-5">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-[#FF708A] shadow-xl border border-white/20">
-                  <Activity className="size-8" />
+          <div className="relative z-10">
+            {/* Section header */}
+            <div className="mb-12 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="pill-base border border-pink-200 bg-white/70 backdrop-blur-sm shadow-sm">
+                    <Activity className="size-3.5 text-pink-500 fill-pink-500" />
+                    <p className="text-pink-600 font-black uppercase tracking-widest text-[10px]">
+                      {t("performance.label")}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.5em] text-black">{t("performance.korea")}</p>
-                  <p className="text-2xl font-black uppercase tracking-tight text-black">Domestic Charts</p>
-                </div>
-              </div>
-            </div>
-            <p className="mb-10 max-w-2xl text-[14px] font-medium leading-relaxed text-black/70">
-              {t("performance.korea.desc")}
-            </p>
-            <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-              {displayedKoreaGroups.map((group, idx) => (
-                <KoreaChartGroup key={idx} {...group} />
-              ))}
-            </div>
-            <div className="mt-12 flex items-center justify-center gap-4">
-              {[1, 2].map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setKoreaPage(page)}
-                  className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-full text-xs font-black transition-all shadow-sm",
-                    koreaPage === page
-                      ? "bg-emerald-500 text-white scale-110 shadow-emerald-200"
-                      : "bg-white text-slate-400 hover:bg-slate-50 border border-slate-100"
-                  )}
-                >
-                  {page}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="card-premium p-6 lg:p-10 !rounded-[3rem]">
-            {/* Card header */}
-            <div className="mb-10 flex items-center justify-between">
-              <div className="flex items-center gap-5">
-                <div className={cn(
-                  "flex h-14 w-14 items-center justify-center rounded-2xl shadow-xl border overflow-hidden shrink-0",
-                  activePlatform === "spotify" ? "bg-black border-black" : "bg-white border-white/20"
-                )}>
-                  {activePlatform === "spotify"
-                    ? <img src="/spotify.png" alt="Spotify" className="h-full w-full object-cover" />
-                    : <img src="/Youtube.png" alt="YouTube" className="h-9 w-9 object-contain" />
-                  }
-                </div>
-                <div>
-                  <p className={cn("text-xl font-black uppercase tracking-[0.3em]", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
-                    {t(`performance.${activePlatform}` as any)}
+                <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-slate-900">
+                  {t("home.performance.liveTracking").trim()}
+                </h2>
+                {formattedUpdatedAt ? (
+                  <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400" suppressHydrationWarning>
+                    {t("performance.updatedAt")} {formattedUpdatedAt}
                   </p>
-                  <p className={cn("text-4xl font-black uppercase tracking-tight", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
-                    {activePlatform === "youtube" ? t("home.performance.officialMv") : t("home.performance.rankings")}
-                  </p>
-                </div>
+                ) : null}
               </div>
             </div>
 
-            {/* Stats bar */}
-            {activePlatformData && (
-              <>
-                <PlatformStatsBar
-                  platform={activePlatform as "spotify" | "youtube"}
-                  totalValue={activePlatformData.totalValue}
-                  dailyValue={activePlatformData.dailyValue}
-                  dailyChange={activePlatformData.dailyChange}
-                  dailyChangeFormat={activePlatformData.dailyChangeFormat}
-                  // ✅ Xóa mounted prop
-                  t={t}
-                />
-                {/* ✅ Bỏ check mounted */}
-                {activePlatformData.note && (
-                  <p className="mb-6 -mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-black/30 text-right px-1">
-                    {activePlatformData.note}
-                  </p>
+            {/* Platform Tabs */}
+            <div className="mb-8 flex flex-wrap gap-3">
+              <PlatformTabButton variant="spotify" active={activePlatform === "spotify"} onClick={() => setActivePlatform("spotify")}>
+                <div className="flex size-4 items-center justify-center rounded-sm bg-black overflow-hidden shrink-0">
+                  <img src="/spotify.png" alt="Spotify" className="h-full w-full object-cover" />
+                </div>
+                {t("performance.spotify")}
+              </PlatformTabButton>
+              <PlatformTabButton variant="youtube" active={activePlatform === "youtube"} onClick={() => setActivePlatform("youtube")}>
+                <img src="/Youtube.png" alt="YouTube" className="h-4 w-4 object-contain" />
+                {t("performance.youtube")}
+              </PlatformTabButton>
+              <PlatformTabButton variant="korea" active={activePlatform === "korea"} onClick={() => setActivePlatform("korea")}>
+                <div className="flex size-4 items-center justify-center rounded-sm bg-emerald-500 text-[8px] font-bold text-white">KR</div>
+                {t("performance.korea")}
+              </PlatformTabButton>
+            </div>
+
+            {/* Main Content */}
+            {activePlatform === "korea" ? (
+              <div className="rounded-[2.5rem] bg-white/40 backdrop-blur-xl p-6 lg:p-10 border border-white/70 shadow-lg">
+                <div className="mb-10 flex items-center justify-between">
+                  <div className="flex items-center gap-5">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-[#FF708A] shadow-xl border border-white/20">
+                      <Activity className="size-8" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.5em] text-black">{t("performance.korea")}</p>
+                      <p className="text-2xl font-black uppercase tracking-tight text-black">Domestic Charts</p>
+                    </div>
+                  </div>
+                </div>
+                <p className="mb-10 max-w-2xl text-[14px] font-medium leading-relaxed text-black/70">
+                  {t("performance.korea.desc")}
+                </p>
+                <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+                  {displayedKoreaGroups.map((group, idx) => (
+                    <KoreaChartGroup key={idx} {...group} />
+                  ))}
+                </div>
+                <div className="mt-12 flex items-center justify-center gap-4">
+                  {[1, 2].map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setKoreaPage(page)}
+                      className={cn(
+                        "flex h-10 w-10 items-center justify-center rounded-full text-xs font-black transition-all shadow-sm",
+                        koreaPage === page
+                          ? "bg-emerald-500 text-white scale-110 shadow-emerald-200"
+                          : "bg-white text-slate-400 hover:bg-slate-50 border border-slate-100"
+                      )}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-10">
+                {/* Platform Header inside Content area */}
+                <div className="flex items-center gap-5 px-2">
+                  <div className={cn(
+                    "flex h-14 w-14 items-center justify-center rounded-2xl shadow-xl border overflow-hidden shrink-0",
+                    activePlatform === "spotify" ? "bg-black border-black" : "bg-white border-white/20"
+                  )}>
+                    {activePlatform === "spotify"
+                      ? <img src="/spotify.png" alt="Spotify" className="h-full w-full object-cover" />
+                      : <img src="/Youtube.png" alt="YouTube" className="h-9 w-9 object-contain" />
+                    }
+                  </div>
+                  <div>
+                    <p className={cn("text-xl font-black uppercase tracking-[0.3em]", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
+                      {t(`performance.${activePlatform}` as any)}
+                    </p>
+                    <p className={cn("text-4xl font-black uppercase tracking-tight", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
+                      {activePlatform === "youtube" ? t("home.performance.officialMv") : t("home.performance.rankings")}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Stats bar */}
+                {activePlatformData && (
+                  <div className="px-2">
+                    <PlatformStatsBar
+                      platform={activePlatform as "spotify" | "youtube"}
+                      totalValue={activePlatformData.totalValue}
+                      dailyValue={activePlatformData.dailyValue}
+                      dailyChange={activePlatformData.dailyChange}
+                      dailyChangeFormat={activePlatformData.dailyChangeFormat}
+                      t={t}
+                    />
+                    {activePlatformData.note && (
+                      <p className="mb-6 -mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-black/30 text-right px-1">
+                        {activePlatformData.note}
+                      </p>
+                    )}
+                  </div>
                 )}
-              </>
+
+                {/* Track table */}
+                <div>
+                  <div className="mb-2 grid items-center px-6 py-3 grid-cols-[48px_1fr_100px] lg:grid-cols-[48px_1fr_160px_180px_150px]">
+                    <div className={cn("text-center text-[13px] font-black uppercase tracking-widest", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>#</div>
+                    <div className={cn("text-[13px] font-black uppercase tracking-widest", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
+                      {t("charts.trackInfo").split(" ")[0]}
+                    </div>
+                    <div className={cn("text-right text-[13px] font-black uppercase tracking-widest max-lg:hidden", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
+                      {t("charts.total")}
+                    </div>
+                    <div className={cn("text-right text-[13px] font-black uppercase tracking-widest max-lg:hidden", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
+                      {t("charts.daily")}
+                    </div>
+                    <div className={cn("text-right text-[13px] font-black uppercase tracking-widest", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
+                      {t("charts.trend")}
+                    </div>
+                  </div>
+
+                  <div className="overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/50 backdrop-blur-xl shadow-lg">
+                    {activePlatformData?.items && activePlatformData.items.length > 0 ? (
+                      activePlatformData.items.slice(0, 5).map((item, index) => (
+                        <PerformanceItemRow
+                          key={`${item.id}-${item.href ?? ""}-${index}`}
+                          item={item}
+                          index={index}
+                          platform={activePlatform as "spotify" | "youtube"}
+                        />
+                      ))
+                    ) : (
+                      <div className="py-16 text-center text-sm italic text-slate-400">
+                        {t("performance.empty")}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* View all */}
+                <div className="mt-8 text-center">
+                  <Link
+                    href={`/charts?platform=${activePlatform}`}
+                    className={cn(
+                      "inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest transition-all hover:scale-105",
+                      activePlatform === "spotify" ? "text-sky-600" : "text-pink-600"
+                    )}
+                  >
+                    {t("home.performance.viewAll")}
+                    <ExternalLink className="size-3.5" />
+                  </Link>
+                </div>
+              </div>
             )}
-
-            {/* Track table header */}
-            <div className="mb-2 grid items-center px-4 py-3 grid-cols-[48px_1fr_100px] lg:grid-cols-[48px_1fr_160px_180px_150px]">
-              <div className={cn("text-center text-[13px] font-black uppercase tracking-widest", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>#</div>
-              <div className={cn("text-[13px] font-black uppercase tracking-widest", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
-                {t("charts.trackInfo").split(" ")[0]}
-              </div>
-              <div className={cn("text-right text-[13px] font-black uppercase tracking-widest max-lg:hidden", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
-                {t("charts.total")}
-              </div>
-              <div className={cn("text-right text-[13px] font-black uppercase tracking-widest max-lg:hidden", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
-                {t("charts.daily")}
-              </div>
-              <div className={cn("text-right text-[13px] font-black uppercase tracking-widest", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
-                {t("charts.trend")}
-              </div>
-            </div>
-
-            {/* Track list */}
-            <div className="overflow-hidden rounded-[2rem] border border-white bg-white">
-              {activePlatformData?.items && activePlatformData.items.length > 0 ? (
-                activePlatformData.items.slice(0, 5).map((item, index) => (
-                  <PerformanceItemRow
-                    key={`${item.id}-${item.href ?? ""}-${index}`}
-                    item={item}
-                    index={index}
-                    platform={activePlatform as "spotify" | "youtube"}
-                  />
-                ))
-              ) : (
-                <div className="py-16 text-center text-sm italic text-slate-400">
-                  {t("performance.empty")}
-                </div>
-              )}
-            </div>
-
-            {/* View all */}
-            <div className="mt-8 text-center">
-              <Link
-                href={`/charts?platform=${activePlatform}`}
-                className={cn(
-                  "inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest transition-all hover:scale-105",
-                  activePlatform === "spotify" ? "text-sky-500" : "text-pink-500"
-                )}
-              >
-                {t("home.performance.viewAll")}
-                <ExternalLink className="size-3.5" />
-              </Link>
-            </div>
           </div>
-        )}
+        </div>
       </div>
     </section>
   )

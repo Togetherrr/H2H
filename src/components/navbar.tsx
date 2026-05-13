@@ -196,11 +196,11 @@ export function Navbar({
   }, [])
 
   const navItems = [
-    { href: isHome ? "#comeback" : "/home#comeback", label: t("stats.comeback.eyebrow") },
+    { href: isHome ? "#profile" : "/home#profile", label: t("header.nav.profile") },
+    { href: isHome ? "#career" : "/home#career", label: t("header.nav.career") },
+    { href: isHome ? "#album" : "/home#album", label: t("header.nav.album") },
     { href: isHome ? "#performance" : "/home#performance", label: t("header.nav.performance") },
-    { href: isHome ? "#concept" : "/home#concept", label: t("header.nav.concept") },
-    { href: isHome ? "#moments" : "/home#moments", label: t("header.nav.moments") },
-    { href: isHome ? "#join" : "/home#join", label: t("header.nav.join") },
+    { href: isHome ? "#social" : "/home#social", label: t("header.nav.social") },
     { href: "/voting", label: t("header.nav.voting") },
   ]
 

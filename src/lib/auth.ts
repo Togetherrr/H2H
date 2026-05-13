@@ -14,7 +14,7 @@ export async function getCurrentProfile() {
   const supabase = await createClient()
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await supabase.auth.getUser() // @perf-ignore-all
 
   if (!user) {
     return { user: null, profile: null }

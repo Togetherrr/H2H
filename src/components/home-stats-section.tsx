@@ -1,10 +1,9 @@
 "use client"
 
-/* eslint-disable @next/next/no-img-element */
-
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import Link from "next/link"
+import Image from "next/image"
 import {
   CalendarDays,
   Radio,
@@ -288,7 +287,7 @@ function FilmStrip() {
       <div className="flex h-full animate-marquee items-center gap-6 py-6 px-12">
         {images.map((src, idx) => (
           <div key={idx} className="relative aspect-[4/5] h-3/4 flex-shrink-0 overflow-hidden rounded-lg border-[6px] border-white/40 bg-slate-800 shadow-xl rotate-1 group-hover:rotate-0 transition-transform duration-500">
-            <img src={src} alt="Nostalgic Moment" className="h-full w-full object-cover" />
+            <Image src={src} alt="Nostalgic Moment" fill className="object-cover" />
             <div className="absolute top-0 bottom-0 left-0 w-2 flex flex-col justify-around py-2">
               {[...Array(6)].map((_, i) => <div key={i} className="w-1 h-1 rounded-sm bg-white/20 mx-auto" />)}
             </div>
@@ -436,11 +435,12 @@ function DebutVideoModal({
                 className="absolute inset-0 h-full w-full pointer-events-none"
               />
             ) : video?.thumbnail ? (
-              <img
+              <Image
                 src={video.thumbnail}
                 alt={video?.title ?? "YouTube preview"}
-                className="absolute inset-0 h-full w-full object-cover opacity-80"
-                loading="eager"
+                fill
+                className="object-cover opacity-80"
+                priority
               />
             ) : null}
 
@@ -690,220 +690,229 @@ export function HomeStatsSection({ snapshot }: HomeStatsSectionProps) {
   }
 
   return (
-    <section ref={sectionRef} className="relative reveal-up py-20 px-4 overflow-hidden">
-      <BackgroundEffects />
-      <DebutVideoModal
-        isOpen={videoModalOpen}
-        onClose={handleDebutVideoClose}
-        status={videoStatus}
-        video={randomVideo}
-        onRetry={fetchRandomVideo}
-        errorMessage={videoError}
-      />
+    <section ref={sectionRef} className="relative reveal-up py-20 select-none overflow-hidden">
+      <div className="max-w-5xl mx-auto relative z-10">
+        <div className="card-premium shimmer-border p-6 md:p-10 relative overflow-hidden">
+          {/* Background blobs - Standardized */}
+          <div className="absolute top-0 right-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 size-96 bg-sky-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" />
 
-      {/* Section Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 max-w-5xl mx-auto">
-        <div>
-          <div className="flex items-center gap-3 text-[#FF708A] mb-3">
-            <Sparkles className="size-5 fill-current animate-pulse" />
-            <p className="text-[11px] font-black uppercase tracking-[0.4em]">Official Performance</p>
-          </div>
-          <h2 className="section-title text-black text-2xl md:text-4xl">
-            {t("home.stats.careerRecords") || "RECORDS"}
-          </h2>
-        </div>
-      </div>
+          <div className="relative z-10">
+            <DebutVideoModal
+              isOpen={videoModalOpen}
+              onClose={handleDebutVideoClose}
+              status={videoStatus}
+              video={randomVideo}
+              onRetry={fetchRandomVideo}
+              errorMessage={videoError}
+            />
 
-      {/* Bento Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto auto-rows-[minmax(140px,auto)]">
-        {statCards.map((card, i) => {
-          const Icon = card.icon
-          const isDark = card.textColor === "text-white"
-          const isDebutCard = "hasVideoModal" in card
-          const isAwardCard = "sparkleColor" in card
-
-          const cardContent = (
-            <>
-              {/* Hover glow */}
-              <div className="absolute inset-0 bg-white/0 group-hover:bg-white/20 transition-colors duration-500 z-10" />
-
-              {/* Debut: film strip */}
-              {"hasFilmStrip" in card && card.hasFilmStrip && <FilmStrip />}
-
-              {/* Debut: floating hearts */}
-              {"hasHearts" in card && card.hasHearts && (
-                <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
-                  {[
-                    { top: "18%", left: "20%", delay: "0s", dur: "3s", size: "size-6" },
-                    { top: "55%", left: "75%", delay: "0.5s", dur: "4s", size: "size-4" },
-                    { top: "72%", left: "30%", delay: "1s", dur: "2.5s", size: "size-6" },
-                    { top: "30%", left: "60%", delay: "1.5s", dur: "3.5s", size: "size-4" },
-                    { top: "80%", left: "55%", delay: "2s", dur: "2s", size: "size-6" },
-                    { top: "45%", left: "15%", delay: "2.5s", dur: "4.5s", size: "size-4" },
-                  ].map((h, idx) => (
-                    <Heart key={idx}
-                      className={cn("absolute text-[#FF708A]/15 fill-current animate-pulse", h.size)}
-                      style={{ top: h.top, left: h.left, animationDelay: h.delay, animationDuration: h.dur }}
-                    />
-                  ))}
+            {/* Section Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+              <div>
+                <div className="flex items-center gap-3 text-pink-500 mb-3">
+                  <Sparkles className="size-5 fill-current animate-pulse" />
+                  <p className="text-[11px] font-black uppercase tracking-[0.4em]">Official Performance</p>
                 </div>
-              )}
-
-              {/* Award cards: shimmer + sparkles + hover hint */}
-              {isAwardCard && (
-                <>
-                  <ShimmerSweep />
-                  <AwardSparkles color={(card as { sparkleColor: "sky" | "violet" }).sparkleColor} />
-                  <div className="absolute inset-x-0 bottom-0 z-20 flex justify-center pb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0 pointer-events-none">
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-black/6 text-[9px] font-black uppercase tracking-widest text-black/40">
-                      View details <ArrowUpRight className="size-2.5" />
-                    </span>
-                  </div>
-                </>
-              )}
-
-              {/* Content */}
-              <div className="relative z-20 flex flex-col h-full justify-between gap-4">
-                <div className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-xl shadow-sm transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3",
-                  card.iconBg, card.iconColor
-                )}>
-                  <Icon className="size-5" />
-                </div>
-
-                <div className="flex flex-col flex-1 justify-center">
-                  {"debutDate" in card ? (
-                    /* ── Debut card: glass info block ── */
-                    <div className="flex flex-col items-center rounded-[3rem] bg-[#FFF9F0]/70 backdrop-blur-md border border-white/80 shadow-sm px-10 py-12 mx-auto w-full relative overflow-hidden group/inner">
-                      {/* Decorative gradient orb */}
-                      <div className="absolute -top-10 -right-10 size-24 bg-[#FF708A]/10 blur-2xl rounded-full" />
-                      {/* MV name — info only, no play icon */}
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-black/35">Debut MV</span>
-                        <span className="w-1 h-1 rounded-full bg-[#FF708A]/40" />
-                        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#FF708A]">The Chase</span>
-                      </div>
-                      {mounted && isVisible ? (
-                        <FlipNumber value={card.value} size="lg" />
-                      ) : (
-                        <div className="flex gap-2 justify-center py-4">
-                          <div className="w-8 h-12 md:w-12 md:h-16 rounded-lg bg-[#FFF9F0]/80 border border-black/5" />
-                        </div>
-                      )}
-                      <p className="text-[10px] font-black uppercase tracking-[0.35em] text-black/30 -mt-1 mb-2">days</p>
-                      <div className="flex items-center gap-3 w-full justify-center mb-1">
-                        <div className="h-[1px] flex-1 bg-black/10" />
-                        <p className="text-[13px] font-black uppercase tracking-[0.35em] text-[#FF708A]">
-                          {card.debutDate}
-                        </p>
-                        <div className="h-[1px] flex-1 bg-black/10" />
-                      </div>
-                      {mounted && <LiveTicker />}
-                      <span className="text-[8px] font-bold uppercase tracking-[0.25em] text-black/28 mt-2">
-                        Since 6:00 PM KST
-                      </span>
-                    </div>
-                  ) : (
-                    /* ── Award cards: count-up number ── */
-                    <div className="flex flex-col items-center rounded-[2rem] bg-[#FFF9F0]/60 backdrop-blur-md border border-white/80 shadow-sm px-4 py-6 mx-auto w-full relative overflow-hidden">
-                      {/* Decorative gradient orb */}
-                      <div className="absolute -top-10 -right-10 size-24 bg-white/40 blur-2xl rounded-full" />
-                      {mounted && isVisible ? (
-                        <FlipNumber value={card.countUpValue ?? card.value} size="lg" />
-                      ) : (
-                        <div className="flex gap-2 justify-center py-4">
-                          <div className="w-8 h-12 md:w-12 md:h-16 rounded-lg bg-[#FFF9F0]/80 border border-black/5" />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-end justify-between pt-4 border-t border-black/5">
-                  <div className="space-y-0.5">
-                    <p className={cn("text-[12px] font-black uppercase tracking-widest", card.textColor)}>
-                      {"label" in card ? card.label : "OUR DEBUT DAYS"}
-                    </p>
-                    <span className={cn(
-                      "inline-flex px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest mt-1",
-                      isDark ? "bg-white/20 text-white" : "bg-black/5 text-black"
-                    )}>
-                      {card.badge}
-                    </span>
-                  </div>
-                  <div className={cn(
-                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all duration-500 group-hover:scale-110",
-                    isDark ? "bg-white/10 text-white" : "bg-black/5 text-black"
-                  )}>
-                    <ArrowUpRight className="size-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                  </div>
-                </div>
+                <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-slate-900">
+                  {t("home.stats.careerRecords") || "RECORDS"}
+                </h2>
               </div>
+            </div>
 
-              {/* Debut card: hover CTA overlay (unchanged) */}
-              {isDebutCard && (
-                <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-500 bg-[#FF708A]/10 backdrop-blur-[2px] rounded-3xl">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/80 shadow-xl">
-                    <Play className="size-7 text-[#FF708A] ml-1" />
-                  </div>
-                  <p className="text-[13px] font-black text-black/80 tracking-wide text-center px-6">
-                    Play a random Hearts2Hearts video ✨
-                  </p>
-                  <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-black/40">
-                    Click to open
-                  </span>
-                </div>
-              )}
+            {/* Bento Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[minmax(140px,auto)]">
+              {statCards.map((card, i) => {
+                const Icon = card.icon
+                const isDark = card.textColor === "text-white"
+                const isDebutCard = "hasVideoModal" in card
+                const isAwardCard = "sparkleColor" in card
 
-              {/* Decorative background icon */}
-              {!("hasFilmStrip" in card && card.hasFilmStrip) && (
-                <div className="absolute -bottom-10 -right-10 opacity-[0.03] group-hover:opacity-[0.08] group-hover:scale-125 transition-all duration-700 pointer-events-none z-0">
-                  <Icon className={cn("size-[300px]", isDark ? "text-white" : "text-black")} />
-                </div>
-              )}
-            </>
-          )
+                const cardContent = (
+                  <>
+                    {/* Hover glow */}
+                    <div className="absolute inset-0 bg-white/0 group-hover:bg-white/20 transition-colors duration-500 z-10" />
 
-          if (isDebutCard) {
-            return (
-              <button
-                key={card.key}
-                onClick={handleDebutVideoOpen}
-                onPointerEnter={() => {
-                  if (!randomVideo && videoStatus === "idle") void fetchRandomVideo(0, false)
-                }}
-                onFocus={() => {
-                  if (!randomVideo && videoStatus === "idle") void fetchRandomVideo(0, false)
-                }}
-                className={cn(
-                  "group relative flex flex-col justify-between overflow-hidden rounded-[3rem] p-6 border border-white/60 shadow-xl transition-all duration-700 hover:-translate-y-2 hover:shadow-[0_40px_80px_rgba(0,0,0,0.12)] cursor-pointer text-left w-full",
-                  isDebutCard ? "md:p-14" : "md:p-8",
-                  card.className
-                )}
-                style={{ animationDelay: `${i * 100}ms` }}
-              >
-                {cardContent}
-              </button>
-            )
-          }
+                    {/* Debut: film strip */}
+                    {"hasFilmStrip" in card && card.hasFilmStrip && <FilmStrip />}
 
-          return (
-            <Link
-              href={`/records/${card.slug}`}
-              key={card.key}
-              className={cn(
-                "group relative flex flex-col justify-between overflow-hidden rounded-3xl p-4 md:p-6 border border-white/60 shadow-xl transition-all duration-500 hover:-translate-y-2 cursor-pointer",
-                card.slug === "music-show-wins"
-                  ? "hover:shadow-[0_24px_60px_rgba(56,189,248,0.22)]"
-                  : "hover:shadow-[0_24px_60px_rgba(167,139,250,0.22)]",
-                card.className
-              )}
-              style={{ animationDelay: `${i * 100}ms` }}
-            >
-              {cardContent}
-            </Link>
-          )
-        })}
+                    {/* Debut: floating hearts */}
+                    {"hasHearts" in card && card.hasHearts && (
+                      <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
+                        {[
+                          { top: "18%", left: "20%", delay: "0s", dur: "3s", size: "size-6" },
+                          { top: "55%", left: "75%", delay: "0.5s", dur: "4s", size: "size-4" },
+                          { top: "72%", left: "30%", delay: "1s", dur: "2.5s", size: "size-6" },
+                          { top: "30%", left: "60%", delay: "1.5s", dur: "3.5s", size: "size-4" },
+                          { top: "80%", left: "55%", delay: "2s", dur: "2s", size: "size-6" },
+                          { top: "45%", left: "15%", delay: "2.5s", dur: "4.5s", size: "size-4" },
+                        ].map((h, idx) => (
+                          <Heart key={idx}
+                            className={cn("absolute text-[#FF708A]/15 fill-current animate-pulse", h.size)}
+                            style={{ top: h.top, left: h.left, animationDelay: h.delay, animationDuration: h.dur }}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Award cards: shimmer + sparkles + hover hint */}
+                    {isAwardCard && (
+                      <>
+                        <ShimmerSweep />
+                        <AwardSparkles color={(card as { sparkleColor: "sky" | "violet" }).sparkleColor} />
+                        <div className="absolute inset-x-0 bottom-0 z-20 flex justify-center pb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0 pointer-events-none">
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-black/6 text-[9px] font-black uppercase tracking-widest text-black/40">
+                            View details <ArrowUpRight className="size-2.5" />
+                          </span>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Content */}
+                    <div className="relative z-20 flex flex-col h-full justify-between gap-4">
+                      <div className={cn(
+                        "flex h-10 w-10 items-center justify-center rounded-xl shadow-sm transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3",
+                        card.iconBg, card.iconColor
+                      )}>
+                        <Icon className="size-5" />
+                      </div>
+
+                      <div className="flex flex-col flex-1 justify-center">
+                        {"debutDate" in card ? (
+                          /* ── Debut card: glass info block ── */
+                          <div className="flex flex-col items-center rounded-[3rem] bg-[#FFF9F0]/70 backdrop-blur-md border border-white/80 shadow-sm px-10 py-12 mx-auto w-full relative overflow-hidden group/inner">
+                            {/* Decorative gradient orb */}
+                            <div className="absolute -top-10 -right-10 size-24 bg-[#FF708A]/10 blur-2xl rounded-full" />
+                            {/* MV name — info only, no play icon */}
+                            <div className="flex items-center gap-2 mb-3">
+                              <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-black/35">Debut MV</span>
+                              <span className="w-1 h-1 rounded-full bg-[#FF708A]/40" />
+                              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#FF708A]">The Chase</span>
+                            </div>
+                            {mounted && isVisible ? (
+                              <FlipNumber value={card.value} size="lg" />
+                            ) : (
+                              <div className="flex gap-2 justify-center py-4">
+                                <div className="w-8 h-12 md:w-12 md:h-16 rounded-lg bg-[#FFF9F0]/80 border border-black/5" />
+                              </div>
+                            )}
+                            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-black/30 -mt-1 mb-2">days</p>
+                            <div className="flex items-center gap-3 w-full justify-center mb-1">
+                              <div className="h-[1px] flex-1 bg-black/10" />
+                              <p className="text-[13px] font-black uppercase tracking-[0.35em] text-[#FF708A]">
+                                {card.debutDate}
+                              </p>
+                              <div className="h-[1px] flex-1 bg-black/10" />
+                            </div>
+                            {mounted && <LiveTicker />}
+                            <span className="text-[8px] font-bold uppercase tracking-[0.25em] text-black/28 mt-2">
+                              Since 6:00 PM KST
+                            </span>
+                          </div>
+                        ) : (
+                          /* ── Award cards: count-up number ── */
+                          <div className="flex flex-col items-center rounded-[2rem] bg-[#FFF9F0]/60 backdrop-blur-md border border-white/80 shadow-sm px-4 py-6 mx-auto w-full relative overflow-hidden">
+                            {/* Decorative gradient orb */}
+                            <div className="absolute -top-10 -right-10 size-24 bg-white/40 blur-2xl rounded-full" />
+                            {mounted && isVisible ? (
+                              <FlipNumber value={card.countUpValue ?? card.value} size="lg" />
+                            ) : (
+                              <div className="flex gap-2 justify-center py-4">
+                                <div className="w-8 h-12 md:w-12 md:h-16 rounded-lg bg-[#FFF9F0]/80 border border-black/5" />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-end justify-between pt-4 border-t border-black/5">
+                        <div className="space-y-0.5">
+                          <p className={cn("text-[12px] font-black uppercase tracking-widest", card.textColor)}>
+                            {"label" in card ? card.label : "OUR DEBUT DAYS"}
+                          </p>
+                          <span className={cn(
+                            "inline-flex px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest mt-1",
+                            isDark ? "bg-white/20 text-white" : "bg-black/5 text-black"
+                          )}>
+                            {card.badge}
+                          </span>
+                        </div>
+                        <div className={cn(
+                          "flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all duration-500 group-hover:scale-110",
+                          isDark ? "bg-white/10 text-white" : "bg-black/5 text-black"
+                        )}>
+                          <ArrowUpRight className="size-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Debut card: hover CTA overlay (unchanged) */}
+                    {isDebutCard && (
+                      <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-500 bg-[#FF708A]/10 backdrop-blur-[2px] rounded-3xl">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/80 shadow-xl">
+                          <Play className="size-7 text-[#FF708A] ml-1" />
+                        </div>
+                        <p className="text-[13px] font-black text-black/80 tracking-wide text-center px-6">
+                          Play a random Hearts2Hearts video ✨
+                        </p>
+                        <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-black/40">
+                          Click to open
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Decorative background icon */}
+                    {!("hasFilmStrip" in card && card.hasFilmStrip) && (
+                      <div className="absolute -bottom-10 -right-10 opacity-[0.03] group-hover:opacity-[0.08] group-hover:scale-125 transition-all duration-700 pointer-events-none z-0">
+                        <Icon className={cn("size-[300px]", isDark ? "text-white" : "text-black")} />
+                      </div>
+                    )}
+                  </>
+                )
+
+                if (isDebutCard) {
+                  return (
+                    <button
+                      key={card.key}
+                      onClick={handleDebutVideoOpen}
+                      onPointerEnter={() => {
+                        if (!randomVideo && videoStatus === "idle") void fetchRandomVideo(0, false)
+                      }}
+                      onFocus={() => {
+                        if (!randomVideo && videoStatus === "idle") void fetchRandomVideo(0, false)
+                      }}
+                      className={cn(
+                        "group relative flex flex-col justify-between overflow-hidden rounded-[3rem] p-6 border border-white/60 shadow-xl transition-all duration-700 hover:-translate-y-2 hover:shadow-[0_40px_80px_rgba(0,0,0,0.12)] cursor-pointer text-left w-full",
+                        isDebutCard ? "md:p-14" : "md:p-8",
+                        card.className
+                      )}
+                      style={{ animationDelay: `${i * 100}ms` }}
+                    >
+                      {cardContent}
+                    </button>
+                  )
+                }
+
+                return (
+                  <Link
+                    href={`/records/${card.slug}`}
+                    key={card.key}
+                    className={cn(
+                      "group relative flex flex-col justify-between overflow-hidden rounded-3xl p-4 md:p-6 border border-white/60 shadow-xl transition-all duration-500 hover:-translate-y-2 cursor-pointer",
+                      card.slug === "music-show-wins"
+                        ? "hover:shadow-[0_24px_60px_rgba(56,189,248,0.22)]"
+                        : "hover:shadow-[0_24px_60px_rgba(167,139,250,0.22)]",
+                      card.className
+                    )}
+                    style={{ animationDelay: `${i * 100}ms` }}
+                  >
+                    {cardContent}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   )

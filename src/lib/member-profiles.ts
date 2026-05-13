@@ -7,6 +7,34 @@ export type MemberProfile = {
   keywords: string[]
   sourceName: string
   sourceUrl: string
+  // Full info from DB
+  nameKr?: string
+  fullName?: string
+  fullNameKr?: string
+  englishName?: string
+  birthDate?: string
+  zodiac?: string
+  bloodType?: string
+  mbti?: string
+  heightCm?: number | string
+  nationality?: string
+  birthplace?: string
+  emoji?: string
+  trainingYears?: number | string
+  roleModel?: string
+  character?: string
+  nicknames?: string[]
+  funFacts?: string[]
+  favorites?: Record<string, string | string[]>
+  detail?: {
+    bio?: string
+    bio_en?: string
+    highlights?: string[]
+    group_label?: string
+    role_label?: string
+    source_name?: string
+    source_url?: string
+  }
 }
 
 export const memberProfiles: MemberProfile[] = [

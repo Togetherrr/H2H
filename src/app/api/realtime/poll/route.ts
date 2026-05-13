@@ -6,6 +6,13 @@ import { floorToMinutes, parseSpotifyTrackId } from "@/lib/realtime/utils";
 export const runtime = "nodejs";
 export const revalidate = 0;
 
+const isDebug = process.env.NODE_ENV !== "production";
+const logDebug = (...args: unknown[]) => {
+  if (isDebug) {
+    console.log(...args);
+  }
+};
+
 function requireCronSecret(req: Request) {
   const configured = process.env.H2H_CRON_SECRET;
 
@@ -31,7 +38,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
-    console.log("POLL ROUTE HIT");
+  logDebug("POLL ROUTE HIT");
 
     const url = new URL(req.url);
 
@@ -50,19 +57,19 @@ export async function GET(req: Request) {
 
     const spotifyRows = snapshot.spotify.items
       .map((item) => {
-        console.log("RAW SPOTIFY ITEM:", item);
+  logDebug("RAW SPOTIFY ITEM:", item);
 
         const parsedId =
           parseSpotifyTrackId(item.href) ??
           item.id ??
           parseSpotifyTrackId(item.meta);
 
-        console.log("PARSED SPOTIFY ID:", parsedId);
+  logDebug("PARSED SPOTIFY ID:", parsedId);
 
         const total = typeof item.total === "number" ? item.total : null;
 
         if (!parsedId || total === null) {
-          console.log("INVALID SPOTIFY ITEM:", item);
+          logDebug("INVALID SPOTIFY ITEM:", item);
           return null;
         }
 
@@ -107,7 +114,7 @@ export async function GET(req: Request) {
         const total = typeof item.total === "number" ? item.total : null;
 
         if (!platformId || total === null) {
-          console.log("INVALID YOUTUBE ITEM:", item);
+          logDebug("INVALID YOUTUBE ITEM:", item);
           return null;
         }
 
@@ -129,8 +136,8 @@ export async function GET(req: Request) {
       total: number;
     }>;
 
-    console.log("SPOTIFY ROWS:", spotifyRows);
-    console.log("YOUTUBE ROWS:", youtubeRows);
+  logDebug("SPOTIFY ROWS:", spotifyRows);
+  logDebug("YOUTUBE ROWS:", youtubeRows);
 
     const supabase = createServiceClient();
 
@@ -144,7 +151,7 @@ export async function GET(req: Request) {
         .eq("is_active", true);
 
       if (existingItemsError) {
-        console.log("SPOTIFY FALLBACK ITEMS ERROR:", existingItemsError);
+  logDebug("SPOTIFY FALLBACK ITEMS ERROR:", existingItemsError);
       } else {
         const itemIds = (existingItems ?? [])
           .map((row) => row.id)
@@ -183,7 +190,7 @@ export async function GET(req: Request) {
             })
             .filter(Boolean) as typeof spotifyRows;
 
-          console.log("SPOTIFY FALLBACK ROWS:", finalSpotifyRows);
+          logDebug("SPOTIFY FALLBACK ROWS:", finalSpotifyRows);
         }
       }
     }
@@ -208,7 +215,7 @@ export async function GET(req: Request) {
 
     const snapshotRows = [...finalSpotifyRows, ...youtubeRows];
 
-    console.log("ITEMS TO UPSERT:", itemsToUpsert);
+  logDebug("ITEMS TO UPSERT:", itemsToUpsert);
 
     if (itemsToUpsert.length === 0) {
       return NextResponse.json(
@@ -244,8 +251,8 @@ export async function GET(req: Request) {
       })
       .select("id,type,platform_id");
 
-    console.log("UPSERTED ITEMS:", upsertedItems);
-    console.log("UPSERT ERROR:", upsertError);
+  logDebug("UPSERTED ITEMS:", upsertedItems);
+  logDebug("UPSERT ERROR:", upsertError);
 
     if (upsertError) {
       return NextResponse.json(

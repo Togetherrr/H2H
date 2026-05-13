@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
+export const revalidate = 60
 import { Music2, Youtube, ArrowLeft, TrendingUp, TrendingDown, Clock, Activity, ExternalLink } from "lucide-react"
 import Link from "next/link"
 import { getRealtimeSnapshotFromDb } from "@/lib/realtime/db-snapshot"

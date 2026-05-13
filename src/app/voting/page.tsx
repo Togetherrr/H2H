@@ -1,3 +1,4 @@
+export const revalidate = 60
 import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 import { votingGuideContent } from "@/lib/voting-guide"

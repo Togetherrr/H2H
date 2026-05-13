@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createStaticClient } from "@/lib/supabase/static"
 import { computeRolling24h, getKstDayStart, type RealtimeItem, type RealtimeSnapshot } from "@/lib/realtime/rolling24h"
 import type { PerformanceItem, PlatformPerformance, TrackPerformanceSnapshot } from "@/lib/track-performance"
 
@@ -90,7 +90,7 @@ function buildPlatformPerformance(
   return { platform, updatedAt: computed.updatedAt }
 }
 export async function getRealtimeSnapshotFromDb(): Promise<TrackPerformanceSnapshot> {
-  const supabase = await createClient()
+  const supabase = createStaticClient()
   const { data: items, error: itemsError } = await supabase
     .from("h2h_items")
     .select("id,type,platform_id,title,cover_url,release_date,is_active,source_updated_at")

@@ -223,13 +223,6 @@ ORDER BY ?releaseDate
         const date = formatDateDDMMYYYY(binding.releaseDate?.value ?? "")
         const type = binding.instanceLabel?.value ?? "Release"
         const year = getYearFromDate(date)
-        let summary = ""
-        try {
-          summary = await fetchWikipediaSummary(title)
-        } catch {
-          summary = ""
-        }
-
         return {
           slug: toSlug(title),
           title,
@@ -237,7 +230,7 @@ ORDER BY ?releaseDate
           type,
           cover: binding.cover?.value ?? "/group.png",
           subtitle: year ? `${year} ${type}` : type,
-          summary: summary || `Auto-synced from Wikidata for ${title}.`,
+          summary: `Auto-synced from Wikidata for ${title}.`,
           tracks: [],
           sourceUrl: binding.item?.value,
         } satisfies ReleaseRecord
@@ -271,7 +264,20 @@ export const getReleaseCatalog = cache(async () => {
 
 export async function getReleaseBySlug(slug: string) {
   const catalog = await getReleaseCatalog()
-  return catalog.find((release) => release.slug === slug)
+  const release = catalog.find((r) => r.slug === slug)
+  
+  if (release && release.summary.includes("Auto-synced")) {
+    try {
+      const summary = await fetchWikipediaSummary(release.title)
+      if (summary) {
+        return { ...release, summary }
+      }
+    } catch {
+      // stay with fallback
+    }
+  }
+  
+  return release
 }
 
 export async function getTimelineEvents(): Promise<TimelineEvent[]> {
