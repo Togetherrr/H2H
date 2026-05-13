@@ -25,8 +25,9 @@ export type VotingAppCategory = {
 export type VotingAppCard = {
   id: string
   name: string
+  program_name?: string // trường mới đồng bộ với database
   subtitle?: string
-  badge?: string
+  badge?: string        // sẽ hiển thị giá trị của program_name
   iconText?: string
   iconImageSrc?: string
   categoryId: VotingAppCategoryId
@@ -68,7 +69,7 @@ export type VotingGuideContent = {
 
 export const votingGuideContent: VotingGuideContent = {
   pageTitle: "VOTING & SUPPORT",
-  pageSubtitle: "Track live voting progress and master the guide to all K-pop voting applications.",
+  pageSubtitle: "track live voting progress and master the guide to all k-pop voting applications.",
   heroNote: undefined,
   tabs: { appGuideLabel: "APP GUIDE", trackingLabel: "TRACKING" },
   categories: [
@@ -78,11 +79,12 @@ export const votingGuideContent: VotingGuideContent = {
     { id: "stream_support", label: "STREAM SUPPORT" },
   ],
   apps: [
-    // ── MUSIC SHOWS ──────────────────────────────────────────────────────────
+    // ── music shows ──────────────────────────────────────────────────────────
     {
       id: "mnet-plus",
       name: "MNET PLUS",
-      badge: "MCOUNTDOWN",
+      program_name: "M COUNTDOWN",
+      badge: "M COUNTDOWN",
       iconImageSrc: "/voting/mnet-plus.svg",
       categoryId: "music_shows",
       sections: [
@@ -96,13 +98,12 @@ export const votingGuideContent: VotingGuideContent = {
           ],
         },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
     {
       id: "higher",
       name: "HIGHER",
+      program_name: "INKIGAYO",
       badge: "INKIGAYO",
       iconImageSrc: "/voting/higher.svg",
       categoryId: "music_shows",
@@ -114,17 +115,15 @@ export const votingGuideContent: VotingGuideContent = {
           items: [
             "Live vote (Sun 05:20 PM): max 5 votes (50 Ruby each) (KST).",
             "Hot stage: max 10 votes/day (30 Ruby each).",
-            "Unlimited accounts: logout & switch emails to stack votes.",
           ],
         },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
     {
       id: "muniverse",
       name: "MUNIVERSE",
+      program_name: "STAGE M PICK",
       badge: "STAGE M PICK",
       iconImageSrc: "/voting/muniverse.svg",
       categoryId: "music_shows",
@@ -135,48 +134,39 @@ export const votingGuideContent: VotingGuideContent = {
           title: "Events & Strategy",
           items: [
             "Stage M Pick (Sat 07:00 PM–Thu 01:00 PM): 1 vote = 10 Silver or 1 Gold Lumy (KST).",
-            "Max 10 votes/day per account using Silver Lumy; Gold Lumy votes are unlimited.",
-            "Unlimited accounts: logout & switch emails to stack votes.",
+            "Max 10 votes/day per account using Silver Lumy.",
           ],
         },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
-      websiteHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
     {
       id: "mubeat",
       name: "MUBEAT",
-      badge: "MUSIC CORE, AWARDS",
+      program_name: "MUSIC CORE",
+      badge: "MUSIC CORE",
       iconImageSrc: "/voting/mubeat.svg",
       categoryId: "music_shows",
       sections: [
         { title: "Currencies & Expiry", items: ["Heart Beats: 90 Days", "Star Beats: No Expiry"] },
         {
           title: "How to Collect",
-          items: [
-            "Watch Ads: 15 ads/day per account (Max 100/device).",
-            "Quizzes: Reset Mon 02:00 PM (KST).",
-            "Awards Voting Ticket: Watch Ad.",
-          ],
+          items: ["Watch Ads: 15 ads/day per account.", "Quizzes: Reset Mon 02:00 PM (KST)."],
         },
         {
           title: "Events & Strategy",
           items: [
             "Pre-vote (Tue 08:00 PM–Thu 01:00 PM): 3 Beats/vote (KST).",
             "Live vote (Sat): max 5 tickets/account (30 Beats each).",
-            "Awards (GDA, SMA).",
           ],
         },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
     {
       id: "linc",
       name: "LINC",
+      program_name: "INKIGAYO",
       badge: "INKIGAYO",
       iconImageSrc: "/voting/linc.svg",
       categoryId: "music_shows",
@@ -185,529 +175,234 @@ export const votingGuideContent: VotingGuideContent = {
         { title: "How to Collect", items: ["Ads: 30/day (LINC) + 20/day (TIN).", "Chat: stay min. 24hrs to keep points."] },
         {
           title: "Events & Strategy",
-          items: [
-            "Pre-voting (Mon–Fri): max 10 votes/day.",
-            "1 vote = 30 FP or 8 Diamond.",
-            "Goal: 3,000 FP for 4-week comeback.",
-          ],
+          items: ["Pre-voting (Mon–Fri): max 10 votes/day.", "1 vote = 30 FP or 8 Diamond."],
         },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
     {
       id: "tin",
       name: "TIN",
-      badge: "(INKIGAYO FAN POINTS)",
+      program_name: "INKIGAYO FAN POINTS",
+      badge: "INKIGAYO FAN POINTS",
       iconImageSrc: "/voting/tin.svg",
       categoryId: "music_shows",
       sections: [
         { title: "Currencies & Expiry", items: ["Fan Points"] },
-        {
-          title: "How to Collect",
-          items: [
-            "Download TIN app (digital photocard tracker).",
-            "Tap Fan Points icon.",
-            "Watch up to 20 additional ads/day.",
-          ],
-        },
+        { title: "How to Collect", items: ["Download TIN app.", "Watch up to 20 additional ads/day."] },
         {
           title: "Events & Strategy",
-          items: [
-            "Fan Points from TIN auto-send to LINC app reserve.",
-            "Alternate ads between LINC and TIN to bypass cooldowns.",
-          ],
+          items: ["Fan Points from TIN auto-send to LINC app reserve.", "Alternate ads between LINC and TIN."],
         },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
     {
       id: "idolchamp",
       name: "IDOLCHAMP",
+      program_name: "SHOW CHAMPION",
       badge: "SHOW CHAMPION",
       iconImageSrc: "/voting/idolchamp.svg",
       categoryId: "music_shows",
       sections: [
-        {
-          title: "Currencies & Expiry",
-          items: ["Ruby Chamsim: 90 Days", "Time Chamsim: End of Month"],
-        },
-        {
-          title: "How to Collect",
-          items: ["10 Ads/day (1 Spin Roulette: ♥ 1–10).", "Check-in (+30), Likes (+20), Quizzes (+20)."],
-        },
-        {
-          title: "Events & Strategy",
-          items: ["Pre-vote: No daily limit.", "1 ♥ = 1 Ticket.", "5 💙 = 1 Ticket."],
-        },
+        { title: "Currencies & Expiry", items: ["Ruby Chamsim: 90 Days", "Time Chamsim: End of Month"] },
+        { title: "How to Collect", items: ["10 Ads/day.", "Check-in (+30), Likes (+20), Quizzes (+20)."] },
+        { title: "Events & Strategy", items: ["Pre-vote: No daily limit.", "1 ♥ = 1 Ticket.", "5 💙 = 1 Ticket."] },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
     {
       id: "fancast",
       name: "FANCAST",
+      program_name: "MUSIC BANK",
       badge: "MUSIC BANK",
       iconImageSrc: "/voting/fancast.svg",
       categoryId: "music_shows",
       sections: [
-        {
-          title: "Currencies & Expiry",
-          items: ["Blue Hearts: 30–60 days", "Gold Hearts (Paid/mission)"],
-        },
-        {
-          title: "How to Collect",
-          items: [
-            "Daily Attendance: 10/day (810/month max).",
-            "Watch Ads: 20 Hearts/ad, 60 ads/day.",
-            "Charging Station Missions: Variable.",
-            "Purchase (Gold Hearts).",
-          ],
-        },
+        { title: "Currencies & Expiry", items: ["Blue Hearts: 30–60 days", "Gold Hearts"] },
+        { title: "How to Collect", items: ["Daily Attendance: 10/day.", "Watch Ads: 20 Hearts/ad, 60 ads/day."] },
         {
           title: "Events & Strategy",
-          items: [
-            "Pre-vote (Sun 15:00–Wed 11:00 KST): 50 Blue or 50 Yellow Hearts/vote.",
-            "Unlimited votes/day (10-min cooldown after 500 votes).",
-            "No live vote.",
-          ],
+          items: ["Pre-vote: 50 Blue or 50 Yellow Hearts/vote.", "Unlimited votes/day (10-min cooldown)."],
         },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
 
-    // ── AWARDS ───────────────────────────────────────────────────────────────
+    // ── awards ───────────────────────────────────────────────────────────────
     {
       id: "podoal",
       name: "PODOAL",
+      program_name: "ASEA, DEBUT POLLS",
       badge: "ASEA, DEBUT POLLS",
       iconImageSrc: "/voting/podoal.svg",
       categoryId: "awards",
       sections: [
-        {
-          title: "Currencies & Expiry",
-          items: ["Podoal (no expiry)", "Jelly (no expiry)"],
-        },
-        {
-          title: "How to Collect",
-          items: [
-            "Attendance",
-            "Watch Ads",
-            "Missions",
-            "Podoschool & Quiz Bites",
-            "Passtival",
-            "Meal Time",
-            "Invite Friends",
-            "Games",
-          ],
-        },
-        {
-          title: "Events & Strategy",
-          items: [
-            "Awards (ASEA).",
-            'Use PodoAL for "Fan Voting" (Ads/Billboards) and Jellies for official "Monthly Charts."',
-          ],
-        },
+        { title: "Currencies & Expiry", items: ["Podoal (no expiry)", "Jelly (no expiry)"] },
+        { title: "How to Collect", items: ["Attendance", "Watch Ads", "Missions", "Podoschool"] },
+        { title: "Events & Strategy", items: ["Use PodoAL for Fan Voting and Jellies for Monthly Charts."] },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
     {
       id: "my1pick",
       name: "MY1PICK",
+      program_name: "KM CHART, GDA, SMA, DREAM CONCERT, ASEA, APAN",
       badge: "KM CHART, GDA, SMA, DREAM CONCERT, ASEA, APAN",
       iconImageSrc: "/voting/my1pick.svg",
       categoryId: "awards",
       sections: [
-        {
-          title: "Currencies & Expiry",
-          items: [
-            "1. Gold Heart (Free, expires monthly)",
-            "2. Blue Heart (Daily, expires at midnight KST)",
-            "3. OnePick Heart (Paid, no expiry)",
-          ],
-        },
-        {
-          title: "How to Collect",
-          items: [
-            "Blue: Daily Attendance, Community posts.",
-            "Gold: Watch Ads (15–20/day), Missions, Surveys.",
-            "OnePick: In-app purchases, Shopping for Merch.",
-          ],
-        },
-        {
-          title: "Events & Strategy",
-          items: [
-            "KM Chart: Use Gold Hearts (20 hearts = 1 vote).",
-            "Daily Polls: Use Blue Hearts as they don't carry over.",
-            "Strategy: Burn Blue Hearts daily; stockpile Gold for KM Chart cycles; reserve OnePick for year-end \"Triple Crown\" awards.",
-          ],
-        },
+        { title: "Currencies & Expiry", items: ["Gold Heart", "Blue Heart", "OnePick Heart"] },
+        { title: "How to Collect", items: ["Attendance", "Watch Ads (15-20/day)", "Surveys"] },
+        { title: "Events & Strategy", items: ["KM Chart: Use Gold Hearts.", "Burn Blue Hearts daily."] },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
     {
       id: "bigc",
       name: "BIGC",
+      program_name: "STAGE M PICK",
       badge: "STAGE M PICK",
       iconImageSrc: "/voting/bigc.svg",
       categoryId: "awards",
       sections: [
-        {
-          title: "Currencies & Expiry",
-          items: ["BIGC GEMs (Free, 1 year)", "ROYAL GEMs (Paid, 1 year)"],
-        },
-        {
-          title: "How to Collect",
-          items: [
-            "Daily Attendance (20).",
-            "Watch Ads (3/ad, up to 100/day).",
-            "Invitation Event (10).",
-            "Visit BIGC SNS (15).",
-            "Purchase (ROYAL GEMs).",
-          ],
-        },
-        {
-          title: "Events & Strategy",
-          items: [
-            "1 ROYAL GEM = 20 BIGC GEMs for voting. GEMs can be gifted (min 100).",
-          ],
-        },
+        { title: "Currencies & Expiry", items: ["BIGC GEMs", "ROYAL GEMs"] },
+        { title: "How to Collect", items: ["Daily Attendance (20).", "Watch Ads (3/ad, up to 100/day)."] },
+        { title: "Events & Strategy", items: ["1 ROYAL GEM = 20 BIGC GEMs for voting."] },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
-      websiteHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
     {
       id: "whosfan",
       name: "WHOSFAN",
+      program_name: "HANTEO MUSIC AWARDS (HMA)",
       badge: "HANTEO MUSIC AWARDS (HMA)",
       iconImageSrc: "/voting/whosfan.svg",
       categoryId: "awards",
       sections: [
-        {
-          title: "Currencies & Expiry",
-          items: ["Whosfan Hearts (monthly expiry)"],
-        },
-        {
-          title: "How to Collect",
-          items: [
-            "Daily check-in.",
-            "Watch ads.",
-            "Community missions.",
-          ],
-        },
-        {
-          title: "Events & Strategy",
-          items: [
-            "Vote during HMA voting periods.",
-            "Stack Hearts before voting windows open.",
-          ],
-        },
+        { title: "Currencies & Expiry", items: ["Whosfan Hearts"] },
+        { title: "How to Collect", items: ["Daily check-in.", "Watch ads.", "Community missions."] },
+        { title: "Events & Strategy", items: ["Vote during HMA periods.", "Stack Hearts before windows open."] },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
-    },
-    {
-      id: "mubeat-awards",
-      name: "MUBEAT",
-      badge: "GDA, SMA",
-      iconImageSrc: "/voting/mubeat.svg",
-      categoryId: "awards",
-      sections: [
-        {
-          title: "Currencies & Expiry",
-          items: ["Heart Beats: 90 Days", "Star Beats: No Expiry"],
-        },
-        {
-          title: "How to Collect",
-          items: [
-            "Watch Ads: 15 ads/day per account (Max 100/device).",
-            "Quizzes: Reset Mon 02:00 PM (KST).",
-            "Awards Voting Ticket: Watch Ad.",
-          ],
-        },
-        {
-          title: "Events & Strategy",
-          items: [
-            "Awards tickets earned by watching ads during campaign periods.",
-            "GDA & SMA: submit tickets during designated voting windows.",
-          ],
-        },
-      ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
     {
       id: "superstar",
       name: "SUPERSTAR",
+      program_name: "MELON MUSIC AWARDS",
       badge: "MELON MUSIC AWARDS",
       iconImageSrc: "/voting/superstar.svg",
       categoryId: "awards",
       sections: [
-        {
-          title: "Currencies & Expiry",
-          items: ["Stars (no expiry)"],
-        },
-        {
-          title: "How to Collect",
-          items: [
-            "Daily missions.",
-            "Watch ads.",
-            "Special event missions.",
-          ],
-        },
-        {
-          title: "Events & Strategy",
-          items: [
-            "Use Stars during MMA voting period.",
-            "Stack Stars months in advance for year-end awards.",
-          ],
-        },
+        { title: "Currencies & Expiry", items: ["Stars (no expiry)"] },
+        { title: "How to Collect", items: ["Daily missions.", "Watch ads."] },
+        { title: "Events & Strategy", items: ["Use Stars during MMA voting period.", "Stack Stars months in advance."] },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
 
-    // ── BIRTHDAY / ANNIVERSARY ───────────────────────────────────────────────
+    // ── birthday / anniversary ───────────────────────────────────────────────
     {
       id: "choeadol",
       name: "CHOEADOL",
-      badge: "HEART EVENTS, THEME PICKS, IMAGE PICKS, SUPPORT EVENTS",
+      program_name: "HEART EVENTS, THEME PICKS, SUPPORT EVENTS",
+      badge: "HEART EVENTS, THEME PICKS, SUPPORT EVENTS",
       iconImageSrc: "/voting/choeadol.svg",
       categoryId: "birthday",
       sections: [
-        {
-          title: "Currencies & Expiry",
-          items: [
-            "Daily Hearts (expire 23:59 KST)",
-            "Ever Hearts (no expiry)",
-            "Diamonds (support refunds only)",
-          ],
-        },
-        {
-          title: "How to Collect",
-          items: [
-            "Log in twice daily.",
-            "Heart Boxes every 4 hours.",
-            "Watch ads (reset 30 min).",
-            "Maintain streak for Ever Hearts.",
-          ],
-        },
-        {
-          title: "Events & Strategy",
-          items: [
-            "Batch voting (100+ hearts) triggers rebate to grow Ever Hearts. Prioritize Ever Hearts for long-term voting.",
-          ],
-        },
+        { title: "Currencies & Expiry", items: ["Daily Hearts", "Ever Hearts"] },
+        { title: "How to Collect", items: ["Heart Boxes every 4 hours.", "Watch ads (reset 30 min)."] },
+        { title: "Events & Strategy", items: ["Batch voting (100+) triggers rebate to grow Ever Hearts."] },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
     {
       id: "kdol",
       name: "KDOL",
+      program_name: "REAL-TIME, DAILY, WEEKLY, MONTHLY RANKINGS",
       badge: "REAL-TIME, DAILY, WEEKLY, MONTHLY RANKINGS",
       iconImageSrc: "/voting/kdol.svg",
       categoryId: "birthday",
       sections: [
-        {
-          title: "Currencies & Expiry",
-          items: [
-            "Purple Hearts (no expiry, cannot purchase)",
-            "Gems (games/purchase)",
-          ],
-        },
-        {
-          title: "How to Collect",
-          items: [
-            "5 Attendance Boxes (300, 200, 150, 300, 500 hearts).",
-            "Invitation Links (1,000 hearts + 5 gems).",
-            "View Ads (200 hearts/ad, every 10 min).",
-          ],
-        },
-        {
-          title: "Events & Strategy",
-          items: [
-            "Real-time rankings reset daily at 00:00 KST. Use Gems for bonus heart games.",
-          ],
-        },
+        { title: "Currencies & Expiry", items: ["Purple Hearts", "Gems"] },
+        { title: "How to Collect", items: ["5 Attendance Boxes.", "Watch Ads (200 hearts/ad)."] },
+        { title: "Events & Strategy", items: ["Rankings reset daily at 00:00 KST."] },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
     {
       id: "queeri",
       name: "QUEERI",
-      badge: "DAILY CHARTS, FAN SUPPORT POLLS, AD SPONSORSHIP",
+      program_name: "DAILY CHARTS, FAN SUPPORT POLLS",
+      badge: "DAILY CHARTS, FAN SUPPORT POLLS",
       iconImageSrc: "/voting/queeri.svg",
       categoryId: "birthday",
       sections: [
-        {
-          title: "Currencies & Expiry",
-          items: [
-            "Silver Crowns (expire 28th monthly)",
-            "Gold Crowns (expire 60 days)",
-          ],
-        },
-        {
-          title: "How to Collect",
-          items: [
-            "Daily Attendance (5, streak increases).",
-            "Watch Ads (20/day, 5 each).",
-            "Trade Silver for Gold (2:1).",
-            "Day 7 Streak: 100 Silver + 20 Gold.",
-          ],
-        },
-        {
-          title: "Events & Strategy",
-          items: [
-            "Convert Silver to Gold regularly before expiry. Focus Gold on campaigns with strategic impact.",
-          ],
-        },
+        { title: "Currencies & Expiry", items: ["Silver Crowns", "Gold Crowns"] },
+        { title: "How to Collect", items: ["Daily Attendance.", "Watch Ads (20/day)."] },
+        { title: "Events & Strategy", items: ["Convert Silver to Gold regularly before expiry."] },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
     {
       id: "upick",
       name: "UPICK",
+      program_name: "POLLS, EVENTS, CAMPAIGNS",
       badge: "POLLS, EVENTS, CAMPAIGNS",
       iconImageSrc: "/voting/upick.svg",
       categoryId: "birthday",
       sections: [
-        {
-          title: "Currencies & Expiry",
-          items: [
-            "Blue Jams (expire monthly)",
-            "Pink Jams (no expiry)",
-          ],
-        },
-        {
-          title: "How to Collect",
-          items: [
-            "Daily Attendance.",
-            "Watch Ads (20/ad, 60 ads/day = 1,200 Blue Jams).",
-            "Twitter follow mission (100).",
-            "Purchase (Pink Jams).",
-          ],
-        },
-        {
-          title: "Events & Strategy",
-          items: [
-            "Time Attack Events: 100% vote refund. Buy Blue Jam Carry-Over Coupon (50 Pink Jams) to extend expiry.",
-          ],
-        },
+        { title: "Currencies & Expiry", items: ["Blue Jams", "Pink Jams"] },
+        { title: "How to Collect", items: ["Daily Attendance.", "Watch Ads (1,200 Blue Jams/day)."] },
+        { title: "Events & Strategy", items: ["Time Attack Events: 100% vote refund."] },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
     {
       id: "picnic",
       name: "PICNIC",
-      badge: "DEBUT POLLS, BIRTHDAY SUPPORT, WEEKLY PIC-CHART",
+      program_name: "DEBUT POLLS, BIRTHDAY SUPPORT",
+      badge: "DEBUT POLLS, BIRTHDAY SUPPORT",
       iconImageSrc: "/voting/picnic.svg",
       categoryId: "birthday",
       sections: [
-        {
-          title: "Currencies & Expiry",
-          items: [
-            "Star Candy (Paid/Free)",
-            "Free Stars expire 60 months (5 years) after acquisition unless stated otherwise for specific events.",
-          ],
-        },
-        {
-          title: "How to Collect",
-          items: [
-            "Attendance/Daily Login",
-            "Watching Ads",
-            "Participating in Communities",
-            "Direct Purchase (In-App Purchase)",
-          ],
-        },
-        {
-          title: "Events & Strategy",
-          items: [
-            "Monthly/Debut Votes: Support for specific idol milestones.",
-            'Strategy: Focus on "Star Candy Recharge" via daily activities to accumulate for high-priority support events.',
-            "Weekly PIC Chart: Resets weekly.",
-          ],
-        },
+        { title: "Currencies & Expiry", items: ["Star Candy"] },
+        { title: "How to Collect", items: ["Attendance", "Watching Ads", "Community"] },
+        { title: "Events & Strategy", items: ["Focus on Star Candy for high-priority support."] },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
-      websiteHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
     {
       id: "bugs-favorite",
       name: "BUGS FAVORITE",
+      program_name: "DEBUT POLLS, BIRTHDAY SUPPORT",
       badge: "DEBUT POLLS, BIRTHDAY SUPPORT",
       iconImageSrc: "/voting/bugs-favorite.svg",
       categoryId: "birthday",
       sections: [
-        {
-          title: "Currencies & Expiry",
-          items: [
-            "Pink Heart (Daily expire 23:59 KST; Missions expire 30 days)",
-            "Gold Heart (Paid, expire 1 year)",
-          ],
-        },
-        {
-          title: "How to Collect",
-          items: [
-            "Daily Attendance: 100 Hearts (Free) or 300 Hearts (Subscribers).",
-            "Heart Station: Missions/Shopping.",
-            "Store: Purchase Gold Hearts.",
-          ],
-        },
-        {
-          title: "Events & Strategy",
-          items: [
-            "Use Pink Hearts daily before expiry.",
-            "Reserve Gold Hearts for high-priority birthday/debut support events.",
-          ],
-        },
+        { title: "Currencies & Expiry", items: ["Pink Heart", "Gold Heart"] },
+        { title: "How to Collect", items: ["Daily Attendance.", "Heart Station Missions."] },
+        { title: "Events & Strategy", items: ["Use Pink Hearts daily before expiry."] },
       ],
-      guideHref: "#",
-      androidHref: "#",
-      iosHref: "#",
-      websiteHref: "#",
+      guideHref: "#", androidHref: "#", iosHref: "#",
     },
   ],
   masterTips: {
     title: "MASTER VOTING TIPS",
     preparation: [
-      "Create multiple accounts (if allowed by the app rules).",
-      "Start collecting points/beats/jellies at least a month before the comeback.",
-      "Note expiration dates! Many points expire at the end of the month or after 90 days.",
+      "create multiple accounts (if allowed by the app rules).",
+      "start collecting points/beats/jellies at least a month before the comeback.",
+      "note expiration dates! many points expire at the end of the month.",
     ],
     execution: [
-      'Coordinate with fanbases for "mass voting" times.',
-      "Don't drop all votes on day 1; pace them according to the fanbase strategy.",
-      "For live voting, open the app and be ready 5 minutes before the show segment.",
+      'coordinate with fanbases for "mass voting" times.',
+      "don't drop all votes on day 1; pace them according to strategy.",
+      "for live voting, open the app 5 minutes before the show segment.",
     ],
   },
   joinTeam: {
     title: "JOIN OUR VOTING TEAM",
-    body: "Passionate about helping Hearts2Hearts win? Join our dedicated frontline voting team! Drop us a DM on X (Twitter) to get started.",
+    body: "passionate about helping hearts2hearts win? join our dedicated frontline voting team! drop us a dm on x (twitter) to get started.",
     ctaLabel: "DM US ON X",
     href: "#",
   },
@@ -715,61 +410,29 @@ export const votingGuideContent: VotingGuideContent = {
     {
       id: "overview",
       eyebrow: "Overview",
-      title: "What is voting for?",
-      description: "A quick summary of what fan voting impacts and when it matters.",
+      title: "what is voting for?",
+      description: "a quick summary of what fan voting impacts and when it matters.",
       cards: [
-        { title: "What it affects", body: "Add your exact description here (awards, shows, polls, or app events)." },
-        { title: "When to prioritize", body: "Add guidance about comeback windows, rounds, or deadlines." },
-        { title: "Account basics", body: "Add requirements: login, region, verification, or age limits." },
+        { title: "what it affects", body: "add your exact description here (awards, shows, polls, or app events)." },
+        { title: "when to prioritize", body: "add guidance about comeback windows, rounds, or deadlines." },
+        { title: "account basics", body: "add requirements: login, region, verification, or age limits." },
       ],
     },
     {
       id: "how-to",
       eyebrow: "How To Vote",
-      title: "Step-by-step flow",
-      description: "Mirror the exact step blocks from your guide page here.",
+      title: "step-by-step flow",
+      description: "mirror the exact step blocks from your guide page here.",
       cards: [
-        { title: "Step 1", body: "Open the app/website and sign in." },
-        { title: "Step 2", body: "Navigate to the voting banner or event page." },
-        { title: "Step 3", body: "Select the category and confirm your vote." },
-        { title: "Step 4", body: "Claim / spend tickets, coins, or hearts (if applicable)." },
-      ],
-    },
-    {
-      id: "tickets",
-      eyebrow: "Tickets",
-      title: "Earn & use voting tickets",
-      description: "Add all ticket sources exactly like your current guide.",
-      cards: [
-        { title: "Daily check-in", body: "Describe check-in rewards and limits." },
-        { title: "Missions", body: "Describe watch/share/quiz missions and payouts." },
-        { title: "Ads / offers", body: "Describe ad watching and any restrictions." },
-      ],
-    },
-    {
-      id: "tips",
-      eyebrow: "Tips",
-      title: "Avoid losing votes",
-      description: "Common issues that cause votes not to count.",
-      cards: [
-        { title: "Timezone", body: "Explain reset time (KST/UTC) and how to avoid confusion." },
-        { title: "Network", body: "Vote on stable connection; retry if confirmation fails." },
-        { title: "Screenshots", body: "If your guide requires proof, add the exact steps." },
-      ],
-    },
-    {
-      id: "faq",
-      eyebrow: "FAQ",
-      title: "Quick answers",
-      cards: [
-        { title: "Why can't I vote?", body: "Add reasons: missing tickets, not logged in, region lock." },
-        { title: "My tickets disappeared", body: "Add guidance: reset time, claimed vs unclaimed." },
-        { title: "Can I vote multiple times?", body: "Add exact limits and cooldowns." },
+        { title: "step 1", body: "open the app/website and sign in." },
+        { title: "step 2", body: "navigate to the voting banner or event page." },
+        { title: "step 3", body: "select the category and confirm your vote." },
+        { title: "step 4", body: "claim / spend tickets, coins, or hearts (if applicable)." },
       ],
     },
   ],
   quickLinks: [
-    { label: "Official voting page", href: "#", note: "Replace with your official link." },
-    { label: "Support / help center", href: "#", note: "Replace with your support link." },
+    { label: "official voting page", href: "#", note: "replace with your official link." },
+    { label: "support / help center", href: "#", note: "replace with your support link." },
   ],
 }

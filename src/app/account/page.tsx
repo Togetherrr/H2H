@@ -63,7 +63,7 @@ export default async function AccountPage() {
             </Link>
           ) : null}
           <Link
-            href="/"
+            href="/home"
             className="rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Ve trang chu

@@ -31,7 +31,7 @@ export default async function StatDetailPage({ params }: StatDetailPageProps) {
     <main className="min-h-screen bg-[linear-gradient(180deg,#e9f7ff_0%,#f6fbff_48%,#edf8ff_100%)] px-5 py-8 sm:px-8 lg:px-10">
       <div className="mx-auto w-full max-w-6xl">
         <Link
-          href="/"
+          href="/home"
           className="inline-flex items-center rounded-full border border-white/70 bg-white/70 px-4 py-2 text-xs uppercase tracking-[0.2em] text-sky-700 transition hover:bg-white"
         >
           Back to home
@@ -47,7 +47,7 @@ export default async function StatDetailPage({ params }: StatDetailPageProps) {
 
             <aside className="rounded-[1.5rem] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(230,244,255,0.84))] p-5 shadow-[0_16px_40px_rgba(87,145,188,0.12)]">
               <p className="text-[11px] uppercase tracking-[0.24em] text-sky-700/75">Current total</p>
-              <p className="mt-3 text-5xl font-light tracking-tight text-slate-950">{detail.total}</p>
+              <p className="mt-3 text-5xl font-light tracking-tight text-slate-950">{detail.total.toLocaleString()}</p>
               <p className="mt-2 text-sm text-slate-600">{detail.totalLabel}</p>
 
               <div className="mt-5 rounded-[1.2rem] border border-white/80 bg-white/75 p-4">

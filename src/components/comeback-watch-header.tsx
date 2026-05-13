@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Bell, Music, ShoppingCart } from "lucide-react"
+import { Music, ShoppingCart } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/useTranslation"
 import type { HomeStatsSnapshot } from "@/lib/home-stats"
@@ -15,18 +15,11 @@ type CountdownParts = {
   isLive: boolean
 }
 
-const TZ_OFFSETS: Record<string, number> = {
-  KST: 9,
-  EDT: -4,
-  UTC: 0,
-}
-
 function parseIsoDate(date: string) {
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
     const [day, month, year] = date.split("/")
     return new Date(`${year}-${month}-${day}T00:00:00+09:00`)
   }
-
   const normalized = /T/.test(date) ? date : `${date}T00:00:00+09:00`
   const parsed = new Date(normalized)
   return Number.isNaN(parsed.getTime()) ? null : parsed
@@ -35,45 +28,35 @@ function parseIsoDate(date: string) {
 function formatCountdownParts(target: string): CountdownParts | null {
   const parsed = parseIsoDate(target)
   if (!parsed) return null
-
   const diff = parsed.getTime() - Date.now()
-  if (diff <= 0) {
-    return { days: 0, hours: 0, minutes: 0, seconds: 0, isLive: true }
-  }
-
+  if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0, isLive: true }
   const totalSeconds = Math.floor(diff / 1000)
-  const days = Math.floor(totalSeconds / (60 * 60 * 24))
-  const hours = Math.floor((totalSeconds % (60 * 60 * 24)) / (60 * 60))
-  const minutes = Math.floor((totalSeconds % (60 * 60)) / 60)
-  const seconds = totalSeconds % 60
-
-  return { days, hours, minutes, seconds, isLive: false }
+  return {
+    days: Math.floor(totalSeconds / (60 * 60 * 24)),
+    hours: Math.floor((totalSeconds % (60 * 60 * 24)) / (60 * 60)),
+    minutes: Math.floor((totalSeconds % (60 * 60)) / 60),
+    seconds: totalSeconds % 60,
+    isLive: false,
+  }
 }
 
 function pad2(value: number) {
   return Math.max(0, value).toString().padStart(2, "0")
 }
 
-export function ComebackWatchHeader({ 
-  snapshot, 
-  timeZone = "KST" 
-}: { 
-  snapshot: HomeStatsSnapshot, 
-  timeZone?: TimeZone 
+export function ComebackWatchHeader({
+  snapshot,
+  timeZone = "KST"
+}: {
+  snapshot: HomeStatsSnapshot,
+  timeZone?: TimeZone
 }) {
-  const { t, lang } = useTranslation()
+  const { t } = useTranslation()
   const [countdown, setCountdown] = useState<CountdownParts | null>(null)
 
   useEffect(() => {
-    if (!snapshot.upcomingComeback) {
-      setCountdown(null)
-      return
-    }
-
-    const update = () => {
-      setCountdown(formatCountdownParts(snapshot.upcomingComeback?.releaseAt ?? ""))
-    }
-
+    if (!snapshot.upcomingComeback) { setCountdown(null); return }
+    const update = () => setCountdown(formatCountdownParts(snapshot.upcomingComeback?.releaseAt ?? ""))
     update()
     const timer = setInterval(update, 1000)
     return () => clearInterval(timer)
@@ -87,25 +70,11 @@ export function ComebackWatchHeader({
     ? (() => {
         const parsed = parseIsoDate(releaseAt)
         if (!parsed) return releaseAt
-        
-        let displayDate = parsed
-        if (timeZone !== "LOCAL") {
-          const utc = parsed.getTime()
-          displayDate = new Date(utc)
-        }
-
-        const locale = lang === "vi" ? "vi-VN" : "en-GB"
-        
         const options: Intl.DateTimeFormatOptions = {
-          month: "short",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
+          month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false,
           timeZone: timeZone === "LOCAL" ? undefined : timeZone === "EDT" ? "America/New_York" : timeZone === "KST" ? "Asia/Seoul" : "UTC"
         }
-
-        return new Intl.DateTimeFormat(locale, options).format(displayDate).toUpperCase() + ` ${timeZone}`
+        return new Intl.DateTimeFormat("en-GB", options).format(parsed).toUpperCase() + ` ${timeZone}`
       })()
     : null
 
@@ -117,10 +86,12 @@ export function ComebackWatchHeader({
   ]
 
   return (
-    <div className="reveal-up relative mx-auto w-full max-w-4xl">
-      <div className="relative flex flex-col items-center text-center">
+    /* Hero: just provides vertical spacing + centering — body::before handles the global overlay */
+    <section className="relative min-h-[75vh] flex flex-col justify-center items-center pt-32 pb-12 px-6">
+      <div className="w-full max-w-6xl flex flex-col items-center text-center">
+
         {/* Status Badge */}
-        <div className="mb-8 flex items-center gap-2 rounded-full border border-white/60 bg-white/40 px-6 py-2.5 shadow-sm backdrop-blur-md">
+        <div className="mb-10 flex items-center gap-2 rounded-full border border-white/60 bg-white/40 px-6 py-2.5 shadow-xl backdrop-blur-md animate-glow-sky">
           <span className="relative flex h-2 w-2">
             <span className={cn(
               "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
@@ -131,68 +102,65 @@ export function ComebackWatchHeader({
               hasComeback ? "bg-[#FF708A]" : "bg-slate-400"
             )} />
           </span>
-          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#E05670]">
+          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-700">
             {hasComeback ? t("home.comeback.active") : t("home.comeback.standby")}
           </span>
         </div>
 
         {/* Album Subtitle */}
-        <p className="text-[12px] font-black tracking-[0.3em] text-sky-500 uppercase drop-shadow-sm mb-4">
+        <p className="text-[14px] font-black tracking-[0.4em] uppercase mb-6 drop-shadow-[0_1px_4px_rgba(0,0,0,0.2)]" style={{ color: hasComeback ? '#FF708A' : '#1e3a5f' }}>
           {hasComeback ? `#${(albumTitle as string).replace(/\s+/g, '')}` : t("home.comeback.preparing")}
         </p>
 
         {/* Main Date Display */}
-        <h2
-          className={cn(
-            "text-title text-4xl leading-none sm:text-6xl lg:text-7xl xl:text-8xl uppercase drop-shadow-[0_2px_15px_rgba(255,255,255,0.9)]",
-            !hasComeback && "opacity-40 italic"
-          )}
-        >
+        <h2 className={cn(
+          "font-black tracking-tighter text-5xl leading-none sm:text-7xl lg:text-8xl xl:text-9xl uppercase drop-shadow-[0_4px_16px_rgba(0,0,0,0.18)]",
+          hasComeback
+            ? "text-black drop-shadow-[0_10px_25px_rgba(255,255,255,0.4)]"
+            : "italic text-slate-600/60"
+        )}>
           {hasComeback ? formattedDate : t("voting.comingSoon")}
         </h2>
 
-        {/* Countdown Area */}
-        <div className="mt-16 flex items-center justify-center gap-4 sm:gap-10">
+        {/* Countdown - Individual Floating Cards */}
+        <div className="mt-16 grid grid-cols-2 md:flex items-center justify-center gap-4 sm:gap-6">
           {countdownItems.map((item, index) => (
-            <div key={index} className="flex items-center gap-4 sm:gap-10">
-              <div className="flex flex-col items-center">
-                <span className="text-title font-mono text-5xl tracking-tighter sm:text-7xl lg:text-9xl">
+            <div
+              key={index}
+              className={[
+                "flex flex-col items-center",
+                index === 0 ? "animate-float" :
+                index === 1 ? "animate-float-delay-1" :
+                index === 2 ? "animate-float-delay-2" :
+                              "animate-float-delay-3"
+              ].join(" ")}
+            >
+              <div className="flex size-24 sm:size-32 lg:size-40 flex-col items-center justify-center rounded-[2rem] bg-gradient-to-br from-[#FFF0F5] to-[#FFD1DC] border border-white shadow-2xl shadow-pink-500/5">
+                <span className="font-mono font-black text-4xl sm:text-5xl lg:text-7xl tracking-tighter text-black">
                   {pad2(item.value)}
                 </span>
-                <span className="mt-4 text-[10px] font-black tracking-[0.5em] text-sky-500 uppercase">
+                <span className="mt-1 text-[9px] font-black tracking-[0.3em] text-[#FF708A] uppercase">
                   {item.label}
                 </span>
               </div>
-              
-              {index < 3 && (
-                <span className="mb-10 text-4xl font-black text-[#FFC2D1] sm:text-6xl lg:text-7xl">:</span>
-              )}
             </div>
           ))}
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-16 flex flex-wrap items-center justify-center gap-6">
-          {hasComeback ? (
-            <>
-              <button className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-[#FF99AC] to-[#FF708A] px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white shadow-xl shadow-pink-200/50 transition-all hover:scale-105 hover:shadow-2xl">
-                <ShoppingCart className="size-4" />
-                <span>{t("home.comeback.preOrder")}</span>
-              </button>
-              <button className="group flex items-center gap-3 rounded-2xl border-2 border-sky-100 bg-white/40 px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-sky-600 backdrop-blur-md transition-all hover:bg-white hover:scale-105">
-                <Music className="size-4" />
-                {t("home.comeback.preSave")}
-              </button>
-            </>
-          ) : (
-            <button className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/40 px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-slate-600 shadow-sm backdrop-blur-md transition-all hover:bg-white">
-              <Bell className="size-4" />
-              {t("home.comeback.notifyMe")}
+        {hasComeback && (
+          <div className="mt-16 flex flex-wrap items-center justify-center gap-6">
+            <button className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#FF99AC] to-[#FF708A] px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white shadow-xl shadow-pink-500/25 transition-all hover:scale-105 hover:shadow-2xl">
+              <ShoppingCart className="size-4" />
+              <span>{t("home.comeback.preOrder")}</span>
             </button>
-          )}
-        </div>
-
+            <button className="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white transition-all hover:bg-white/25 hover:scale-105">
+              <Music className="size-4" />
+              {t("home.comeback.preSave")}
+            </button>
+          </div>
+        )}
       </div>
-    </div>
+    </section>
   )
 }

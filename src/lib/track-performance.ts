@@ -1,3 +1,11 @@
+/**
+ * track-performance.ts
+ * ✅ Đã thay Chartex → Kworb cho Spotify
+ * ✅ YouTube giữ nguyên (YouTube Data API v3)
+ */
+
+import { fetchKworbSpotify } from "@/lib/realtime/kworb"
+
 export type PerformanceItem = {
   id: string
   title: string
@@ -21,6 +29,10 @@ export type PlatformPerformance = {
   items: PerformanceItem[]
   note?: string
   viewAllHref?: string
+  followers?: number | null
+  monthlyListeners?: number | null
+  subscribers?: number | null
+  videoCount?: number | null
 }
 
 export type TrackPerformanceSnapshot = {
@@ -35,6 +47,10 @@ export type TrackPerformanceSnapshot = {
   isSample: boolean
 }
 
+/* =========================================================
+   DEFAULTS
+========================================================= */
+
 const DEFAULT_SPOTIFY: PlatformPerformance = {
   name: "Spotify",
   totalValue: null,
@@ -42,7 +58,7 @@ const DEFAULT_SPOTIFY: PlatformPerformance = {
   dailyChange: null,
   highlights: [],
   items: [],
-  note: "Unavailable",
+  note: "No realtime data available",
   viewAllHref: "/charts",
 }
 
@@ -53,488 +69,146 @@ const DEFAULT_YOUTUBE: PlatformPerformance = {
   dailyChange: null,
   highlights: [],
   items: [],
+  subscribers: null,
+  videoCount: null,
 }
 
-const SAMPLE_SPOTIFY: PlatformPerformance = {
-  name: "Spotify",
-  totalValue: 1245000,
-  dailyValue: 45200,
-  dailyChange: 1200,
-  dailyChangeFormat: "number",
-  highlights: [],
-  items: [
-    {
-      id: "sample-1",
-      title: "The Chase",
-      subtitle: "Hearts2Hearts",
-      imageUrl: "/group.png",
-      total: 450000,
-      daily: 15000,
-      dailyChange: 5.2,
-      dailyChangeFormat: "percent",
-      href: "https://open.spotify.com",
-    },
-    {
-      id: "sample-2",
-      title: "Butterflies",
-      subtitle: "Hearts2Hearts",
-      imageUrl: "/group.png",
-      total: 320000,
-      daily: 12000,
-      dailyChange: 3.1,
-      dailyChangeFormat: "percent",
-      href: "https://open.spotify.com",
-    },
-    {
-      id: "sample-3",
-      title: "Style",
-      subtitle: "Hearts2Hearts",
-      imageUrl: "/group.png",
-      total: 210000,
-      daily: 8500,
-      dailyChange: -1.2,
-      dailyChangeFormat: "percent",
-      href: "https://open.spotify.com",
-    },
-  ],
-  note: "Sample Data (Offline)",
-  viewAllHref: "/charts",
+/* =========================================================
+   PLACEHOLDER (dùng khi chưa load xong)
+========================================================= */
+
+export function getTrackPerformancePlaceholderSnapshot(): TrackPerformanceSnapshot {
+  return {
+    updatedAt: "",
+    spotify: DEFAULT_SPOTIFY,
+    youtube: DEFAULT_YOUTUBE,
+    sources: { note: "Loading realtime stats…" },
+    isSample: true,
+  }
 }
 
-const H2H_TRACK_TITLES = [
-  "the chase",
-  "butterflies",
-  "style",
-  "pretty please",
-  "focus",
-  "apple pie",
-  "flutter",
-  "blue moon",
-  "rude",
-]
+/* =========================================================
+   YOUTUBE — giữ nguyên, chỉ cần set env vars:
+   H2H_YOUTUBE_API_KEY=...
+   H2H_YOUTUBE_VIDEO_IDS=id1,id2,id3,...
+========================================================= */
 
-type ChartexStats = {
-  total: number | null
-  daily: number | null
-  dailyChange: number | null
+async function fetchJsonWithTimeout(url: string, timeoutMs: number) {
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) })
+    if (!response.ok) return null
+    return await response.json()
+  } catch {
+    return null
+  }
 }
 
-function firstArray(payload: any): any[] {
-  const candidates = [
-    payload?.data?.items,
-    payload?.data?.results,
-    payload?.data,
-    payload?.items,
-    payload?.results,
-  ]
+export async function fetchYouTubeVideos(): Promise<PlatformPerformance | null> {
+  const apiKey = process.env.H2H_YOUTUBE_API_KEY
+  const rawVideoIds = process.env.H2H_YOUTUBE_VIDEO_IDS
 
-  return candidates.find(Array.isArray) ?? []
-}
-
-function pickString(source: any, keys: string[]) {
-  for (const key of keys) {
-    const value = source?.[key]
-    if (typeof value === "string" && value.trim()) {
-      return value.trim()
-    }
+  if (!apiKey || !rawVideoIds) {
+    console.warn("YOUTUBE: Missing H2H_YOUTUBE_API_KEY or H2H_YOUTUBE_VIDEO_IDS")
+    return null
   }
 
-  return ""
-}
+  const videoIds = rawVideoIds
+    .split(/[,\s]+/g)
+    .map((s) => s.trim())
+    .filter(Boolean)
 
-function pickNumber(source: any, keys: string[]) {
-  for (const key of keys) {
-    const raw = source?.[key]
+  if (videoIds.length === 0) return null
 
-    if (typeof raw === "number" && Number.isFinite(raw)) {
-      return raw
-    }
-
-    if (typeof raw === "string") {
-      const value = Number(raw.replace(/,/g, ""))
-      if (Number.isFinite(value)) {
-        return value
+  type YouTubeVideoRow = {
+    id?: string
+    snippet?: {
+      title?: string
+      thumbnails?: {
+        high?: { url?: string }
+        medium?: { url?: string }
+        default?: { url?: string }
       }
     }
+    statistics?: { viewCount?: string }
   }
 
-  return null
-}
+  const allRows: YouTubeVideoRow[] = []
 
-function getSpotifyId(song: any) {
-  const direct = pickString(song, [
-    "spotify_id",
-    "spotify_track_id",
-    "spotify_platform_id",
-    "platform_id",
-    "track_id",
-  ])
-
-  if (direct) {
-    return direct
-  }
-
-  const uri = pickString(song, ["spotify_uri", "uri"])
-  const match = uri.match(/spotify:track:([A-Za-z0-9]+)/)
-
-  return match?.[1] ?? ""
-}
-
-function getArtistName(song: any) {
-  const direct = pickString(song, ["artist_name", "artist", "artists_name", "primary_artist_name"])
-  if (direct) {
-    return direct
-  }
-
-  const artists = song?.artists
-  if (typeof artists === "string" && artists.trim()) {
-    return artists.trim()
-  }
-
-  if (Array.isArray(artists)) {
-    return artists
-      .map((artist) => pickString(artist, ["artist_name", "name"]))
-      .filter(Boolean)
-      .join(", ")
-  }
-
-  return ""
-}
-
-function isHearts2HeartsSong(song: any) {
-  const artist = getArtistName(song).toLowerCase()
-  const title = pickString(song, ["song_name", "title", "name"]).toLowerCase()
-
-  // Chỉ chấp nhận nếu nghệ sĩ là Hearts2Hearts hoặc tiêu đề chứa Hearts2Hearts
-  return artist.includes("hearts2hearts") || title.includes("hearts2hearts")
-}
-
-function parseStatsValue(point: any) {
-  return pickNumber(point, ["value", "streams", "spotify_streams", "count", "total", "amount"])
-}
-
-async function fetchChartex(path: string, params?: Record<string, string | number>) {
-  const appId = process.env.CHARTEX_APP_ID
-  const appToken = process.env.CHARTEX_APP_TOKEN
-
-  if (!appId || !appToken) {
-    return null
-  }
-
-  const url = new URL(path, "https://api.chartex.com")
-  Object.entries(params ?? {}).forEach(([key, value]) => {
-    url.searchParams.set(key, String(value))
-  })
-
-  try {
-    const response = await fetch(url.toString(), {
-      headers: {
-        "X-APP-ID": appId,
-        "X-APP-TOKEN": appToken,
-        Accept: "application/json",
-      },
-      signal: AbortSignal.timeout(8000),
-      next: { revalidate: 3600 },
-    })
-
-    if (!response.ok) {
-      return null
-    }
-
-    return await response.json()
-  } catch (error) {
-    console.error(`Chartex fetch error for ${path}:`, error)
-    return null
-  }
-}
-
-async function fetchChartexSpotifyStats(spotifyId: string): Promise<ChartexStats> {
-  if (!spotifyId) {
-    return { total: null, daily: null, dailyChange: null }
-  }
-
-  const [dailyPayload, totalPayload] = await Promise.all([
-    fetchChartex(`/external/v1/songs/${spotifyId}/spotify/stats/spotify-streams`, {
-      mode: "daily",
-      limit_by_latest_days: 2,
-    }),
-    fetchChartex(`/external/v1/songs/${spotifyId}/spotify/stats/spotify-streams`, {
-      mode: "total",
-      limit_by_latest_days: 1,
-    }),
-  ])
-
-  const dailyPoints = firstArray(dailyPayload)
-  const totalPoints = firstArray(totalPayload)
-  const latestDaily = parseStatsValue(dailyPoints.at(-1))
-  const previousDaily = parseStatsValue(dailyPoints.at(-2))
-  const latestTotal = parseStatsValue(totalPoints.at(-1))
-
-  return {
-    total: latestTotal,
-    daily: latestDaily,
-    dailyChange: latestDaily !== null && previousDaily !== null ? latestDaily - previousDaily : null,
-  }
-}
-
-async function fetchChartexSpotify(): Promise<PlatformPerformance | null> {
-  try {
-    const searchTerms = ["Hearts2Hearts", ...H2H_TRACK_TITLES]
-    const searchPayloads = await Promise.all(
-      searchTerms.map((search) =>
-        fetchChartex("/external/v1/songs/", {
-          search,
-          limit: 25,
-          sort_column: "last_7_days",
-          sort_platform: "spotify",
-        }),
-      ),
-    )
-    const songMap = new Map<string, any>()
-
-    searchPayloads
-      .flatMap(firstArray)
-      .filter(isHearts2HeartsSong)
-      .forEach((song, index) => {
-        const id =
-          pickString(song, ["song_id", "id"]) ||
-          getSpotifyId(song) ||
-          `${pickString(song, ["song_name", "title", "name"])}-${index}`
-
-        if (!songMap.has(id)) {
-          songMap.set(id, song)
-        }
-      })
-
-    const songs = Array.from(songMap.values())
-
-    if (!songs.length) return null
-
-    const items: PerformanceItem[] = await Promise.all(
-      songs.map(async (song: any, index: number): Promise<PerformanceItem> => {
-        const spotifyId = getSpotifyId(song)
-        const artistName = getArtistName(song) || "Hearts2Hearts"
-        const title = pickString(song, ["song_name", "title", "name"]) || "Untitled"
-        const totalValue = pickNumber(song, [
-          "spotify_total_streams",
-          "spotify_streams_total",
-          "total_spotify_streams",
-          "spotify_streams",
-          "total_streams",
-          "streams",
-        ])
-        const dailyValue = pickNumber(song, [
-          "spotify_daily_streams",
-          "spotify_last_24_hours_streams",
-          "spotify_24h_streams",
-          "daily_streams",
-          "last_24h_streams",
-        ])
-        const absoluteDelta = pickNumber(song, [
-          "spotify_growth",
-          "spotify_daily_change",
-          "spotify_last_24_hours_streams_change",
-          "spotify_24h_change",
-          "daily_change",
-          "change",
-        ])
-        const percentageDelta = pickNumber(song, [
-          "spotify_last_24_hours_streams_percentage",
-          "spotify_24h_streams_percentage",
-          "daily_streams_percentage",
-          "change_percentage",
-        ])
-        const needsStats = spotifyId && (totalValue === null || dailyValue === null || (absoluteDelta === null && percentageDelta === null))
-        const stats = needsStats ? await fetchChartexSpotifyStats(spotifyId) : { total: null, daily: null, dailyChange: null }
-
-        const finalDailyChange = absoluteDelta ?? stats.dailyChange ?? percentageDelta
-        const finalDailyChangeFormat = absoluteDelta !== null || (stats && stats.dailyChange !== null) ? "number" : percentageDelta !== null ? "percent" : undefined
-
-        return {
-          id: pickString(song, ["song_id", "id"]) || spotifyId || `${index}-${title}`,
-          title,
-          subtitle: artistName || "Hearts2Hearts",
-          imageUrl:
-            pickString(song, ["image_url", "song_image_url", "album_image_url", "thumbnail_url", "cover_url"]) ||
-            "/group.png",
-          daily: dailyValue ?? stats.daily,
-          total: totalValue ?? stats.total,
-          dailyChange: finalDailyChange,
-          dailyChangeFormat: finalDailyChangeFormat,
-          href: spotifyId
-            ? `https://open.spotify.com/track/${spotifyId}`
-            : pickString(song, ["spotify_url", "url", "song_url"]) || undefined,
-          meta: spotifyId || undefined,
-        }
-      }),
-    )
-
-    const totalValue = items.reduce((sum, item) => sum + (item.total || 0), 0)
-    const dailyValue = items.reduce((sum, item) => sum + (item.daily || 0), 0)
-    const numberChanges = items.filter((item) => item.dailyChange !== null && item.dailyChangeFormat !== "percent")
-    const percentChanges = items.filter((item) => item.dailyChange !== null && item.dailyChangeFormat === "percent")
-    const platformDailyChange =
-      numberChanges.length > 0
-        ? numberChanges.reduce((sum, item) => sum + (item.dailyChange || 0), 0)
-        : percentChanges.length > 0
-          ? percentChanges.reduce((sum, item) => sum + (item.dailyChange || 0), 0) / percentChanges.length
-          : null
-
-    return {
-      name: "Spotify",
-      totalValue: totalValue || null,
-      dailyValue: dailyValue || null,
-      dailyChange: platformDailyChange,
-      dailyChangeFormat: numberChanges.length > 0 ? "number" : percentChanges.length > 0 ? "percent" : undefined,
-      highlights: [],
-      items: items
-        .filter((item) => item.total !== null || item.daily !== null)
-        .sort((a, b) => (b.daily || b.total || 0) - (a.daily || a.total || 0))
-        .slice(0, 100),
-      note: "Chartex",
-      viewAllHref: "/charts",
-    }
-  } catch {
-    return null
-  }
-}
-
-async function fetchSpotifyCharts(): Promise<PlatformPerformance | null> {
-  try {
-    const res = await fetch(
-      "https://charts.spotify.com/charts/spotify:charts:regional:kr:daily/latest/download",
-      { next: { revalidate: 3600 }, signal: AbortSignal.timeout(8000) },
-    )
-
-    if (!res.ok) return null
-
-    const text = await res.text()
-    const rows = text.split("\n").slice(1)
-
-    const items: PerformanceItem[] = rows
-      .map((row, index) => {
-        const cols = row.split(",")
-        const artist = cols[2]?.toLowerCase()
-
-        if (!artist?.includes("hearts2hearts")) return null
-
-        const streams = Number(cols[3]?.replace(/,/g, "")) || null
-
-        return {
-          id: `${index}-${cols[1]}`,
-          title: cols[1],
-          subtitle: cols[2] || "Hearts2Hearts",
-          imageUrl: "/group.png",
-          daily: streams,
-          total: streams,
-          dailyChange: null,
-          href: cols[4],
-        }
-      })
-      .filter(Boolean) as PerformanceItem[]
-
-    if (!items.length) return null
-
-    const total = items.reduce((sum, item) => sum + (item.total || 0), 0)
-
-    return {
-      name: "Spotify",
-      totalValue: total,
-      dailyValue: total,
-      dailyChange: null,
-      highlights: [],
-      items: items.filter((item) => item.total !== null || item.daily !== null).slice(0, 100),
-      note: "Spotify Charts",
-      viewAllHref: "/charts",
-    }
-  } catch {
-    return null
-  }
-}
-async function fetchYouTubeSnapshot(): Promise<PlatformPerformance | null> {
-  const apiKey = process.env.H2H_YOUTUBE_API_KEY
-  if (!apiKey) return null
-
-  // 🔥 DANH SÁCH MV CHÍNH THỨC
-  const VIDEO_IDS = [
-    "F7sGJVUrkjQ",
-    "kxUA2wwYiME",
-    "hJ9Wp3PO3c8",
-    "ufwB9Uja_wM",
-    "Ur7aK4FvK-U",
-    "n7kFRxFIPrI"
-  ]
-
-  try {
+  for (let i = 0; i < videoIds.length; i += 50) {
+    const chunk = videoIds.slice(i, i + 50)
     const url = new URL("https://www.googleapis.com/youtube/v3/videos")
     url.searchParams.set("part", "snippet,statistics")
-    url.searchParams.set("id", VIDEO_IDS.join(","))
+    url.searchParams.set("id", chunk.join(","))
     url.searchParams.set("key", apiKey)
 
-    const res = await fetch(url.toString(), {
-      next: { revalidate: 3600 },
-    })
+    const payload = await fetchJsonWithTimeout(url.toString(), 8000)
+    const rows = (payload?.items ?? []) as YouTubeVideoRow[]
+    allRows.push(...rows)
+  }
 
-    if (!res.ok) return null
+  if (allRows.length === 0) return null
 
-    const data = await res.json()
+  const items: PerformanceItem[] = allRows
+    .map((row) => {
+      const id = row.id
+      if (!id) return null
 
-    const items: PerformanceItem[] = data.items.map((v: any) => {
-      const total = v.statistics?.viewCount
-        ? Number(v.statistics.viewCount)
-        : null
+      const totalRaw = row.statistics?.viewCount ?? null
+      const total = totalRaw ? Number(totalRaw) : null
+      if (total === null || Number.isNaN(total)) return null
+
+      const title = row.snippet?.title ?? ""
+      const imageUrl =
+        row.snippet?.thumbnails?.high?.url ??
+        row.snippet?.thumbnails?.medium?.url ??
+        row.snippet?.thumbnails?.default?.url ??
+        "/group.png"
 
       return {
-        id: v.id,
-        title: v.snippet.title,
+        id,
+        title,
         subtitle: "Official MV",
-        imageUrl: v.snippet.thumbnails?.medium?.url || "/group.png",
+        imageUrl,
+        daily: null, // YouTube API không trả daily — sẽ tính từ DB snapshots
         total,
-        daily: null,
         dailyChange: null,
-        href: `https://www.youtube.com/watch?v=${v.id}`,
-      }
+        href: `https://www.youtube.com/watch?v=${id}`,
+        meta: id,
+      } satisfies PerformanceItem
     })
+    .filter(Boolean) as PerformanceItem[]
 
-    // sort theo view cao nhất
-    const sorted = items.sort((a, b) => (b.total || 0) - (a.total || 0))
+  if (items.length === 0) return null
 
-    const totalViews = sorted.reduce((sum, i) => sum + (i.total || 0), 0)
-
-    return {
-      name: "YouTube",
-      totalValue: totalViews,
-      dailyValue: null,
-      dailyChange: null,
-      highlights: [],
-      items: sorted,
-      note: "Official MV only",
-    }
-  } catch (err) {
-    console.error(err)
-    return null
+  return {
+    name: "YouTube",
+    totalValue: items.reduce((sum, item) => sum + (item.total || 0), 0),
+    dailyValue: null,
+    dailyChange: null,
+    highlights: [],
+    items,
+    note: "YouTube API",
   }
 }
 
-export async function getTrackPerformanceSnapshot(): Promise<TrackPerformanceSnapshot> {
-  const chartex = await fetchChartexSpotify()
-  const fallback = await fetchSpotifyCharts()
-  const youtube = await fetchYouTubeSnapshot()
+/* =========================================================
+   MAIN SNAPSHOT — gọi song song Kworb + YouTube
+========================================================= */
 
-  const spotify = chartex ?? fallback ?? SAMPLE_SPOTIFY
+export async function getTrackPerformanceSnapshot(): Promise<TrackPerformanceSnapshot> {
+  const [spotify, youtube] = await Promise.all([
+    fetchKworbSpotify(),   // ← Kworb thay cho Chartex
+    fetchYouTubeVideos(),  // ← YouTube Data API v3
+  ])
 
   return {
     updatedAt: new Date().toISOString(),
-    spotify,
+    spotify: spotify ?? DEFAULT_SPOTIFY,
     youtube: youtube ?? DEFAULT_YOUTUBE,
     sources: {
-      spotify: chartex ? "Chartex API" : fallback ? "Spotify Charts" : "No data",
+      spotify: spotify ? "Kworb" : "No data",
       youtube: youtube ? "YouTube API" : "No data",
-      note:
-        !chartex && !fallback
-          ? "Không lấy được dữ liệu ChartEX/Spotify từ server hiện tại. Hãy kiểm tra kết nối tới chartex.com hoặc API credentials."
-          : undefined,
     },
-    isSample: !chartex && !fallback,
+    isSample: false,
   }
 }

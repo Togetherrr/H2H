@@ -5,8 +5,8 @@ create table if not exists voting_apps (
   category text,               -- music_shows, awards, birthday...
   program_name text,           -- m countdown, inkigayo...
   logo_url text,
-  currencies text[] default '{}', 
-  collection_methods text[] default '{}', 
+  currencies text[] default '{}',
+  collection_methods text[] default '{}',
   android_url text,
   ios_url text,
   created_at timestamp with time zone default now()
@@ -57,10 +57,10 @@ create policy "enable read access for all users" on guide_steps for select to an
 create policy "enable read access for all users" on voting_rounds for select to anon, authenticated using (true);
 
 -- 7. script đồng bộ dữ liệu category (nếu cần)
-update voting_apps 
-set 
+update voting_apps
+set
   program_name = category,
-  category = case 
+  category = case
     when lower(name) in ('mnet plus', 'higher', 'muniverse', 'mubeat', 'linc', 'tin', 'idolchamp', 'fancast') then 'music_shows'
     when lower(name) in ('choeadol', 'kdol', 'queeri', 'upick', 'picnic', 'bugs favorite') then 'birthday'
     else 'awards'

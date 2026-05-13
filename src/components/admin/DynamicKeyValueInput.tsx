@@ -31,7 +31,7 @@ export function DynamicKeyValueInput({ items, onChange, label }: DynamicKeyValue
 
   return (
     <div className="grid gap-2">
-      {label && <label className="text-sm font-medium leading-none text-slate-700">{label}</label>}
+      {label && <label className="text-sm font-medium leading-none text-slate-300">{label}</label>}
       <div className="space-y-2">
         {items.map((item, index) => (
           <div key={index} className="flex items-center gap-2">
@@ -39,20 +39,20 @@ export function DynamicKeyValueInput({ items, onChange, label }: DynamicKeyValue
               value={item.key}
               onChange={(e) => handleChange(index, "key", e.target.value)}
               placeholder="e.g. Color"
-              className="w-1/3 bg-white/50 border-sky-100 focus-visible:ring-sky-200"
+              className="w-1/3 bg-slate-950 border-slate-800 text-white focus-visible:ring-sky-900/50"
             />
             <Input
               value={item.value}
               onChange={(e) => handleChange(index, "value", e.target.value)}
               placeholder="e.g. Sky Blue, White"
-              className="flex-1 bg-white/50 border-sky-100 focus-visible:ring-sky-200"
+              className="flex-1 bg-slate-950 border-slate-800 text-white focus-visible:ring-sky-900/50"
             />
             <Button
               type="button"
               variant="ghost"
               size="icon"
               onClick={() => handleRemove(index)}
-              className="text-slate-400 hover:text-red-500 hover:bg-red-50 shrink-0"
+              className="text-slate-500 hover:text-red-500 hover:bg-red-950/30 shrink-0"
             >
               <X className="size-4" />
             </Button>
@@ -64,7 +64,7 @@ export function DynamicKeyValueInput({ items, onChange, label }: DynamicKeyValue
         variant="outline"
         size="sm"
         onClick={handleAdd}
-        className="w-full mt-1 border-dashed border-sky-200 text-sky-600 hover:bg-sky-50 hover:text-sky-700"
+        className="w-full mt-1 border-dashed border-slate-800 text-slate-400 hover:bg-slate-900 hover:text-white transition-colors"
       >
         <Plus className="size-4 mr-1" /> Add Favorite
       </Button>

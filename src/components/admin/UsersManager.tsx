@@ -26,37 +26,37 @@ function PaginatedTable({ data, isUpdating, handleRoleChange }: { data: Profile[
 
   return (
     <div className="space-y-4 mt-4">
-      <Card className="overflow-hidden border-slate-200 shadow-sm">
+      <Card className="overflow-hidden border-slate-800 bg-slate-900 shadow-xl">
         <Table>
-          <TableHeader className="bg-slate-50/50">
-            <TableRow>
-              <TableHead className="w-[300px]">Email</TableHead>
-              <TableHead>Full Name</TableHead>
-              <TableHead className="w-[200px]">Role</TableHead>
+          <TableHeader className="bg-slate-950/50">
+            <TableRow className="border-slate-800 hover:bg-transparent">
+              <TableHead className="text-slate-400 font-medium">Email</TableHead>
+              <TableHead className="text-slate-400 font-medium">Full Name</TableHead>
+              <TableHead className="w-[200px] text-slate-400 font-medium">Role</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className="border-slate-800">
             {currentData.length === 0 ? (
-              <TableRow>
+              <TableRow className="border-slate-800">
                 <TableCell colSpan={3} className="h-24 text-center text-slate-500">
                   No records found.
                 </TableCell>
               </TableRow>
             ) : (
               currentData.map((profile) => (
-                <TableRow key={profile.id} className="group transition-colors hover:bg-slate-50/50">
-                  <TableCell className="font-medium text-slate-900">{profile.email}</TableCell>
-                  <TableCell className="text-slate-600">{profile.full_name || "-"}</TableCell>
+                <TableRow key={profile.id} className="group transition-colors hover:bg-slate-800/50 border-slate-800">
+                  <TableCell className="font-medium text-slate-100">{profile.email}</TableCell>
+                  <TableCell className="text-slate-400">{profile.full_name || "-"}</TableCell>
                   <TableCell>
                     <Select
                       defaultValue={profile.role || "user"}
                       onValueChange={(val) => handleRoleChange(profile.id, val)}
                       disabled={isUpdating === profile.id}
                     >
-                      <SelectTrigger className="h-8 w-32 bg-white/50 text-xs">
+                      <SelectTrigger className="h-8 w-32 bg-slate-950 border-slate-800 text-xs text-white">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-slate-900 border-slate-800 text-white">
                         <SelectItem value="user">User</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
                       </SelectContent>
@@ -72,7 +72,7 @@ function PaginatedTable({ data, isUpdating, handleRoleChange }: { data: Profile[
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-2">
           <p className="text-sm text-slate-500">
-            Showing <span className="font-medium text-slate-900">{startIndex + 1}</span> to <span className="font-medium text-slate-900">{Math.min(startIndex + itemsPerPage, data.length)}</span> of <span className="font-medium text-slate-900">{data.length}</span> users
+            Showing <span className="font-medium text-slate-200">{startIndex + 1}</span> to <span className="font-medium text-slate-200">{Math.min(startIndex + itemsPerPage, data.length)}</span> of <span className="font-medium text-slate-200">{data.length}</span> users
           </p>
           <div className="flex items-center space-x-2">
             <Button
@@ -80,11 +80,11 @@ function PaginatedTable({ data, isUpdating, handleRoleChange }: { data: Profile[
               size="sm"
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 border-slate-800 text-slate-400 hover:bg-slate-800"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <div className="text-sm font-medium text-slate-600">
+            <div className="text-sm font-medium text-slate-400">
               Page {currentPage} of {totalPages}
             </div>
             <Button
@@ -92,7 +92,7 @@ function PaginatedTable({ data, isUpdating, handleRoleChange }: { data: Profile[
               size="sm"
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 border-slate-800 text-slate-400 hover:bg-slate-800"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -123,14 +123,14 @@ export function UsersManager({ profiles }: { profiles: Profile[] }) {
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="mb-8">
-        <h2 className="text-3xl font-light tracking-tight text-slate-950 sm:text-4xl">User Management</h2>
+        <h2 className="text-3xl font-light tracking-tight text-white sm:text-4xl">User Management</h2>
         <p className="mt-2 text-sm text-slate-500">Manage permissions and roles for all registered accounts.</p>
       </div>
 
       <Tabs defaultValue="admins" className="w-full">
-        <TabsList className="grid w-[400px] grid-cols-2 bg-slate-100/50">
-          <TabsTrigger value="admins">Administrators ({admins.length})</TabsTrigger>
-          <TabsTrigger value="users">Standard Users ({users.length})</TabsTrigger>
+        <TabsList className="grid w-[400px] grid-cols-2 bg-slate-900 border border-slate-800 p-1 rounded-xl">
+          <TabsTrigger value="admins" className="rounded-lg data-[state=active]:bg-slate-800 data-[state=active]:text-white">Administrators ({admins.length})</TabsTrigger>
+          <TabsTrigger value="users" className="rounded-lg data-[state=active]:bg-slate-800 data-[state=active]:text-white">Standard Users ({users.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="admins">
           <PaginatedTable data={admins} isUpdating={isUpdating} handleRoleChange={handleRoleChange} />

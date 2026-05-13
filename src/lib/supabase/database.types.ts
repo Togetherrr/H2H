@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -14,6 +14,109 @@ export type Database = {
   }
   public: {
     Tables: {
+      h2h_item_snapshots: {
+        Row: {
+          created_at: string
+          daily_kworb: number | null
+          id: string
+          item_id: string
+          total: number
+          ts: string
+        }
+        Insert: {
+          created_at?: string
+          daily_kworb?: number | null
+          id?: string
+          item_id: string
+          total: number
+          ts: string
+        }
+        Update: {
+          created_at?: string
+          daily_kworb?: number | null
+          item_id?: string
+          total?: number
+          ts?: string
+        }
+        Relationships: [
+            foreignKeyName: "h2h_item_snapshots_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "h2h_items"
+            referencedColumns: ["id"]
+        category: string | null
+          },
+        ]
+      }
+      h2h_items: {
+        Row: {
+          cover_url: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          platform_id: string
+          release_date: string | null
+          title: string
+          updated_at: string
+       category?: string | null
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          platform_id: string
+          release_date?: string | null
+          source_updated_at?: string | null
+          title?: string
+          type: string
+        }
+          cover_url?: string | null
+       category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          platform_id?: string
+          release_date?: string | null
+          source_updated_at?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      media_assets: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          delete_url: string | null
+          id: string
+          name: string
+          size: number | null
+          type: string | null
+          url: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          delete_url?: string | null
+          id?: string
+          name: string
+          size?: number | null
+          type?: string | null
+          url: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          delete_url?: string | null
+          id?: string
+          name?: string
+          size?: number | null
+          type?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
       members: {
         Row: {
           bio_short: string | null
@@ -320,6 +423,33 @@ export type Database = {
         }
         Relationships: []
       }
+      themes: {
+        Row: {
+          config: Json
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       timeline_events: {
         Row: {
           cover_url: string | null
@@ -434,6 +564,7 @@ export type Database = {
           ios_url?: string | null
           created_at?: string
         }
+        Relationships: []
       }
       app_strategies: {
         Row: {
@@ -457,6 +588,15 @@ export type Database = {
           content?: string
           created_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "app_strategies_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "voting_apps"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       guide_steps: {
         Row: {
@@ -518,11 +658,11 @@ export type Database = {
           is_active?: boolean
           created_at?: string
         }
- 
         Relationships: [
           {
             foreignKeyName: "voting_rounds_app_id_fkey"
             columns: ["app_id"]
+            isOneToOne: false
             referencedRelation: "voting_apps"
             referencedColumns: ["id"]
           }

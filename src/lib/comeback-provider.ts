@@ -73,5 +73,23 @@ export async function getUpcomingComeback(): Promise<UpcomingComeback | null> {
     comeback = getUpcomingComebackFromEnv()
   }
 
+  /* 
+   * TEMPLATE: Uncomment this block to test a future comeback countdown.
+   * Note: The releaseAt format should be "YYYY-MM-DD" or "YYYY-MM-DDTHH:mm:ss+09:00"
+   */
+  /*
+  if (!comeback) {
+    return {
+      title: "ALBUM_TITLE",
+      releaseAt: "2026-06-01T18:00:00+09:00",
+      note: "Official teaser note here.",
+      source: {
+        label: "Official Trailer",
+        href: "https://youtube.com"
+      }
+    }
+  }
+  */
+
   return comeback
 }

@@ -1,63 +1,55 @@
-import { HomePageClient } from "@/components/home-page-client"
-import { officialLinks as staticOfficialLinks } from "@/lib/home-content"
-import { getFilmFrames, getTimelineEvents } from "../lib/release-catalog"
-import { memberProfiles as staticMemberProfiles } from "@/lib/member-profiles"
-import { hearts2heartsOfficialProfile } from "@/lib/group-official-profile"
-import { getHomeStatsSnapshot } from "@/lib/home-stats"
-import { getTrackPerformanceSnapshot } from "@/lib/track-performance"
+"use client"
 
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { LineupReveal } from "@/components/lineup-reveal"
+import { AnimatePresence, motion } from "framer-motion"
 
-export default async function HomePage() {
-  const [timelineEvents, filmFrames, homeStatsSnapshot, trackPerformanceSnapshot] = await Promise.all([
-    getTimelineEvents(),
-    getFilmFrames(4),
-    getHomeStatsSnapshot(hearts2heartsOfficialProfile.debutDate),
-    getTrackPerformanceSnapshot(),
-  ])
-  let memberProfiles = staticMemberProfiles
-  let officialLinks = staticOfficialLinks
+export default function LandingPage() {
+  const router = useRouter()
+  const [isIntroDone, setIsIntroDone] = useState(false)
 
-  /* 
-   * TEMPORARILY DISABLED: Waiting for admin to finish adding data.
-   * To re-enable, uncomment the block below.
-   */
-  /*
-  if (hasSupabaseEnv()) {
-    const supabase = await createClient()
-    const { data: dbMembers } = await supabase.from("members").select("*").order("sort_order", { ascending: true })
-    if (dbMembers && dbMembers.length > 0) {
-      memberProfiles = dbMembers.map((m) => ({
-        slug: m.slug,
-        name: m.stage_name,
-        position: m.position || "",
-        image: m.profile_image_url || "",
-        intro: m.intro || "",
-        keywords: [],
-        sourceName: "Official",
-        sourceUrl: "#",
-      }))
-    }
+  useEffect(() => {
+    // prefetch trang home để trình duyệt nạp sẵn dữ liệu và ảnh nền
+    router.prefetch("/home")
+  }, [router])
 
-    const { data: dbLinks } = await supabase.from("social_links").select("*").order("sort_order", { ascending: true })
-    if (dbLinks && dbLinks.length > 0) {
-      officialLinks = dbLinks.map((l) => ({
-        name: l.label,
-        href: l.url,
-        note: l.platform,
-      }))
-    }
+  const handleIntroComplete = () => {
+    setIsIntroDone(true)
+    // chuyển hướng sau khi hiệu ứng fade-out đã bắt đầu
+    setTimeout(() => {
+      router.replace("/home")
+    }, 100) 
   }
-  */
 
   return (
-    <HomePageClient
-      filmFrames={filmFrames}
-      timelineEvents={timelineEvents}
-      memberProfiles={memberProfiles}
-      officialLinks={officialLinks}
-      officialProfile={hearts2heartsOfficialProfile}
-      homeStatsSnapshot={homeStatsSnapshot}
-      trackPerformanceSnapshot={trackPerformanceSnapshot}
+    /* mình sử dụng style giống hệt globals.css của bạn 
+       để tạo sự đồng nhất ngay từ lớp nền của landing page 
+    */
+    <main className="min-h-[100dvh] relative bg-[#1a2238] overflow-hidden">
+      <AnimatePresence mode="wait">
+  {!isIntroDone ? (
+    <LineupReveal key="intro" onComplete={handleIntroComplete} />
+  ) : (
+    /* Sử dụng các class Tailwind để khớp hoàn toàn với globals.css:
+       - bg-[#1a2238]: Màu nền chính
+       - bg-[url('/background.jpg')]: Ảnh nền album art
+       - bg-cover, bg-center, bg-fixed, bg-no-repeat: Các thuộc tính hiển thị
+    */
+    <motion.div
+      key="out"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="fixed inset-0 z-[1000] bg-[#1a2238] bg-[url('/background.jpg')] bg-cover bg-center bg-fixed bg-no-repeat"
     />
+  )}
+</AnimatePresence>
+      <style jsx global>{`
+        @media (prefers-reduced-motion: reduce) {
+          * { animation: none !important; transition: none !important; }
+        }
+      `}</style>
+    </main>
   )
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Users, Link as LinkIcon, Disc, ArrowLeft, LogOut, LayoutDashboard, Settings, Sparkles } from "lucide-react"
+import { Users, Link as LinkIcon, Disc, ArrowLeft, LogOut, LayoutDashboard, Settings, Sparkles, Image as ImageIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const NAV_ITEMS = [
@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { name: "Users", value: "users", icon: Users },
   { name: "Members", value: "members", icon: Users },
   { name: "Themes", value: "themes", icon: Sparkles },
+  { name: "Media", value: "media", icon: ImageIcon },
   { name: "Social Links", value: "socials", icon: LinkIcon },
   { name: "Site Settings", value: "settings", icon: Settings },
 ]
@@ -24,7 +25,7 @@ export function Sidebar({
     <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-800 bg-slate-950 pb-6 pt-8 backdrop-blur-xl">
       <div className="px-6">
         <Link
-          href="/"
+          href="/home"
           className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 transition hover:bg-slate-800 hover:text-white"
         >
           <ArrowLeft className="size-4" />
