@@ -41,12 +41,9 @@ export async function getVotingAppsByCategory(category: string): Promise<{
 }> {
   const supabase = createClient()
 
-  const { data: apps, error: appsError } = await supabase
+  const { data: appsData, error: appsError } = await supabase
     .from("voting_apps")
-    .select(`
-      *,
-      voting_rounds (*)
-    `)
+    .select("*")
     .eq("category", category)
     .order("created_at", { ascending: true })
 
@@ -54,11 +51,35 @@ export async function getVotingAppsByCategory(category: string): Promise<{
     return { apps: [], strategies: [], error: appsError.message }
   }
 
-  if (!apps || apps.length === 0) {
+  const apps = (appsData ?? []) as VotingApp[]
+
+  if (apps.length === 0) {
     return { apps: [], strategies: [], error: null }
   }
 
-  const appIds = apps.map((app: VotingApp) => app.id)
+  const appIds = apps.map((app) => app.id)
+
+  const { data: roundsDataRaw, error: roundsError } = await (supabase as any)
+    .from("voting_rounds")
+    .select("*")
+    .in("app_id", appIds)
+    .order("start_at", { ascending: true })
+
+  const roundsData = roundsDataRaw as VotingRound[] | null
+
+  const roundsByApp = new Map<string, VotingRound[]>()
+  if (roundsData) {
+    for (const round of roundsData) {
+      const existing = roundsByApp.get(round.app_id) ?? []
+      existing.push(round)
+      roundsByApp.set(round.app_id, existing)
+    }
+  }
+
+  const appsWithRounds: VotingApp[] = apps.map((app) => ({
+    ...app,
+    voting_rounds: roundsByApp.get(app.id) ?? [],
+  }))
 
   const { data: strategies, error: strategiesError } = await supabase
     .from("app_strategies")
@@ -66,12 +87,16 @@ export async function getVotingAppsByCategory(category: string): Promise<{
     .in("app_id", appIds)
     .order("order_num", { ascending: true })
 
+  if (roundsError) {
+    return { apps: appsWithRounds, strategies: [], error: roundsError.message }
+  }
+
   if (strategiesError) {
-    return { apps: apps as VotingApp[], strategies: [], error: strategiesError.message }
+    return { apps: appsWithRounds, strategies: [], error: strategiesError.message }
   }
 
   return {
-    apps: apps as VotingApp[],
+    apps: appsWithRounds,
     strategies: strategies ?? [],
     error: null,
   }

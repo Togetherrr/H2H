@@ -34,17 +34,18 @@ export type Database = {
         Update: {
           created_at?: string
           daily_kworb?: number | null
+          id?: string
           item_id?: string
           total?: number
           ts?: string
         }
         Relationships: [
+          {
             foreignKeyName: "h2h_item_snapshots_item_id_fkey"
             columns: ["item_id"]
             isOneToOne: false
             referencedRelation: "h2h_items"
             referencedColumns: ["id"]
-        category: string | null
           },
         ]
       }
@@ -56,9 +57,10 @@ export type Database = {
           is_active: boolean
           platform_id: string
           release_date: string | null
+          source_updated_at: string | null
           title: string
+          type: string
           updated_at: string
-       category?: string | null
         }
         Insert: {
           cover_url?: string | null
@@ -70,9 +72,10 @@ export type Database = {
           source_updated_at?: string | null
           title?: string
           type: string
+          updated_at?: string
         }
+        Update: {
           cover_url?: string | null
-       category?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -81,6 +84,7 @@ export type Database = {
           source_updated_at?: string | null
           title?: string
           type?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -527,11 +531,11 @@ export type Database = {
           },
         ]
       }
-      voting_apps: {
+   voting_apps: {
         Row: {
           id: string
           name: string
-          category: string | null
+          category: string
           program_name: string | null
           logo_url: string | null
           currencies: string[] | null
@@ -543,7 +547,7 @@ export type Database = {
         Insert: {
           id?: string
           name: string
-          category?: string | null
+          category: string
           program_name?: string | null
           logo_url?: string | null
           currencies?: string[] | null
@@ -555,7 +559,7 @@ export type Database = {
         Update: {
           id?: string
           name?: string
-          category?: string | null
+          category?: string
           program_name?: string | null
           logo_url?: string | null
           currencies?: string[] | null
@@ -570,29 +574,28 @@ export type Database = {
         Row: {
           id: string
           app_id: string
-          order_num: number
           content: string
+          order_num: number
           created_at: string
         }
         Insert: {
           id?: string
           app_id: string
-          order_num: number
           content: string
+          order_num: number
           created_at?: string
         }
         Update: {
           id?: string
           app_id?: string
-          order_num?: number
           content?: string
+          order_num?: number
           created_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "app_strategies_app_id_fkey"
             columns: ["app_id"]
-            isOneToOne: false
             referencedRelation: "voting_apps"
             referencedColumns: ["id"]
           }
@@ -626,6 +629,14 @@ export type Database = {
           image_url?: string | null
           created_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "guide_steps_app_id_fkey"
+            columns: ["app_id"]
+            referencedRelation: "voting_apps"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       voting_rounds: {
         Row: {
@@ -662,7 +673,6 @@ export type Database = {
           {
             foreignKeyName: "voting_rounds_app_id_fkey"
             columns: ["app_id"]
-            isOneToOne: false
             referencedRelation: "voting_apps"
             referencedColumns: ["id"]
           }

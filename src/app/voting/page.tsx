@@ -3,26 +3,17 @@ import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 import { votingGuideContent } from "@/lib/voting-guide"
 import { VotingPageClient } from "@/app/voting/voting-page-client"
-import { getTranslation, normalizeLanguage } from "@/i18n/translations"
-import { headers } from "next/headers"
+import { t } from "@/i18n/translations"
 import { ArrowUp } from "lucide-react"
 
-export async function generateMetadata({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
-  const { lang: queryLang } = await searchParams
-  const lang = normalizeLanguage(queryLang)
-  const t = (key: any) => getTranslation(lang, key)
-
+export async function generateMetadata() {
   return {
     title: `${t("voting.title")} | Hearts2Hearts`,
     description: t("voting.subtitle"),
   }
 }
 
-export default async function VotingPage({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
-  const { lang: queryLang } = await searchParams
-  const cookieLang = (await headers()).get("cookie")?.match(/lang=([^;]+)/)?.[1]
-  const lang = normalizeLanguage(queryLang || cookieLang)
-  const t = (key: any) => getTranslation(lang, key)
+export default async function VotingPage() {
   const titleParts = (t("voting.title") as string).split("&")
   const titlePrimary = titleParts[0]?.trim() ?? ""
   const titleSecondary = titleParts[1]?.trim()
@@ -108,7 +99,7 @@ export default async function VotingPage({ searchParams }: { searchParams: Promi
           </div>
         </header>
 
-        <VotingPageClient lang={lang} />
+        <VotingPageClient />
 
         <div className="mt-20 flex justify-center">
           <Link href="#top" className="button-base button-secondary">

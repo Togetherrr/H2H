@@ -17,7 +17,7 @@ import {
 } from "lucide-react"
 import { type VotingAppCategoryId } from "@/lib/voting-guide"
 import { cn } from "@/lib/utils"
-import { getTranslation, type Language } from "@/i18n/translations"
+import { t } from "@/i18n/translations"
 import { useVotingApps, type MappedApp } from "@/hooks/useVotingApps"
 
 const CATEGORIES = [
@@ -267,8 +267,7 @@ function Skeleton() {
   )
 }
 
-export function VotingPageClient({ lang }: { lang: Language }) {
-  const t = (key: any) => getTranslation(lang, key)
+export function VotingPageClient() {
   const [activeTab, setActiveTab] = useState<"guide" | "tracking">("guide")
   const [activeCategoryId, setActiveCategoryId] = useState<VotingAppCategoryId>("music_shows")
   const { apps, loading, error } = useVotingApps(activeCategoryId)
