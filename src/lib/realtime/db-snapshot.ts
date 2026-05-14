@@ -96,6 +96,7 @@ export async function getRealtimeSnapshotFromDb(): Promise<TrackPerformanceSnaps
     .select("id,type,platform_id,title,cover_url,release_date,is_active,source_updated_at")
     .eq("is_active", true)
     .order("release_date", { ascending: false })
+    .limit(100)
 
   if (itemsError) {
     return {
@@ -126,6 +127,7 @@ export async function getRealtimeSnapshotFromDb(): Promise<TrackPerformanceSnaps
       .in("item_id", itemIds)
       .gte("ts", oldestIso)
       .order("ts", { ascending: false })
+      .limit(5000)
 
     snapshots = (snapshotRows ?? []) as unknown as RealtimeSnapshot[]
   }

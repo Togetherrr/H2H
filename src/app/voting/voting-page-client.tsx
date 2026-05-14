@@ -1,6 +1,6 @@
 "use client"
 
-/* eslint-disable @next/next/no-img-element */
+import Image from "next/image"
 
 import { useState } from "react"
 import {
@@ -14,11 +14,23 @@ import {
   Loader2,
   AlertCircle,
   Clock,
+  Trophy,
+  X,
+  Globe,
 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 import { type VotingAppCategoryId } from "@/lib/voting-guide"
 import { cn } from "@/lib/utils"
 import { t } from "@/i18n/translations"
 import { useVotingApps, type MappedApp } from "@/hooks/useVotingApps"
+import { useTimeZoneStore } from "@/lib/timezone-store"
+import { formatDateTime, formatDateOnly } from "@/lib/timezone"
 
 const CATEGORIES = [
   { id: "music_shows", active: "bg-sky-100/80 text-sky-600 border-sky-200" },
@@ -30,9 +42,11 @@ const CATEGORIES = [
 function AppIcon({ imageSrc, name }: { imageSrc?: string; name: string }) {
   if (imageSrc) {
     return (
-      <img
+      <Image
         src={imageSrc}
         alt={name}
+        width={48}
+        height={48}
         className="h-12 w-12 rounded-2xl object-cover ring-2 ring-white shadow-md"
       />
     )
@@ -44,10 +58,95 @@ function AppIcon({ imageSrc, name }: { imageSrc?: string; name: string }) {
   )
 }
 
+function GuideModal({
+  isOpen,
+  onClose,
+  app
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  app: MappedApp
+}) {
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto !rounded-[3rem] bg-white/95 backdrop-blur-xl border-white shadow-2xl p-0 gap-0 custom-scrollbar overflow-x-hidden">
+        <DialogHeader className="p-8 pb-4 flex flex-row items-center justify-between gap-4 sticky top-0 bg-white/60 backdrop-blur-md z-20 border-b border-slate-100">
+          <div className="flex items-center gap-4">
+            <AppIcon imageSrc={app.iconImageSrc} name={app.name} />
+            <div className="text-left">
+              <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-slate-900 italic">
+                {app.name} Guide
+              </DialogTitle>
+              <DialogDescription className="text-[10px] font-black text-[#FF708A] uppercase tracking-widest mt-1 opacity-60">
+                {app.badge} • Follow steps below
+              </DialogDescription>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors shrink-0"
+          >
+            <X className="size-5" />
+          </button>
+        </DialogHeader>
+
+        <div className="p-8 space-y-16">
+          {app.guideSteps && app.guideSteps.length > 0 ? (
+            <div className="space-y-20">
+              {app.guideSteps.map((step, index) => (
+                <div key={index} className="flex flex-col items-center text-center gap-8 group/step">
+                  <div className="space-y-4 w-full max-w-2xl">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-black text-white text-base font-black italic shadow-lg shadow-black/10 group-hover/step:scale-110 transition-transform">
+                        {String(index + 1).padStart(2, "0")}
+                      </div>
+                      <h5 className="text-xl font-black uppercase tracking-tight text-slate-900 leading-tight italic">
+                        {step.title || "Next Step"}
+                      </h5>
+                    </div>
+                    {step.description && (
+                      <p className="text-[15px] font-semibold text-slate-500 leading-relaxed italic opacity-80 px-4">
+                        {step.description}
+                      </p>
+                    )}
+                  </div>
+
+                  {step.image_url && (
+                    <div className="w-full max-w-lg mx-auto">
+                      <div className="relative group/img overflow-hidden rounded-[2.5rem] border-4 border-white shadow-2xl shadow-slate-200/50 transition-transform duration-500 hover:scale-[1.02]">
+                        <Image
+                          src={step.image_url}
+                          alt={step.title || "Guide image"}
+                          width={800}
+                          height={1200}
+                          className="w-full h-auto object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-20 text-center">
+              <BookOpen className="size-12 text-slate-200 mx-auto mb-4" />
+              <p className="text-slate-400 font-bold italic">No guide steps available for this app.</p>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 function VotingAppCard({ app }: { app: MappedApp }) {
   const [expanded, setExpanded] = useState(false)
+  const [isGuideOpen, setIsGuideOpen] = useState(false)
+  const timeZone = useTimeZoneStore((s) => s.timeZone)
 
   const isMnet = app.name?.toUpperCase() === "MNET PLUS"
+  const isAwardApp = app.categoryId === "awards"
   const activeRound = app.rounds?.find((round) => round.is_active)
   const now = new Date()
   const isCurrentlyVoting =
@@ -64,101 +163,175 @@ function VotingAppCard({ app }: { app: MappedApp }) {
       <div
         className={cn(
           "card-premium !rounded-[2.5rem] !p-0 overflow-hidden border border-white/60 transition-all duration-500",
-          isMnet ? "!bg-[#FFE4E9]" : "!bg-white/40 backdrop-blur-md shadow-sm"
+          isMnet ? "!bg-[#FFE4E9]" : (isAwardApp ? "!bg-[#FFEBF0]" : "!bg-white/40 backdrop-blur-md shadow-sm")
         )}
       >
-        <button
-          onClick={() => setExpanded((value) => !value)}
-          className="flex w-full items-center justify-between p-6 text-left transition hover:bg-white/20"
-        >
-          <div className="flex items-center gap-5">
-            <AppIcon imageSrc={app.iconImageSrc} name={app.name} />
-            <div>
-              <div className="flex items-center gap-3">
-                <h3 className="text-xl font-black tracking-tighter text-slate-900 uppercase leading-none">
-                  {app.name}
-                </h3>
-                {isCurrentlyVoting && (
-                  <span className="flex h-2 w-2 rounded-full bg-red-500 animate-ping" />
-                )}
-              </div>
-              <div className="mt-2 flex items-center gap-2">
-                <span
-                  className={cn(
-                    "rounded-lg px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.2em] border transition-colors",
-                    isMnet
-                      ? "bg-[#FFEDF0] text-[#FF5A78] border-[#FFD1D9]"
-                      : "bg-white/60 text-slate-500 border-white"
+        <div className="p-6 md:p-8">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-5">
+              <AppIcon imageSrc={app.iconImageSrc} name={app.name} />
+              <div>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-2xl font-black tracking-tighter text-slate-900 uppercase leading-none italic">
+                    {app.name}
+                  </h3>
+                  {isCurrentlyVoting && (
+                    <span className="flex h-2 w-2 rounded-full bg-[#FF3B57] animate-ping" />
                   )}
-                >
-                  {app.badge}
-                </span>
-                {activeRound && (
-                  <span className="text-[9px] font-bold text-[#FF708A] uppercase tracking-[0.2em] opacity-80">
-                    • {activeRound.round_name}
+                </div>
+                <div className="mt-2.5 flex items-center gap-2">
+                  <span
+                    className={cn(
+                      "rounded-lg px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.2em] border transition-colors",
+                      isMnet || isAwardApp
+                        ? "bg-white/60 text-[#FF5A78] border-[#FFD1D9]"
+                        : "bg-white/60 text-slate-500 border-white"
+                    )}
+                  >
+                    {app.badge}
                   </span>
-                )}
+                  {(() => {
+                    const now = new Date();
+                    const activeRound = app.rounds.find(r => r.is_active && now >= new Date(r.start_at) && now <= new Date(r.end_at));
+                    const futureRound = app.rounds.find(r => r.is_active && now < new Date(r.start_at));
+                    const pastRound = app.rounds.length > 0 && !activeRound && !futureRound;
+
+                    if (activeRound) {
+                      return (
+                        <div className="flex items-center gap-1.5 rounded-lg bg-green-500/10 px-2 py-0.5 text-green-600 border border-green-500/20">
+                          <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
+                          <p className="text-[9px] font-black uppercase tracking-widest italic leading-none">Active</p>
+                        </div>
+                      );
+                    }
+                    if (futureRound) {
+                      return (
+                        <div className="flex items-center gap-1.5 rounded-lg bg-sky-500/10 px-2 py-0.5 text-sky-600 border border-sky-500/20">
+                          <div className="h-1.5 w-1.5 rounded-full bg-sky-400" />
+                          <p className="text-[9px] font-black uppercase tracking-widest italic leading-none">Coming Soon</p>
+                        </div>
+                      );
+                    }
+                    if (pastRound) {
+                      return (
+                        <div className="flex items-center gap-1.5 rounded-lg bg-slate-100 px-2 py-0.5 text-slate-400 border border-slate-200">
+                          <div className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+                          <p className="text-[9px] font-black uppercase tracking-widest italic leading-none">Ended</p>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="flex items-center gap-1.5 rounded-lg bg-slate-100 px-2 py-0.5 text-slate-500 border border-slate-200">
+                        <CheckCircle2 className="size-3" />
+                        <p className="text-[9px] font-black uppercase tracking-widest italic leading-none">Official App</p>
+                      </div>
+                    );
+                  })()}
+                  {activeRound && (
+                    <span className="text-[9px] font-bold text-[#FF708A] uppercase tracking-[0.2em] opacity-80">
+                      • {activeRound.round_name}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-          <div
-            className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-full border border-white bg-white/80 text-slate-400 transition-all duration-500 shadow-sm",
-              expanded && (isMnet ? "rotate-90 text-[#FF5A78]" : "rotate-90 text-slate-900")
-            )}
-          >
-            <ChevronRight className="size-5" />
-          </div>
-        </button>
 
-        <div
-          className={cn(
-            "grid transition-all duration-500 ease-in-out",
-            expanded ? "max-h-[1500px] opacity-100" : "max-h-0 opacity-0 overflow-hidden"
-          )}
-        >
-          <div className="p-8 pt-0 space-y-8">
             {activeRound && (
-              <div className="rounded-[2rem] bg-white/50 border border-white p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center text-[#FF708A] shadow-sm">
-                    <Clock className="size-6" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">voting period</p>
-                    <p className="text-[13px] font-bold text-slate-700">
-                      {new Date(activeRound.start_at).toLocaleDateString()} -
-                      {" "}
-                      {new Date(activeRound.end_at).toLocaleDateString()}
-                      <span className="ml-2 text-slate-400 font-medium">
-                        ({activeRound.display_timezone || "KST"})
-                      </span>
-                    </p>
-                  </div>
-                </div>
-                {isCurrentlyVoting ? (
-                  <div className="px-5 py-2 rounded-xl bg-red-50 text-red-500 text-[10px] font-black uppercase tracking-widest border border-red-100">
-                    vote active now
-                  </div>
-                ) : (
-                  <div className="px-5 py-2 rounded-xl bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest border border-slate-200">
-                    scheduled
-                  </div>
-                )}
+              <div className="rounded-2xl border border-white/60 bg-white/50 px-5 py-4 text-slate-700 shadow-sm backdrop-blur-sm">
+                <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 mb-1">voting period</p>
+                <p className="text-[12px] font-bold whitespace-nowrap">
+                  {formatDateTime(activeRound.start_at, timeZone)} — {formatDateTime(activeRound.end_at, timeZone)}
+                  <span className="ml-2 text-[#FF708A] font-black uppercase tracking-widest text-[9px]">
+                    {timeZone}
+                  </span>
+                </p>
               </div>
             )}
+          </div>
 
-            <div className="flex flex-col lg:flex-row gap-10">
-              <div className="w-full lg:w-1/3 space-y-7">
-                <div className="space-y-4">
-                  <p className="text-[12px] font-black uppercase tracking-[0.3em] text-[#FF708A] flex items-center gap-2">
-                    <Sparkles className="size-3.5" /> Currencies
-                  </p>
-                  <div className="flex flex-wrap gap-3">
+          <div
+            className={cn(
+              "grid transition-all duration-500 ease-in-out",
+              expanded ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0 overflow-hidden"
+            )}
+          >
+            <div className="pt-8 space-y-8">
+              {isAwardApp && app.ceremony_at && activeRound && (
+                <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-r from-[#FF708A] to-[#FF3B57] p-6 text-white shadow-lg">
+                  <div className="absolute right-0 top-0 size-32 bg-white/10 blur-2xl rounded-full -mr-10 -mt-10" />
+                  <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="size-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
+                        <Trophy className="size-6" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-pink-100">official ceremony time</p>
+                        <p className="text-xl md:text-2xl font-black uppercase tracking-tighter">
+                          {formatDateTime(app.ceremony_at, timeZone)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {(app.description || (app.reflection_rate && app.reflection_rate.length > 0)) && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {app.description && (
+                    <div className="rounded-2xl bg-white/40 border border-white p-5 shadow-sm">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Description</p>
+                      <p className="text-[13px] font-bold text-slate-700 leading-relaxed italic">{app.description}</p>
+                    </div>
+                  )}
+                  {app.reflection_rate && app.reflection_rate.length > 0 && (
+                    <div className="rounded-[2rem] border border-white/60 bg-white/30 p-7 shadow-sm">
+                      <p className="text-[10px] font-black text-[#FF708A] uppercase tracking-[0.3em] mb-5 flex items-center gap-2">
+                        <Sparkles className="size-3" /> Reflection Rate
+                      </p>
+                      <ul className="space-y-3 text-[13px] font-semibold text-slate-700 italic opacity-80">
+                        {(() => {
+                          const rawRate = app.reflection_rate as any;
+                          let rates: string[] = [];
+                          
+                          if (Array.isArray(rawRate)) {
+                            rates = rawRate;
+                          } else if (typeof rawRate === 'string') {
+                            const trimmed = rawRate.trim();
+                            if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                              try {
+                                const parsed = JSON.parse(trimmed);
+                                rates = Array.isArray(parsed) ? parsed : [trimmed];
+                              } catch (e) {
+                                rates = [trimmed];
+                              }
+                            } else {
+                              rates = [trimmed];
+                            }
+                          }
+                          
+                          return rates
+                            .filter(rate => rate && String(rate).trim().length > 0)
+                            .map((rate, idx) => (
+                              <li key={idx} className="flex items-start gap-2.5">
+                                <span className="mt-2 h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                                <span>{rate}</span>
+                              </li>
+                            ));
+                        })()}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="grid gap-6 lg:grid-cols-3">
+                <div className="rounded-[2rem] border border-white/60 bg-white/30 p-7 shadow-sm">
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#FF708A] mb-5">Currencies</p>
+                  <div className="flex flex-wrap gap-2">
                     {currencyItems.map((item) => (
                       <span
                         key={item}
-                        className="px-4 py-2 rounded-xl bg-white border border-white text-[14px] font-bold text-slate-700 shadow-sm"
+                        className="rounded-xl bg-white border border-white px-4 py-2 text-[12px] font-bold text-slate-700 shadow-sm"
                       >
                         {item}
                       </span>
@@ -166,82 +339,91 @@ function VotingAppCard({ app }: { app: MappedApp }) {
                   </div>
                 </div>
 
-                <div className="space-y-4 pt-5 border-t border-white/60">
-                  <p className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-500 flex items-center gap-2">
-                    <CheckCircle2 className="size-4" /> Collection
-                  </p>
-                  <ul className="space-y-4 pl-1">
+                <div className="rounded-[2rem] border border-white/60 bg-white/30 p-7 shadow-sm">
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-5">Collection</p>
+                  <ul className="space-y-3 text-[13px] font-semibold text-slate-700 italic opacity-80">
                     {collectItems.map((item) => (
-                      <li
-                        key={item}
-                        className="flex items-start gap-3 text-[15px] font-semibold text-slate-600 leading-relaxed italic"
-                      >
-                        <div className="mt-3 h-1.5 w-1.5 rounded-full bg-[#FFC2D1] shrink-0" />
-                        {item}
+                      <li key={item} className="flex items-start gap-2.5">
+                        <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#FF708A] shrink-0" />
+                        <span>{item}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
-              </div>
 
-              <div
-                className={cn(
-                  "w-full lg:w-2/3 rounded-[2rem] border border-white/60 p-7 lg:p-9 backdrop-blur-sm",
-                  isMnet ? "bg-white/40" : "bg-white/20"
-                )}
-              >
-                <p className="text-[12px] font-black uppercase tracking-[0.35em] text-slate-800 mb-6 flex items-center gap-3">
-                  <span className="h-px w-10 bg-[#FF708A]" /> Strategy & Schedule
-                </p>
-                <div className="grid gap-5">
-                  {strategyItems.map((item, index) => (
-                    <div
-                      key={`${app.id}-${index}`}
-                      className="group/item flex items-center justify-between gap-5 rounded-2xl border border-white bg-white/70 p-6 transition hover:bg-white hover:shadow-md"
-                    >
-                      <div className="flex items-center gap-5">
-                        <span className="text-2xl font-black text-[#FFC2D1] italic">
-                          {String(index + 1).padStart(2, "0")}
-                        </span>
-                        <p className="text-[16px] font-semibold text-slate-800 leading-snug">{item}</p>
-                      </div>
-                      <Copy
-                        className="size-5 text-slate-300 group-hover/item:text-[#FF708A] transition-colors shrink-0 cursor-pointer"
-                        onClick={() => navigator.clipboard.writeText(item)}
-                      />
-                    </div>
-                  ))}
+                <div className="rounded-[2rem] border border-white/60 bg-white/30 p-7 shadow-sm">
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-5">Strategy</p>
+                  <ul className="space-y-3 text-[13px] font-semibold text-slate-700 italic opacity-80">
+                    {strategyItems.length === 0 ? (
+                      <li className="text-slate-400 font-medium">No strategies yet.</li>
+                    ) : (
+                      strategyItems.map((item, index) => (
+                        <li key={index} className="flex items-start gap-2.5">
+                          <span className="mt-2 h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span>{item}</span>
+                        </li>
+                      ))
+                    )}
+                  </ul>
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-white/60 pt-8">
-              <div className="flex gap-2.5 pl-1">
-                {app.androidHref && (
-                  <a
-                    href={app.androidHref}
-                    target="_blank"
-                    rel="noreferrer"
-                    title="Android"
-                    className="p-3 rounded-2xl bg-white border border-white text-slate-400 hover:text-[#FF708A] shadow-sm transition-all hover:-translate-y-1 hover:border-[#FFEDF0]"
-                  >
-                    <Smartphone className="size-5" />
-                  </a>
+          <div className="mt-10 flex flex-wrap items-center justify-between gap-6 border-t border-white/60 pt-8">
+            <div className="flex gap-4 items-center">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-1">links:</p>
+              {app.androidHref && (
+                <a
+                  href={app.androidHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-3.5 rounded-2xl bg-white border border-white text-[#FF708A] shadow-sm transition-all hover:-translate-y-1"
+                  title="Android App"
+                >
+                  <Smartphone className="size-5" />
+                </a>
+              )}
+              {app.iosHref && (
+                <a
+                  href={app.iosHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-3.5 rounded-2xl bg-white border border-white text-[#FF708A] shadow-sm transition-all hover:-translate-y-1"
+                  title="iOS App"
+                >
+                  <Smartphone className="size-5" />
+                </a>
+              )}
+              {app.websiteHref && (
+                <a
+                  href={app.websiteHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-3.5 rounded-2xl bg-white border border-white text-[#FF708A] shadow-sm transition-all hover:-translate-y-1"
+                  title="Website"
+                >
+                  <Globe className="size-5" />
+                </a>
+              )}
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className={cn(
+                  "flex items-center gap-3 px-7 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg",
+                  expanded 
+                    ? "bg-[#0F172A] text-white" 
+                    : "bg-white border border-white text-slate-500 hover:bg-slate-50"
                 )}
-                {app.iosHref && (
-                  <a
-                    href={app.iosHref}
-                    target="_blank"
-                    rel="noreferrer"
-                    title="iOS"
-                    className="p-3 rounded-2xl bg-white border border-white text-slate-400 hover:text-[#FF708A] shadow-sm transition-all hover:-translate-y-1 hover:border-[#FFEDF0]"
-                  >
-                    <Smartphone className="size-5" />
-                  </a>
-                )}
-              </div>
+              >
+                {expanded ? "Hide Details" : "Show Details"}
+                <ChevronRight className={cn("size-4 transition-transform", expanded && "rotate-90")} />
+              </button>
 
               <button
+                onClick={() => setIsGuideOpen(true)}
                 className="flex items-center gap-3 rounded-2xl bg-[#FF3B57] px-8 py-4 text-[11px] font-black uppercase tracking-widest text-white shadow-xl shadow-pink-100 hover:bg-[#FF2B4A] transition-all hover:scale-105 active:scale-95"
               >
                 <BookOpen className="size-4" /> View Guide
@@ -250,9 +432,16 @@ function VotingAppCard({ app }: { app: MappedApp }) {
           </div>
         </div>
       </div>
+
+      <GuideModal
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
+        app={app}
+      />
     </div>
   )
 }
+
 
 function Skeleton() {
   return (
@@ -321,54 +510,104 @@ export function VotingPageClient() {
             })}
           </div>
 
-          {error && (
-            <div className="flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50/60 px-5 py-4 text-red-600">
-              <AlertCircle className="size-5 shrink-0" />
-              <p className="text-sm font-medium">lỗi khi tải dữ liệu: {error}</p>
-            </div>
-          )}
-
-          {!error && (
-            <div className="card-premium !rounded-[2.5rem] !bg-white/40 border border-white/60 p-8 lg:p-10">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-black text-white shadow-lg">
-                  <LayoutGrid className="size-5" />
-                </div>
-                <h4 className="text-[16px] font-black uppercase tracking-tighter text-slate-900 leading-none">
-                  apps directory
-                  {!loading && <span className="ml-2.5 text-[#FF708A] opacity-40">/ {apps.length}</span>}
-                </h4>
-                {loading && <Loader2 className="size-4 animate-spin text-[#FF708A]" />}
+          {["birthday", "stream_support"].includes(activeCategoryId) ? (
+            <div className="card-premium !p-20 text-center !bg-white/40 backdrop-blur-md border border-white/60 rounded-[3rem] reveal-up">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 bg-white/50 backdrop-blur-sm shadow-sm mb-8">
+                <span className="h-1.5 w-1.5 rounded-full bg-sky-500 animate-pulse" />
+                <p className="text-slate-600 font-black uppercase tracking-widest text-[9px]">Future Phase</p>
               </div>
-
-              {loading ? (
-                <div className="flex gap-3 flex-wrap">
-                  {[1, 2, 3].map((item) => (
-                    <div key={item} className="h-10 w-28 rounded-xl bg-white/60 animate-pulse" />
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-3">
-                  {apps.map((app) => (
-                    <button
-                      key={app.id}
-                      onClick={() => scrollToApp(app.id)}
-                      className="flex items-center gap-3 rounded-xl border border-white bg-white/60 px-5 py-3 text-[12px] font-bold text-slate-700 transition hover:bg-[#FFC2D1]/20 hover:border-[#FFC2D1]/60 hover:shadow-sm"
-                    >
-                      <div className="h-1.5 w-1.5 rounded-full bg-[#FF708A]" />
-                      {app.name}
-                    </button>
-                  ))}
+              <h3 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-4 text-slate-900 italic leading-none">
+                {activeCategoryId === "birthday" ? "Birthday Events" : "Vote Donate"}
+              </h3>
+              <p className="text-slate-500 font-bold italic opacity-60 text-lg max-w-xl mx-auto leading-relaxed">
+                {activeCategoryId === "birthday" 
+                  ? "Birthday and anniversary support campaigns will appear here in the next era. Stay tuned for official birthday goals!"
+                  : "Community donation projects for voting support are currently being organized. This section will open when donation channels are finalized."}
+              </p>
+            </div>
+          ) : (
+            <>
+              {error && (
+                <div className="flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50/60 px-5 py-4 text-red-600">
+                  <AlertCircle className="size-5 shrink-0" />
+                  <p className="text-sm font-medium">lỗi khi tải dữ liệu: {error}</p>
                 </div>
               )}
-            </div>
-          )}
 
-          <div className="grid gap-10">
-            {loading
-              ? [1, 2].map((item) => <Skeleton key={item} />)
-              : apps.map((app) => <VotingAppCard key={app.id} app={app} />)}
-          </div>
+              {!error && (
+                <div className="card-premium !rounded-[2.5rem] !bg-white/40 border border-white/60 p-8 lg:p-10">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-black text-white shadow-lg">
+                      <LayoutGrid className="size-5" />
+                    </div>
+                    <h4 className="text-[16px] font-black uppercase tracking-tighter text-slate-900 leading-none">
+                      apps directory
+                    </h4>
+                    {loading && <Loader2 className="size-4 animate-spin text-[#FF708A]" />}
+                  </div>
+
+                  {loading ? (
+                    <div className="flex gap-3 flex-wrap">
+                      {[1, 2, 3].map((item) => (
+                        <div key={item} className="h-10 w-28 rounded-xl bg-white/60 animate-pulse" />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-3">
+                      {apps.map((app) => (
+                        <button
+                          key={app.id}
+                          onClick={() => scrollToApp(app.id)}
+                          className="flex items-center gap-3 rounded-xl border border-white bg-white/60 px-5 py-3 text-[12px] font-bold text-slate-700 transition hover:bg-[#FFC2D1]/20 hover:border-[#FFC2D1]/60 hover:shadow-sm"
+                        >
+                          <div className="h-1.5 w-1.5 rounded-full bg-[#FF708A]" />
+                          {app.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="grid gap-10">
+                {loading
+                  ? [1, 2].map((item) => <Skeleton key={item} />)
+                  : (() => {
+                      // Group apps by name to avoid duplicates on the voting page
+                      const uniqueAppsMap = new Map<string, MappedApp>();
+                      const now = new Date();
+
+                      apps.forEach(app => {
+                        const key = app.name.toLowerCase().trim();
+                        const existing = uniqueAppsMap.get(key);
+                        
+                        const hasActiveRound = app.rounds.some(r => 
+                          r.is_active && now >= new Date(r.start_at) && now <= new Date(r.end_at)
+                        );
+
+                        if (!existing) {
+                          uniqueAppsMap.set(key, app);
+                        } else {
+                          const existingHasActive = existing.rounds.some(r => 
+                            r.is_active && now >= new Date(r.start_at) && now <= new Date(r.end_at)
+                          );
+                          
+                          // Priority: Active App > Newer App
+                          if (hasActiveRound && !existingHasActive) {
+                            uniqueAppsMap.set(key, app);
+                          } else if (hasActiveRound === existingHasActive) {
+                            if (app.id > existing.id) uniqueAppsMap.set(key, app);
+                          }
+                        }
+                      });
+
+                      return Array.from(uniqueAppsMap.values()).map((app) => (
+                        <VotingAppCard key={app.id} app={app} />
+                      ));
+                    })()}
+              </div>
+            </>
+          )}
         </div>
       ) : (
         <div className="card-premium !p-20 text-center !bg-white/40 backdrop-blur-md border border-white/60 rounded-[3rem]">

@@ -1,13 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { Users, Link as LinkIcon, Disc, ArrowLeft, LogOut, LayoutDashboard, Settings, Sparkles, Image as ImageIcon } from "lucide-react"
+import { Users, Link as LinkIcon, Disc, ArrowLeft, LogOut, LayoutDashboard, Settings, Sparkles, Image as ImageIcon, BadgeCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const NAV_ITEMS = [
   { name: "Overview", value: "overview", icon: LayoutDashboard },
   { name: "Users", value: "users", icon: Users },
   { name: "Members", value: "members", icon: Users },
+  { name: "Voting Apps", value: "voting", icon: BadgeCheck },
   { name: "Themes", value: "themes", icon: Sparkles },
   { name: "Media", value: "media", icon: ImageIcon },
   { name: "Social Links", value: "socials", icon: LinkIcon },

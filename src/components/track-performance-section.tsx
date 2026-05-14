@@ -1,7 +1,6 @@
 "use client"
 
-/* eslint-disable @next/next/no-img-element */
-
+import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { TrendingUp, TrendingDown, Activity, ExternalLink } from "lucide-react"
@@ -89,7 +88,7 @@ export function PerformanceItemRow({
       {/* Track info */}
       <div className="flex min-w-0 items-center gap-3">
         <div className="h-[42px] w-[42px] shrink-0 overflow-hidden rounded-[10px] border border-white/20">
-          <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+          <Image src={item.imageUrl} alt={item.title} width={42} height={42} className="h-full w-full object-cover" />
         </div>
         <div className="min-w-0">
           <p className="truncate text-[13px] font-black text-black">{item.title}</p>
@@ -384,12 +383,12 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
             <div className="mb-8 flex flex-wrap gap-3">
               <PlatformTabButton variant="spotify" active={activePlatform === "spotify"} onClick={() => setActivePlatform("spotify")}>
                 <div className="flex size-4 items-center justify-center rounded-sm bg-black overflow-hidden shrink-0">
-                  <img src="/spotify.png" alt="Spotify" className="h-full w-full object-cover" />
+                  <Image src="/spotify.png" alt="Spotify" width={16} height={16} className="h-full w-full object-cover" />
                 </div>
                 {t("performance.spotify")}
               </PlatformTabButton>
               <PlatformTabButton variant="youtube" active={activePlatform === "youtube"} onClick={() => setActivePlatform("youtube")}>
-                <img src="/Youtube.png" alt="YouTube" className="h-4 w-4 object-contain" />
+                <Image src="/Youtube.png" alt="YouTube" width={16} height={16} className="h-4 w-4 object-contain" />
                 {t("performance.youtube")}
               </PlatformTabButton>
               <PlatformTabButton variant="korea" active={activePlatform === "korea"} onClick={() => setActivePlatform("korea")}>
@@ -446,8 +445,8 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
                     activePlatform === "spotify" ? "bg-black border-black" : "bg-white border-white/20"
                   )}>
                     {activePlatform === "spotify"
-                      ? <img src="/spotify.png" alt="Spotify" className="h-full w-full object-cover" />
-                      : <img src="/Youtube.png" alt="YouTube" className="h-9 w-9 object-contain" />
+                      ? <Image src="/spotify.png" alt="Spotify" width={56} height={56} className="h-full w-full object-cover" />
+                      : <Image src="/Youtube.png" alt="YouTube" width={36} height={36} className="h-9 w-9 object-contain" />
                     }
                   </div>
                   <div>

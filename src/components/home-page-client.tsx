@@ -1,13 +1,11 @@
 "use client"
-
-/* eslint-disable @next/next/no-img-element */
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowRight, Facebook, Heart, Instagram, Music2, Star, Twitter, Youtube, Users2, X, Cake, Zap, Ruler, Droplets, Globe, Quote, Sparkles, BookOpen, Trophy, Fingerprint, Music, Smile, MapPin, Users } from "lucide-react"
+import { ArrowRight, Facebook, Heart, Instagram, Music2, Star, Twitter, Youtube, Users2, X, Cake, Zap, Ruler, Droplets, Globe, Quote, Sparkles, BookOpen, Trophy, Fingerprint, Music, Smile, MapPin, Users, Smartphone, ChevronRight } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Dialog, DialogContent, DialogOverlay, DialogPortal, DialogTitle } from "@radix-ui/react-dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogPortal, DialogOverlay } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import { HomeStatsSection } from "@/components/home-stats-section"
 import { TrackPerformanceSection } from "@/components/track-performance-section"
@@ -25,6 +23,9 @@ import type { MemberProfile } from "@/lib/member-profiles"
 import type { GroupOfficialProfile } from "@/lib/group-official-profile"
 import type { HomeStatsSnapshot } from "@/lib/home-stats"
 import type { TrackPerformanceSnapshot } from "@/lib/track-performance"
+import type { ActiveVoteApp } from "@/lib/supabase/voting-service-server"
+import { useTimeZoneStore } from "@/lib/timezone-store"
+import { formatDateTime, formatDateOnly } from "@/lib/timezone"
 
 type OfficialLink = { id?: string; name: string; href: string; note: string; platform?: string }
 
@@ -107,6 +108,7 @@ interface HomePageClientProps {
   officialLinks: OfficialLink[]
   homeStatsSnapshot: HomeStatsSnapshot
   trackPerformanceSnapshot: TrackPerformanceSnapshot
+  activeVoteApps: ActiveVoteApp[]
 }
 
 // --- Sub-components cho giao diện mới ---
@@ -140,7 +142,7 @@ function MemberCardNew({ member, onClick, priority }: { member: MemberProfile; o
           unoptimized
           className="object-cover object-top transition-transform duration-700 group-hover:scale-108"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-sky-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-t from-sky-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" ></div>
       </div>
       <div className="text-center w-full pb-1">
         <h3 className="text-[15px] font-black uppercase tracking-tight text-slate-950 group-hover:text-sky-600 transition-colors">
@@ -154,6 +156,428 @@ function MemberCardNew({ member, onClick, priority }: { member: MemberProfile; o
         </div>
       </div>
     </button>
+  )
+}
+
+function GuideModal({
+  isOpen,
+  onClose,
+  app,
+  timeZone
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  app: ActiveVoteApp | null;
+  timeZone: TimeZone;
+}) {
+  if (!app) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto !rounded-[3rem] bg-white/95 backdrop-blur-xl border-white shadow-2xl p-0 gap-0 custom-scrollbar overflow-x-hidden">
+        <DialogHeader className="p-8 pb-4 flex flex-row items-center justify-between gap-4 sticky top-0 bg-white/60 backdrop-blur-md z-20 border-b border-slate-100">
+          <div className="flex items-center gap-4">
+            {app.logo_url ? (
+              <Image
+                src={app.logo_url}
+                alt={app.name}
+                width={48}
+                height={48}
+                className="size-12 rounded-2xl object-cover ring-2 ring-white shadow-sm"
+              />
+            ) : (
+              <div className="size-12 rounded-2xl bg-gradient-to-br from-amber-200 to-pink-200 flex items-center justify-center text-[11px] font-black text-slate-800 ring-2 ring-white shadow-sm">
+                {app.name.slice(0, 2).toUpperCase()}
+              </div>
+            )}
+            <div className="text-left">
+              <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-slate-900 italic">
+                {app.name} Guide
+              </DialogTitle>
+              <DialogDescription className="text-[10px] font-black text-[#FF708A] uppercase tracking-widest mt-1 opacity-60">
+                {app.program_name || "Awards"} • Follow steps below
+              </DialogDescription>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors shrink-0"
+          >
+            <X className="size-5" />
+          </button>
+        </DialogHeader>
+
+        <div className="p-8 space-y-16">
+          {app.guide_steps && app.guide_steps.length > 0 ? (
+            <div className="space-y-20">
+              {app.guide_steps.map((step, index) => (
+                <div key={index} className="flex flex-col items-center text-center gap-8 group/step">
+                  <div className="space-y-4 w-full max-w-2xl">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-black text-white text-base font-black italic shadow-lg shadow-black/10 group-hover/step:scale-110 transition-transform">
+                        {String(index + 1).padStart(2, "0")}
+                      </div>
+                      <h5 className="text-xl font-black uppercase tracking-tight text-slate-900 leading-tight italic">
+                        {step.title || "Next Step"}
+                      </h5>
+                    </div>
+                    {step.description && (
+                      <p className="text-[15px] font-semibold text-slate-500 leading-relaxed italic opacity-80 px-4">
+                        {step.description}
+                      </p>
+                    )}
+                  </div>
+
+                  {step.image_url && (
+                    <div className="w-full max-w-lg mx-auto">
+                      <div className="relative group/img overflow-hidden rounded-[2.5rem] border-4 border-white shadow-2xl shadow-slate-200/50 transition-transform duration-500 hover:scale-[1.02]">
+                        <Image
+                          src={step.image_url}
+                          alt={step.title || "Guide image"}
+                          width={800}
+                          height={1200}
+                          className="w-full h-auto object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" ></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-20 text-center">
+              <BookOpen className="size-12 text-slate-200 mx-auto mb-4" />
+              <p className="text-slate-400 font-bold italic">No guide steps available for this app.</p>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function ActiveVoteSection({ apps }: { apps: ActiveVoteApp[] }) {
+  const timeZone = useTimeZoneStore((s) => s.timeZone) as TimeZone
+  const [selectedAppForGuide, setSelectedAppForGuide] = useState<ActiveVoteApp | null>(null)
+
+  // Group ALL apps by program_name to get all platforms (My1Pick, UPICK, etc.)
+  const groupedApps = apps.reduce((acc, app) => {
+    const name = app.program_name || "Official Event"
+    if (!acc[name]) acc[name] = []
+    acc[name].push(app)
+    return acc
+  }, {} as Record<string, ActiveVoteApp[]>)
+
+  // Only show groups that have at least one featured app
+  const groupKeys = Object.keys(groupedApps).filter(programName =>
+    groupedApps[programName].some(app => !!app.is_featured)
+  )
+
+  if (groupKeys.length === 0) return null
+
+  return (
+    <motion.section
+      id="active-vote"
+      className="py-14 select-none relative overflow-hidden"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
+      <div className="max-w-5xl mx-auto px-4 relative z-10">
+        <div className="card-premium shimmer-border p-6 md:p-10 relative overflow-hidden">
+          <div className="absolute top-0 right-0 size-96 bg-amber-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" ></div>
+          <div className="absolute bottom-0 left-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" ></div>
+
+          <div className="relative z-10">
+            <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="space-y-3">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-200 bg-white/70 backdrop-blur-sm shadow-sm w-fit">
+                  <Trophy className="size-3.5 text-amber-500" />
+                  <span className="text-amber-600 font-black uppercase tracking-widest text-[9px]">live voting</span>
+                </div>
+                <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-slate-900 leading-none">Active campaigns</h2>
+                <p className="text-[13px] text-slate-500 font-medium max-w-xl leading-relaxed italic opacity-80">
+                  Multiple platforms supporting the same event. Switch between apps to see specific guides and strategies.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-16">
+              {groupKeys.map((programName) => (
+                <AwardGroup
+                  key={programName}
+                  programName={programName}
+                  apps={groupedApps[programName]}
+                  timeZone={timeZone}
+                  onViewGuide={setSelectedAppForGuide}
+                  defaultExpanded={groupKeys.length === 1}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {selectedAppForGuide && (
+        <GuideModal
+          isOpen={!!selectedAppForGuide}
+          onClose={() => setSelectedAppForGuide(null)}
+          app={selectedAppForGuide}
+          timeZone={timeZone}
+        />
+      )}
+    </motion.section>
+  )
+}
+
+function AwardGroup({
+  programName,
+  apps,
+  timeZone,
+  onViewGuide,
+  defaultExpanded = false
+}: {
+  programName: string;
+  apps: ActiveVoteApp[];
+  timeZone: TimeZone;
+  onViewGuide: (app: ActiveVoteApp) => void;
+  defaultExpanded?: boolean;
+}) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
+
+  // Find the featured app, fallback to UPICK, or just the first app
+  const mainApp = apps.find(a => a.is_featured) || apps[0]
+
+  if (!mainApp) return null
+
+  const ceremonyAt = apps.find(a => a.ceremony_at)?.ceremony_at
+
+  return (
+    <div className="rounded-[3rem] border border-white/60 bg-white/40 backdrop-blur-md overflow-hidden shadow-sm transition-all duration-500 hover:shadow-2xl hover:shadow-slate-200/50 group">
+      {/* Group Header */}
+      <div
+        className="p-8 pb-6 border-b border-white/60 bg-white/20 cursor-pointer hover:bg-white/30 transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#FF708A] animate-pulse" />
+              <p className="text-[11px] font-black uppercase tracking-[0.4em] text-[#FF708A]">Official Event</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <h3 className="text-4xl md:text-5xl font-black tracking-tighter text-slate-900 uppercase leading-[0.85] italic py-1">
+                {programName}
+              </h3>
+              <div className={cn(
+                "size-10 rounded-full bg-white/40 border border-white flex items-center justify-center transition-transform duration-500",
+                isExpanded ? "rotate-180" : ""
+              )}>
+                <ChevronRight className="size-5 text-slate-600 rotate-90" />
+              </div>
+            </div>
+          </div>
+
+          {ceremonyAt && (
+            <div className="rounded-[2rem] bg-gradient-to-br from-[#FF708A] to-[#FF3B57] px-8 py-5 text-white shadow-xl shadow-pink-100/50 flex items-center gap-5 transition-transform group-hover:scale-105">
+              <div className="size-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
+                <Trophy className="size-6" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-100 opacity-80 mb-0.5">Ceremony Time</p>
+                <p className="text-base font-black uppercase tracking-tight italic leading-none">
+                  {formatDateTime(ceremonyAt, timeZone)}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.5, ease: [0.04, 0.62, 0.23, 0.98] }}
+            className="overflow-hidden"
+          >
+            {/* Highlight Recommendation Notice */}
+            <div className="mt-8 mx-8 p-5 rounded-2xl bg-amber-50/60 border border-amber-100/50 backdrop-blur-sm">
+              <div className="flex items-start gap-4">
+                <div className="size-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+                  <Sparkles className="size-5 text-amber-600" />
+                </div>
+                <p className="text-[13px] font-semibold text-slate-700 leading-relaxed italic">
+                  {apps.length > 1 ? (
+                    <>
+                      Official voting for <strong className="text-slate-950 uppercase">{programName}</strong> is active across multiple platforms, including <strong className="text-slate-950">My1Pick</strong>, <strong className="text-slate-950">Idol Champ</strong>, and <strong className="text-slate-950">UPICK</strong>. We recommend <strong className="text-slate-900">distributing votes across all apps</strong> for maximum results. Among these, <strong className="text-[#FF708A] underline decoration-pink-200 underline-offset-4">UPICK</strong> is the most recommended platform as it offers the fastest voting process and the easiest methods to gather free materials.
+                    </>
+                  ) : (
+                    <>
+                      Official voting for <strong className="text-slate-950 uppercase">{programName}</strong> is live on <strong className="text-[#FF708A] underline decoration-pink-200 underline-offset-4">{mainApp.name}</strong>. Please follow our guide below to maximize your contribution.
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {/* App Details Content */}
+            <div className="p-8 md:p-10 space-y-10">
+              <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+                <div className="flex items-center gap-5">
+                  <div className="size-16 rounded-[1.5rem] bg-white shadow-md flex items-center justify-center overflow-hidden border border-white ring-4 ring-white/20">
+                    {mainApp.logo_url ? (
+                      <Image src={mainApp.logo_url} alt={mainApp.name} width={64} height={64} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="font-black text-slate-800 text-lg">{mainApp.name.slice(0, 2)}</span>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="text-2xl font-black text-slate-900 uppercase italic leading-none">{mainApp.name}</h4>
+                    <div className="mt-3 flex items-center gap-3">
+                      <div className="flex items-center gap-1.5 bg-slate-900 text-white px-2.5 py-1 rounded-lg">
+                        <span className="size-1.5 rounded-full bg-green-400 animate-pulse" />
+                        <p className="text-[10px] font-black uppercase tracking-widest">Active</p>
+                      </div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        {mainApp.active_round?.round_name || "Official Voting App"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {mainApp.active_round && (
+                  <div className="rounded-2xl border border-white bg-white/60 px-6 py-5 text-slate-700 shadow-sm backdrop-blur-sm">
+                    <p className="text-[9px] font-black uppercase tracking-[0.25em] text-[#FF708A] mb-1.5">voting period</p>
+                    <p className="text-[13px] font-bold whitespace-nowrap">
+                      {formatDateTime(mainApp.active_round.start_at, timeZone)} — {formatDateTime(mainApp.active_round.end_at, timeZone)}
+                      <span className="ml-2 text-sky-500 font-black uppercase tracking-widest text-[10px]">
+                        {timeZone}
+                      </span>
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {(mainApp.description || (mainApp.reflection_rate && mainApp.reflection_rate.length > 0)) && (
+                <div className="grid gap-5 sm:grid-cols-2">
+                  {mainApp.description && (
+                    <div className="rounded-3xl bg-white/50 border border-white p-6 shadow-sm">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5">Description</p>
+                      <p className="text-[14px] font-bold text-slate-700 leading-relaxed italic">{mainApp.description}</p>
+                    </div>
+                  )}
+                  {mainApp.reflection_rate && mainApp.reflection_rate.length > 0 && (
+                    <div className="rounded-3xl bg-white/50 border border-white p-7 shadow-sm">
+                      <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] mb-5 flex items-center gap-2">
+                        <Sparkles className="size-3.5 text-[#FF708A]" /> Reflection Rate
+                      </p>
+                      <ul className="space-y-3 text-[13px] font-semibold text-slate-700 italic opacity-80">
+                        {(() => {
+                          const rawRate = mainApp.reflection_rate as any;
+                          let rates: string[] = [];
+
+                          if (Array.isArray(rawRate)) {
+                            rates = rawRate;
+                          } else if (typeof rawRate === 'string') {
+                            const trimmed = rawRate.trim();
+                            if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                              try {
+                                const parsed = JSON.parse(trimmed);
+                                rates = Array.isArray(parsed) ? parsed : [trimmed];
+                              } catch (e) {
+                                rates = [trimmed];
+                              }
+                            } else {
+                              rates = [trimmed];
+                            }
+                          }
+
+                          return rates
+                            .filter(rate => rate && String(rate).trim().length > 0)
+                            .map((rate, idx) => (
+                              <li key={idx} className="flex items-start gap-3">
+                                <span className="mt-2 h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                                <span>{rate}</span>
+                              </li>
+                            ));
+                        })()}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="grid gap-6 lg:grid-cols-3">
+                <div className="rounded-[2rem] border border-white/60 bg-white/60 p-7 shadow-sm">
+                  <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#FF708A] mb-5">Currencies</p>
+                  <div className="flex flex-wrap gap-2.5">
+                    {(mainApp.currencies ?? []).map((item) => (
+                      <span key={item} className="rounded-xl bg-white border border-white px-4 py-2 text-[12px] font-bold text-slate-700 shadow-sm">{item}</span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-[2rem] border border-white/60 bg-white/60 p-7 shadow-sm">
+                  <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500 mb-5">Collection</p>
+                  <ul className="space-y-3.5 text-[13px] font-semibold text-slate-700 italic opacity-80">
+                    {(mainApp.collection_methods ?? []).map((item) => (
+                      <li key={item} className="flex items-start gap-3">
+                        <span className="mt-2 h-1.5 w-1.5 rounded-full bg-pink-400 shrink-0" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="rounded-[2rem] border border-white/60 bg-white/60 p-7 shadow-sm">
+                  <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500 mb-5">Strategy</p>
+                  <ul className="space-y-3.5 text-[13px] font-semibold text-slate-700 italic opacity-80">
+                    {mainApp.strategies.length === 0 ? (
+                      <li className="text-slate-400 font-medium">No strategies yet.</li>
+                    ) : (
+                      mainApp.strategies.map((s) => (
+                        <li key={s.id} className="flex items-start gap-3">
+                          <span className="mt-2 h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span>{s.content}</span>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-6 border-t border-white/60 pt-10">
+                <div className="flex gap-4 items-center">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mr-2">links:</p>
+                  {mainApp.android_url && (
+                    <a href={mainApp.android_url} target="_blank" rel="noreferrer" className="p-4 rounded-2xl bg-white border border-white text-[#FF708A] shadow-md hover:-translate-y-1 transition-all" title="Android App"><Smartphone className="size-5" /></a>
+                  )}
+                  {mainApp.ios_url && (
+                    <a href={mainApp.ios_url} target="_blank" rel="noreferrer" className="p-4 rounded-2xl bg-white border border-white text-[#FF708A] shadow-md hover:-translate-y-1 transition-all" title="iOS App"><Smartphone className="size-5" /></a>
+                  )}
+                  {(mainApp as any).website_url && (
+                    <a href={(mainApp as any).website_url} target="_blank" rel="noreferrer" className="p-4 rounded-2xl bg-white border border-white text-[#FF708A] shadow-md hover:-translate-y-1 transition-all" title="Website"><Globe className="size-5" /></a>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => onViewGuide(mainApp)}
+                  className="flex items-center gap-4 rounded-[1.5rem] bg-[#FF3B57] px-10 py-5 text-[12px] font-black uppercase tracking-widest text-white shadow-2xl shadow-pink-200 hover:bg-[#FF2B4A] transition-all hover:scale-105 active:scale-95 group"
+                >
+                  <BookOpen className="size-5 group-hover:rotate-12 transition-transform" />
+                  View {mainApp.name} Guide
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 
@@ -207,16 +631,16 @@ function MemberDetailModal({
             <div className="relative w-full md:w-[35%] aspect-[4/5] md:aspect-auto overflow-hidden bg-slate-900">
               <div
                 className={`absolute inset-0 bg-gradient-to-br from-pink-200/30 via-sky-200/20 to-slate-900 transition-opacity duration-500 ${heroLoaded ? "opacity-0" : "opacity-100"}`}
-              />
+              ></div>
               <div
                 className={`absolute -top-16 -right-16 size-40 rounded-full bg-pink-200/40 blur-3xl transition-opacity duration-700 ${heroLoaded ? "opacity-0" : "opacity-100"}`}
-              />
+              ></div>
               <div
                 className={`absolute bottom-12 left-10 size-28 rounded-full bg-sky-200/40 blur-3xl transition-opacity duration-700 ${heroLoaded ? "opacity-0" : "opacity-100"}`}
-              />
+              ></div>
               <div
                 className={`absolute inset-0 bg-gradient-to-br from-sky-200/80 via-sky-300/70 to-sky-200/60 transition-opacity duration-[1400ms] ${heroLoaded ? "opacity-30" : "opacity-100"}`}
-              />
+              ></div>
               <motion.div
                 key={member.slug}
                 className="absolute inset-0"
@@ -224,15 +648,18 @@ function MemberDetailModal({
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
               >
-                <img
+                <Image
                   src={member.image}
                   alt={member.name}
+                  width={800}
+                  height={1200}
+                  priority
                   className={`h-full w-full object-cover object-top transition-opacity duration-[1400ms] ${heroLoaded ? "opacity-100" : "opacity-0"}`}
                   onLoad={() => setHeroLoaded(true)}
                   onError={() => setHeroLoaded(true)}
                 />
               </motion.div>
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/20 to-transparent" ></div>
 
               <div className="absolute bottom-10 left-10 right-10">
                 <motion.div
@@ -240,7 +667,7 @@ function MemberDetailModal({
                   animate={{ opacity: 1, x: 0 }}
                   className="flex items-center gap-3 mb-3"
                 >
-                  <div className="h-px w-10 bg-sky-400" />
+                  <div className="h-px w-10 bg-sky-400" ></div>
                   <span className="text-[11px] font-black uppercase tracking-[0.4em] text-sky-400">HEARTS2HEARTS</span>
                 </motion.div>
                 <motion.h2
@@ -490,22 +917,7 @@ const AVAILABLE_ICONS = [
 function renderBrandIcon(iconId: string | null | undefined, className: string = "size-5") {
   if (!iconId) return <ArrowRight className={className} />
 
-  const isWeverse = iconId.toLowerCase() === "weverse"
-  if (isWeverse) {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 512 512">
-        <defs>
-          <linearGradient id="weverse-a" gradientUnits="userSpaceOnUse" />
-          <linearGradient id="weverse-b" x2="1" gradientTransform="scale(461.56)rotate(42.582 -.07 .17)" href="#weverse-a">
-            <stop stopColor="#000120" />
-            <stop offset="1" stopColor="#000120" />
-          </linearGradient>
-        </defs>
-        <path fillRule="evenodd" d="M89.8 0h332.4C471.8 0 512 40.2 512 89.8v332.4c0 49.6-40.2 89.8-89.8 89.8H89.8C40.2 512 0 471.8 0 422.2V89.8C0 40.2 40.2 0 89.8 0" style={{ fill: "url(#weverse-b)" }} />
-        <path fillRule="evenodd" d="M75.3 172.1s12-7.2 17.8-9.9 11.5-4.9 16.9-6.6l3.8-1.2q1.9-.5 3.9-1 1.9-.5 3.9-.9 1.9-.4 3.9-.8c5-.8 9.6-1.3 14-1.5 4.3-.1 8.3 0 12 .4s7 1.1 9.9 1.9c2.8.8 5.3 1.8 7.3 2.8.6.3 1.4.7 2.3 1.4q1.5.9 3.3 2.4l1 .8q.5.4.9.9.5.4 1 .9l.9.9 1 1.2 1 1.2q.4.6.9 1.2.4.7.9 1.3.4.8.9 1.5.4.8.9 1.5.4.8.9 1.6l.8 1.6q.3.8.7 1.6.4 1 .7 2 .4.9.7 1.9t.5 2q.3 1 .5 2c.6 2.9.9 6.1 1 9.6q0 5.25-.9 11.4l-1.3 8-1.2 7.9-1.2 7.9-1.3 7.9-1.2 8-1.3 7.9-1.2 7.9-1.3 7.9q-.1 1.2-.3 2.4-.1 1.2-.3 2.4l-.2 2.4-.2 2.4q-.4 4.5-.5 8.3 0 3.9.3 7.2.4 3.2 1.1 5.9.7 2.6 1.8 4.6 1.2 2 2.8 3.3.3.3.8.6.4.3.9.6.4.2.9.4.5.3 1 .4 2 .7 4.5.7 2.2 0 4.8-.7c1.8-.5 3.6-1.3 5.5-2.3 1.9-1.1 3.9-2.5 5.9-4.2s4-3.7 5.9-6.1c2-2.4 3.9-5.2 5.7-8.5q2.7-4.8 5.1-10.9 2.3-6.1 4.2-13.7c1.2-5 2.3-10.5 3-16.6l1.4-10.5 1.4-10.5 1.3-10.5 1.4-10.5 1.3-10.5 1.4-10.5 1.4-10.5 1.3-10.5H302l-1.8 13.5-1.7 13.5-1.7 13.5-1.7 13.4-1.8 13.5-1.7 13.5-1.7 13.5-1.7 13.4q-.7 5.4-1.1 10-.3 4.5-.3 8.3 0 3.7.3 6.7.4 3.1 1.1 5.4t1.8 4q1.1 1.6 2.6 2.7.3.3.7.5.4.3.8.5.5.2.9.3.4.2.9.3 1.8.5 4 .5c1.6 0 3.5-.3 5.4-.8 1.9-.6 3.9-1.5 5.9-2.8s4.1-2.9 6.2-5 4.2-4.5 6.3-7.5 4.1-6.4 6.1-10.4 3.8-8.5 5.6-13.5c1.8-5.1 3.4-10.8 4.9-17.1s2.8-13.2 3.9-20.8q.2-1.1.3-2.3.2-1.1.3-2.2.2-1.2.3-2.3.2-1.1.3-2.3.5-4.4.8-8.6t.5-8.3q.1-4.1.1-8.2v-4.1q-.1-1-.1-2.1 0-1-.1-2 0-1.1-.1-2.1 0-1.1-.1-2.1 0-1.1-.1-2.2-.1-1-.2-2.1-.3-4.3-.8-8.8-.1-1.2-.2-2.3-.2-1.2-.3-2.4-.2-1.1-.3-2.3t-.3-2.4h63.2c.2 1.2.3 2.8.4 5 .2 2.1.3 4.7.5 7.6.3 2.9.6 6.2 1 9.7q.2 1.3.4 2.7l.4 2.8q.3 1.4.5 2.7l.6 2.8c.8 3.8 1.9 7.7 3.2 11.6 1.4 4 3 7.9 5.1 11.7 2 3.8 4.4 7.5 7.3 10.9l2.2 2.6q1.2 1.3 2.5 2.5 1.2 1.2 2.5 2.3t2.7 2.1l-1.5 11.7-1.6 11.6-1.5 11.6-1.6 11.6q-2.9-1.1-5.8-2.5-2.8-1.4-5.5-3.1-2.8-1.6-5.3-3.5-2.6-1.8-5-3.9l-1.6-1.4-1.6-1.4q-.7-.8-1.5-1.5-.7-.8-1.5-1.5c-2.2 8.9-4.9 17.1-8 24.6-3.1 7.6-6.6 14.4-10.5 20.6s-8 11.7-12.5 16.7q-1.7 1.8-3.4 3.5t-3.5 3.4l-3.6 3.2-3.8 3q-1.9 1.4-3.8 2.7t-3.8 2.5q-2 1.3-4 2.4t-4.1 2.1q-2 1.1-4.1 2t-4.2 1.7q-2.1.9-4.2 1.6t-4.3 1.4c-5.7 1.7-11.6 3-17.5 3.8q-2.2.3-4.5.5-2.2.3-4.5.4-2.2.2-4.5.2-2.2.1-4.5.1-6.1 0-11.5-.7-5.5-.7-10.2-2-1.2-.3-2.3-.6l-2.2-.8q-1.2-.4-2.3-.8-1-.4-2.1-.9l-2-1q-1-.5-1.9-1-1-.5-1.9-1.1l-1.8-1.2q-.9-.6-1.7-1.2t-1.6-1.3q-.8-.6-1.6-1.3t-1.5-1.4-1.4-1.5q-.7-.7-1.3-1.5-.6-.7-1.3-1.5-.6-.8-1.1-1.6-.6-.9-1.1-1.7-.6-.8-1.1-1.7-.4-.9-.9-1.8-.5-.8-.9-1.7-.4-1-.8-1.9t-.7-1.9q-.4-.9-.7-1.9-.3-.9-.5-1.9c-3.2 4.7-6.5 8.8-10 12.3q-1.3 1.3-2.6 2.5t-2.6 2.3q-1.3 1.2-2.7 2.2-1.4 1.1-2.9 2.1-1.3 1-2.6 1.8-1.3.9-2.7 1.7t-2.8 1.5q-1.4.8-2.8 1.5-1.2.6-2.5 1.1-1.3.6-2.6 1.1l-2.6 1q-1.3.5-2.6.9-1.2.4-2.3.7-1.2.4-2.3.7-1.2.3-2.3.5-1.2.3-2.3.5-.9.2-1.9.4-.9.2-1.8.3t-1.9.3l-1.8.2c-2.1.2-3.8.3-4.9.3h-1.8q-8.1 0-15.1-1.5-6.9-1.5-12.7-4.5-1.4-.7-2.7-1.5-1.4-.8-2.7-1.7t-2.5-1.9l-2.4-2q-4.5-4.2-7.9-9.7-3.4-5.4-5.6-11.8-2.2-6.5-3.2-13.9-1-7.5-.9-15.7.1-8.3 1.3-17.3l1.3-8.2 1.4-8.2 1.3-8.2 1.3-8.2 1.3-8.2 1.3-8.2 1.3-8.2 1.3-8.2q.1-2.2-.3-3.9-.3-1.6-1-2.8-.2-.3-.4-.5-.2-.3-.4-.5-.2-.3-.4-.5t-.5-.4q-.2-.2-.5-.4-.2-.1-.5-.3-.3-.1-.6-.3-.2-.1-.5-.2l-.6-.2q-.3-.1-.6-.1l-.6-.2q-.2 0-.5-.1h-.6q-.3 0-.6-.1H114l-2.2.2q-1 .2-1.7.4-1.6.5-3.1.9-.8.3-1.5.5-.7.3-1.4.5l-1.4.6q-.7.2-1.4.5l-2.8 1.2q-1.3.7-2.7 1.4c-1 .5-20.5-38.3-20.5-38.3" fill="#00C7BB" />
-      </svg>
-    )
-  }
+
 
   const curated = AVAILABLE_ICONS.find(i => i.id.toLowerCase() === iconId.toLowerCase())
   const slug = curated ? curated.slug : iconId.toLowerCase().trim().replace(/\s+/g, "-")
@@ -513,12 +925,13 @@ function renderBrandIcon(iconId: string | null | undefined, className: string = 
   const src = `https://cdn.simpleicons.org/${slug}`
 
   return (
-    <img
+    <Image
       key={src}
       src={src}
-      alt={iconId}
+      alt={iconId || "brand icon"}
+      width={20}
+      height={20}
       className={className}
-      loading="lazy"
     />
   )
 }
@@ -537,7 +950,7 @@ function OfficialLinkCard({ label, url, note, metaKey }: { label: string; url: s
       className={`group relative flex flex-col gap-4 overflow-hidden rounded-[1.75rem] border border-white/80 bg-white p-5 shadow-md transition-all duration-400 hover:-translate-y-1.5 hover:shadow-xl`}
     >
       {/* Hover gradient wash */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${meta.gradientFrom} ${meta.gradientTo} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+      <div className={`absolute inset-0 bg-gradient-to-br ${meta.gradientFrom} ${meta.gradientTo} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} ></div>
 
       <div className="relative flex items-start justify-between gap-3">
         {/* Icon */}
@@ -571,9 +984,10 @@ export function HomePageClient({
   officialLinks,
   homeStatsSnapshot,
   trackPerformanceSnapshot,
+  activeVoteApps,
 }: HomePageClientProps) {
   const { t } = useTranslation()
-  const [timeZone, setTimeZone] = useState<TimeZone>("KST")
+  const timeZone = useTimeZoneStore((s) => s.timeZone)
   const [selectedMember, setSelectedMember] = useState<MemberProfile | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -592,10 +1006,10 @@ export function HomePageClient({
 
   return (
     <main id="top" className="relative min-h-screen selection:bg-sky-400/20">
-      <Navbar timeZone={timeZone} onTimeZoneChange={setTimeZone} />
+      <Navbar />
 
       <div id="comeback">
-        <ComebackWatchHeader snapshot={homeStatsSnapshot} timeZone={timeZone} />
+        <ComebackWatchHeader snapshot={homeStatsSnapshot} />
       </div>
 
       <div className="section-shell">
@@ -603,6 +1017,8 @@ export function HomePageClient({
           <SpotlightNotice />
         </div>
       </div>
+
+      <ActiveVoteSection apps={activeVoteApps} />
 
       {/* ── SECTION PROFILE (GIAO DIỆN MỚI) ── */}
       {/* ── SECTION PROFILE (GIAO DIỆN MỚI) ── */}
@@ -618,8 +1034,8 @@ export function HomePageClient({
         <div className="max-w-5xl mx-auto px-4 relative z-10">
           <div className="card-premium shimmer-border p-6 md:p-10 relative overflow-hidden">
             {/* Background blobs - Standardized */}
-            <div className="absolute top-0 right-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 size-96 bg-sky-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" />
+            <div className="absolute top-0 right-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" ></div>
+            <div className="absolute bottom-0 left-0 size-96 bg-sky-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" ></div>
 
             <div className="relative z-10">
               {/* Header - Moved Inside */}
@@ -741,8 +1157,8 @@ export function HomePageClient({
         <div className="max-w-5xl mx-auto px-4 relative z-10">
           <div className="card-premium shimmer-border p-6 md:p-10 relative overflow-hidden">
             {/* Background blobs */}
-            <div className="absolute top-0 right-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 size-96 bg-sky-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" />
+            <div className="absolute top-0 right-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" ></div>
+            <div className="absolute bottom-0 left-0 size-96 bg-sky-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" ></div>
 
             <div className="relative z-10">
               {/* Section header */}
@@ -790,13 +1206,13 @@ export function HomePageClient({
       <footer className="max-w-5xl mx-auto px-4 pb-12">
         <div className="card-premium shimmer-border !rounded-[2.5rem] p-10 text-center relative overflow-hidden">
           {/* Background blobs */}
-          <div className="absolute top-0 right-0 size-96 bg-pink-200/10 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 size-96 bg-sky-200/10 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" />
+          <div className="absolute top-0 right-0 size-96 bg-pink-200/10 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" ></div>
+          <div className="absolute bottom-0 left-0 size-96 bg-sky-200/10 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" ></div>
 
           <div className="relative z-10 flex flex-col items-center gap-6">
             <div className="flex items-center gap-6 text-sky-400">
               <Heart className="size-5 fill-current" />
-              <div className="h-px w-24 bg-gradient-to-r from-transparent via-sky-400/60 to-transparent" />
+              <div className="h-px w-24 bg-gradient-to-r from-transparent via-sky-400/60 to-transparent" ></div>
               <Star className="size-5 fill-current" />
             </div>
             <p className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-500">

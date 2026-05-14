@@ -5,7 +5,8 @@ import { Music, ShoppingCart } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/useTranslation"
 import type { HomeStatsSnapshot } from "@/lib/home-stats"
-import type { TimeZone } from "@/components/navbar"
+import { useTimeZoneStore } from "@/lib/timezone-store"
+import { formatDateTime } from "@/lib/timezone"
 
 type CountdownParts = {
   days: number
@@ -45,13 +46,12 @@ function pad2(value: number) {
 }
 
 export function ComebackWatchHeader({
-  snapshot,
-  timeZone = "KST"
+  snapshot
 }: {
-  snapshot: HomeStatsSnapshot,
-  timeZone?: TimeZone
+  snapshot: HomeStatsSnapshot
 }) {
   const { t } = useTranslation()
+  const timeZone = useTimeZoneStore((s) => s.timeZone)
   const [countdown, setCountdown] = useState<CountdownParts | null>(null)
 
   useEffect(() => {
@@ -70,11 +70,13 @@ export function ComebackWatchHeader({
     ? (() => {
         const parsed = parseIsoDate(releaseAt)
         if (!parsed) return releaseAt
-        const options: Intl.DateTimeFormatOptions = {
-          month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false,
-          timeZone: timeZone === "LOCAL" ? undefined : timeZone === "EDT" ? "America/New_York" : timeZone === "KST" ? "Asia/Seoul" : "UTC"
-        }
-        return new Intl.DateTimeFormat("en-GB", options).format(parsed).toUpperCase() + ` ${timeZone}`
+        return `${formatDateTime(parsed, timeZone, "en-GB", { 
+          month: "short", 
+          day: "2-digit", 
+          hour: "2-digit", 
+          minute: "2-digit", 
+          hour12: false 
+        })} ${timeZone}`
       })()
     : null
 

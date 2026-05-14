@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/useTranslation"
 import { createClient } from "@/lib/supabase/client"
 import { AppLink } from "@/components/app-link"
+import { useTimeZoneStore } from "@/lib/timezone-store"
 
 export type TimeZone = "KST" | "EDT" | "UTC" | "LOCAL"
 
@@ -180,13 +181,15 @@ function HeaderNavLink({ href, label }: { href: string; label: string }) {
 }
 
 export function Navbar({ 
-  timeZone = "KST", 
+  timeZone, 
   onTimeZoneChange 
 }: { 
   timeZone?: TimeZone, 
   onTimeZoneChange?: (tz: TimeZone) => void 
 }) {
   const { t } = useTranslation()
+  const storedTimeZone = useTimeZoneStore((s) => s.timeZone)
+  const setStoredTimeZone = useTimeZoneStore((s) => s.setTimeZone)
   const pathname = usePathname()
   const isHome = pathname === "/home"
   const [mounted, setMounted] = useState(false)
@@ -219,14 +222,20 @@ export function Navbar({
 
           <nav className="hidden items-center gap-6 xl:flex">
             {navItems.map((item) => (
-              <HeaderNavLink key={item.href} href={item.href} label={item.label} />
+              <HeaderNavLink key={item.label} href={item.href} label={item.label} />
             ))}
           </nav>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="hidden items-center gap-3 sm:flex">
-            <TimeZoneSwitcher currentTimeZone={timeZone} onTimeZoneChange={onTimeZoneChange} />
+            <TimeZoneSwitcher
+              currentTimeZone={timeZone ?? storedTimeZone}
+              onTimeZoneChange={(tz) => {
+                setStoredTimeZone(tz)
+                if (onTimeZoneChange) onTimeZoneChange(tz)
+              }}
+            />
             <div className="h-4 w-px bg-slate-300/50" />
           </div>
           
