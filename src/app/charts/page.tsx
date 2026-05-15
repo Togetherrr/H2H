@@ -1,7 +1,8 @@
-/* eslint-disable @next/next/no-img-element */
+
 export const revalidate = 60
 import { Music2, Youtube, ArrowLeft, TrendingUp, TrendingDown, Clock, Activity, ExternalLink } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { getRealtimeSnapshotFromDb } from "@/lib/realtime/db-snapshot"
 import { Navbar } from "@/components/navbar"
 import { cn } from "@/lib/utils"
@@ -68,7 +69,7 @@ function FullChartsItemRow({ item, index, platform = "spotify" }: { item: Perfor
       {/* Track info */}
       <div className="flex min-w-0 items-center gap-3">
         <div className="h-[42px] w-[42px] shrink-0 overflow-hidden rounded-[10px] border border-white/20">
-          <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+          <Image src={item.imageUrl} alt={item.title} width={42} height={42} className="h-full w-full object-cover" />
         </div>
         <div className="min-w-0">
           <p className="truncate text-[13px] font-black text-black">{item.title}</p>
@@ -150,9 +151,9 @@ function MetricCard({
             platform === "spotify" ? "bg-black border-black" : "bg-white border-white/60"
           )}>
             {platform === "spotify" ? (
-              <img src="/spotify.png" alt="Spotify" className="h-full w-full object-cover" />
+              <Image src="/spotify.png" alt="Spotify" width={48} height={48} className="h-full w-full object-cover" />
             ) : (
-              <img src="/Youtube.png" alt="YouTube" className="h-6 w-6 object-contain" />
+              <Image src="/Youtube.png" alt="YouTube" width={24} height={24} className="h-6 w-6 object-contain" />
             )}
           </div>
           <span className="text-[12px] font-black uppercase tracking-[0.2em] text-black/50">{label}</span>
@@ -201,7 +202,7 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
   }> = {
     spotify: {
       title: t("charts.spotify.title") as string,
-      icon: <img src="/spotify.png" alt="Spotify" className="h-9 w-9 object-contain" />,
+      icon: <Image src="/spotify.png" alt="Spotify" width={36} height={36} className="h-9 w-9 object-contain" />,
       color: "bg-white",
       shadow: "shadow-xl border border-white/20",
       totalLabel: t("performance.totalStreams") as string,
@@ -214,7 +215,7 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
     },
     youtube: {
       title: t("charts.youtube.title") as string,
-      icon: <img src="/Youtube.png" alt="YouTube" className="h-9 w-9 object-contain" />,
+      icon: <Image src="/Youtube.png" alt="YouTube" width={36} height={36} className="h-9 w-9 object-contain" />,
       color: "bg-white",
       shadow: "shadow-xl border border-white/20",
       totalLabel: t("performance.totalViews") as string,
@@ -260,11 +261,11 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                   platform === "spotify" ? "bg-black border-black" : "bg-white border-white/60"
                 )}>
                   {platform === "spotify" ? (
-                    <img src="/spotify.png" alt="Spotify" className="h-full w-full object-cover" />
+                    <Image src="/spotify.png" alt="Spotify" width={128} height={128} className="h-full w-full object-cover" />
                   ) : (
                     <div className="scale-[1.8] md:scale-[2.5]">
                       {platform === "youtube" ? (
-                        <img src="/Youtube.png" alt="YouTube" className="h-9 w-9 object-contain" />
+                        <Image src="/Youtube.png" alt="YouTube" width={36} height={36} className="h-9 w-9 object-contain" />
                       ) : (
                         <Activity className="h-10 w-10" />
                       )}
@@ -429,7 +430,7 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                         pKey === "spotify" ? "bg-black border-black" : "bg-white border-white/60"
                       )}>
                         {pKey === "spotify" ? (
-                          <img src="/spotify.png" alt="Spotify" className="h-full w-full object-cover" />
+                          <Image src="/spotify.png" alt="Spotify" width={64} height={64} className="h-full w-full object-cover" />
                         ) : (
                           <div className="scale-125">{config.icon}</div>
                         )}

@@ -148,7 +148,8 @@ export async function GET(req: Request) {
         .from("h2h_items")
         .select("id,type,platform_id,title,cover_url,is_active")
         .eq("type", "spotify_track")
-        .eq("is_active", true);
+        .eq("is_active", true)
+        .limit(100);
 
       if (existingItemsError) {
   logDebug("SPOTIFY FALLBACK ITEMS ERROR:", existingItemsError);
@@ -166,7 +167,8 @@ export async function GET(req: Request) {
             .in("item_id", itemIds)
             .gte("ts", oldestIso)
             .lte("ts", bucketTs)
-            .order("ts", { ascending: false });
+            .order("ts", { ascending: false })
+            .limit(1000);
 
           const lastTotalByItemId = new Map<string, number>();
           for (const row of snapshotRows ?? []) {
@@ -293,7 +295,8 @@ export async function GET(req: Request) {
         .select("item_id,daily_kworb")
         .in("item_id", spotifyItemIds)
         .not("daily_kworb", "is", null)
-        .order("ts", { ascending: false });
+        .order("ts", { ascending: false })
+        .limit(1000);
 
       for (const row of lastSnapshots ?? []) {
         if (!lastKworbByItemId.has(row.item_id)) {

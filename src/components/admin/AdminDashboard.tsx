@@ -8,10 +8,11 @@ import { MembersManager } from "@/components/admin/MembersManager"
 import { SocialsManager } from "@/components/admin/SocialsManager"
 import { SiteSettingsManager } from "@/components/admin/SiteSettingsManager"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Sparkles, Users, Disc3, Link as LinkIcon, Database, Palette } from "lucide-react"
+import { Sparkles, Users, Disc3, Link as LinkIcon, Database, Palette, BadgeCheck } from "lucide-react"
 import { ThemesManager } from "@/components/admin/ThemesManager"
 import { MediaLibrary } from "@/components/admin/MediaManager"
 import { Image as ImageIcon } from "lucide-react"
+import { VotingAppsManager } from "@/components/admin/VotingAppsManager"
 
 type AdminStats = {
   users: number
@@ -27,6 +28,7 @@ type AdminTabData = {
   socials?: any[]
   themes?: any[]
   siteSettings?: any
+  votingApps?: any[]
   stats?: AdminStats
 }
 
@@ -35,7 +37,7 @@ type AdminDashboardProps = {
   profile: any
 }
 
-const VALID_TABS = new Set(["overview", "users", "members", "themes", "socials", "settings", "media"])
+const VALID_TABS = new Set(["overview", "users", "members", "themes", "socials", "settings", "media", "voting"])
 
 function normalizeTab(tab: string) {
   return VALID_TABS.has(tab) ? tab : "overview"
@@ -367,6 +369,10 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
       }
       case "media": {
         return <MediaLibrary />
+      }
+      case "voting": {
+        const apps = dataByTab.voting?.votingApps
+        return apps ? <VotingAppsManager initialApps={apps} /> : <TabLoadingState title="Loading voting apps..." />
       }
       case "overview":
       default:

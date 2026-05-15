@@ -19,6 +19,7 @@ export async function GET(req: Request) {
     .select("id,type,platform_id,title,cover_url,release_date,is_active")
     .eq("is_active", true)
     .order("release_date", { ascending: false })
+    .limit(100)
 
   if (itemsError) {
     return NextResponse.json(
@@ -53,6 +54,7 @@ export async function GET(req: Request) {
     .in("item_id", itemIds)
     .gte("ts", oldestIso)
     .order("ts", { ascending: false })
+    .limit(5000)
 
   if (snapshotsError) {
     return NextResponse.json(

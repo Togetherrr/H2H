@@ -542,6 +542,10 @@ export type Database = {
           collection_methods: string[] | null
           android_url: string | null
           ios_url: string | null
+          description: string | null
+          reflection_rate: string[] | null
+          ceremony_at: string | null
+          is_featured: boolean | null
           created_at: string
         }
         Insert: {
@@ -554,6 +558,10 @@ export type Database = {
           collection_methods?: string[] | null
           android_url?: string | null
           ios_url?: string | null
+          description?: string | null
+          reflection_rate?: string[] | null
+          ceremony_at?: string | null
+          is_featured?: boolean | null
           created_at?: string
         }
         Update: {
@@ -566,6 +574,10 @@ export type Database = {
           collection_methods?: string[] | null
           android_url?: string | null
           ios_url?: string | null
+          description?: string | null
+          reflection_rate?: string[] | null
+          ceremony_at?: string | null
+          is_featured?: boolean | null
           created_at?: string
         }
         Relationships: []

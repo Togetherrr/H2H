@@ -8,6 +8,8 @@
     "build": "bun run perf-audit && next build",
     "start": "next start",
     "realtime:poll:local": "bun scripts/poll-realtime-local.mjs",
+    "seed:active-vote": "bun scripts/seed-active-vote.ts",
+    "seed:active-vote:cleanup": "bun scripts/seed-active-vote.ts --cleanup",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "perf-audit": "bun scripts/performance-audit.ts"

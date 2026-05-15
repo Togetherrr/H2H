@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+
 import { ArrowLeft, Music2, ExternalLink, Calendar, Disc, Play, Youtube, Info, Sparkles } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -190,9 +190,11 @@ export default async function AlbumDetailPage({ params }: AlbumPageProps) {
                     rel="noopener noreferrer"
                     className="block relative aspect-video rounded-[3.5rem] overflow-hidden shadow-2xl border-[10px] border-white group/video transition-transform hover:-translate-y-2 bg-slate-200"
                   >
-                    <img 
+                    <Image 
                       src={thumbnailUrl}
                       alt="MV Preview Thumbnail"
+                      width={800}
+                      height={450}
                       className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover/video:scale-105"
                     />
                     {/* Play Overlay */}
@@ -219,11 +221,11 @@ export default async function AlbumDetailPage({ params }: AlbumPageProps) {
                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">Official SM Artist</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <img src="https://upload.wikimedia.org/wikipedia/commons/b/b3/SM_Entertainment_logo.svg" alt="SM" className="h-3" />
+                      <Image src="https://upload.wikimedia.org/wikipedia/commons/b/b3/SM_Entertainment_logo.svg" alt="SM" width={40} height={12} className="h-3" />
                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">SM Entertainment</span>
                     </div>
                 </div>
-                <img src="/logo-remove.png" alt="H2H" className="h-8 grayscale" />
+                <Image src="/logo-remove.png" alt="H2H" width={100} height={32} className="h-8 grayscale" />
               </div>
             </div>
           </div>

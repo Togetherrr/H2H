@@ -8,6 +8,7 @@ import { getRealtimeSnapshotFromDb } from "@/lib/realtime/db-snapshot"
 
 import { createStaticClient } from "@/lib/supabase/static"
 import { hasSupabaseEnv } from "@/lib/supabase/env"
+import { getActiveAwardsVoteApps } from "@/lib/supabase/voting-service-server"
 
 export const revalidate = 60 // Enable ISR: Revalidate every 60 seconds
 
@@ -20,7 +21,8 @@ export default async function HomePage() {
     homeStatsSnapshot, 
     trackPerformanceSnapshot,
     dbMembersResult,
-    dbLinksResult
+    dbLinksResult,
+    activeVoteAppsResult
   ] = await Promise.all([
     getTimelineEvents(),
     getFilmFrames(4),
@@ -28,11 +30,14 @@ export default async function HomePage() {
     getRealtimeSnapshotFromDb(),
     // Fetch members and links in the same parallel batch if Supabase is enabled
     hasSupabaseEnv() 
-      ? createStaticClient().from("members").select("*").order("sort_order", { ascending: true })
+      ? createStaticClient().from("members").select("*").order("sort_order", { ascending: true }).limit(20)
       : Promise.resolve({ data: null }),
     hasSupabaseEnv()
-      ? createStaticClient().from("social_links").select("*").order("sort_order", { ascending: true })
-      : Promise.resolve({ data: null })
+      ? createStaticClient().from("social_links").select("*").order("sort_order", { ascending: true }).limit(50)
+      : Promise.resolve({ data: null }),
+    hasSupabaseEnv()
+      ? getActiveAwardsVoteApps()
+      : Promise.resolve({ apps: [], error: null })
   ])
 
   let memberProfiles = staticMemberProfiles
@@ -97,6 +102,7 @@ export default async function HomePage() {
       officialProfile={hearts2heartsOfficialProfile}
       homeStatsSnapshot={homeStatsSnapshot}
       trackPerformanceSnapshot={trackPerformanceSnapshot}
+      activeVoteApps={activeVoteAppsResult.apps}
     />
   )
 }

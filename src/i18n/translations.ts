@@ -174,7 +174,7 @@ const strings: Record<string, string> = {
   "voting.category.music_shows": "Music Shows",
   "voting.category.awards": "Awards",
   "voting.category.birthday": "Birthday / Anniv.",
-  "voting.category.stream_support": "Stream Support",
+  "voting.category.stream_support": "Vote Donate",
   "voting.appCount": "{count} app",
   "voting.appsCount": "{count} apps",
 
