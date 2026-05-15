@@ -13,6 +13,8 @@ import { ThemesManager } from "@/components/admin/ThemesManager"
 import { MediaLibrary } from "@/components/admin/MediaManager"
 import { Image as ImageIcon } from "lucide-react"
 import { VotingAppsManager } from "@/components/admin/VotingAppsManager"
+import { LineupRevealManager } from "@/components/admin/LineupRevealManager"
+import { CareerRecordsManager } from "@/components/admin/CareerRecordsManager"
 
 type AdminStats = {
   users: number
@@ -37,7 +39,7 @@ type AdminDashboardProps = {
   profile: any
 }
 
-const VALID_TABS = new Set(["overview", "users", "members", "themes", "socials", "settings", "media", "voting"])
+const VALID_TABS = new Set(["overview", "users", "members", "themes", "socials", "settings", "media", "voting", "lineup-reveal", "career-records"])
 
 function normalizeTab(tab: string) {
   return VALID_TABS.has(tab) ? tab : "overview"
@@ -373,6 +375,22 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
       case "voting": {
         const apps = dataByTab.voting?.votingApps
         return apps ? <VotingAppsManager initialApps={apps} /> : <TabLoadingState title="Loading voting apps..." />
+      }
+      case "lineup-reveal": {
+        const settingsData = dataByTab["lineup-reveal"]
+        return settingsData?.siteSettings ? (
+          <LineupRevealManager initialSettings={settingsData.siteSettings} />
+        ) : (
+          <TabLoadingState title="Loading lineup reveal..." />
+        )
+      }
+      case "career-records": {
+        const settingsData = dataByTab["career-records"]
+        return settingsData?.siteSettings ? (
+          <CareerRecordsManager initialSettings={settingsData.siteSettings} />
+        ) : (
+          <TabLoadingState title="Loading career records..." />
+        )
       }
       case "overview":
       default:
