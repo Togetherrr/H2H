@@ -103,6 +103,7 @@ const officialLinkMeta: Record<string, OfficialLinkMeta> = {
 
 interface HomePageClientProps {
   filmFrames: FilmFrame[]
+  careerRecordsFilmFrames?: FilmFrame[]
   timelineEvents: TimelineEvent[]
   memberProfiles: MemberProfile[]
   officialProfile: GroupOfficialProfile
@@ -649,10 +650,15 @@ function MemberDetailModal({
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
               >
-                <img
+                <Image
                   src={member.image}
                   alt={member.name}
-                  className={`h-full w-full object-cover object-top transition-opacity duration-[1400ms] ${heroLoaded ? "opacity-100" : "opacity-0"}`}
+                  fill
+                  sizes="(min-width: 1024px) 140px, (min-width: 768px) 120px, 45vw"
+                  quality={75}
+                  priority={true}
+                  unoptimized
+                  className={`object-cover object-top transition-opacity duration-[1400ms] ${heroLoaded ? "opacity-100" : "opacity-0"}`}
                   onLoad={() => setHeroLoaded(true)}
                   onError={() => setHeroLoaded(true)}
                 />
@@ -990,6 +996,7 @@ function OfficialLinkCard({ label, url, note, metaKey }: { label: string; url: s
 
 export function HomePageClient({
   filmFrames,
+  careerRecordsFilmFrames,
   timelineEvents,
   memberProfiles,
   officialProfile,
@@ -1142,7 +1149,7 @@ export function HomePageClient({
         viewport={{ once: true, amount: 0.1 }}
         transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
       >
-        <HomeStatsSection snapshot={homeStatsSnapshot} />
+        <HomeStatsSection snapshot={homeStatsSnapshot} filmStripFrames={careerRecordsFilmFrames} />
       </motion.div>
 
       <motion.div

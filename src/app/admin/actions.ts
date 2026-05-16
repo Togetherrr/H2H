@@ -65,6 +65,18 @@ export async function getAdminTabData(tab: string) {
     return { siteSettings: data }
   }
 
+  if (tab === "lineup-reveal") {
+    const { data, error } = await supabase.from("site_settings").select("*").eq("id", 1).maybeSingle()
+    if (error) return { error: error.message }
+    return { siteSettings: data }
+  }
+
+  if (tab === "career-records") {
+    const { data, error } = await supabase.from("site_settings").select("*").eq("id", 1).maybeSingle()
+    if (error) return { error: error.message }
+    return { siteSettings: data }
+  }
+
   if (tab === "voting") {
     const { data, error } = await supabase
       .from("voting_apps")

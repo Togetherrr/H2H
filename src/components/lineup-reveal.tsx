@@ -10,7 +10,12 @@ const PAIRS = [
   { type: 'horizontal', left: { tag: 'IAN', name: 'Ian' }, right: { tag: 'YEON', name: 'Yeon' } },
 ]
 
-export function LineupReveal({ onComplete }: { onComplete: () => void }) {
+type LineupRevealProps = {
+  onComplete: () => void
+  memberImages?: Record<string, string>
+}
+
+export function LineupReveal({ onComplete, memberImages }: LineupRevealProps) {
   const [index, setIndex] = useState(0)
 
   useEffect(() => {
@@ -38,6 +43,9 @@ export function LineupReveal({ onComplete }: { onComplete: () => void }) {
     return { initial: { x: side === 'L' ? "-100%" : "100%" }, animate: { x: 0 } }
   }
 
+  const leftImage = memberImages?.[current.left.tag]
+  const rightImage = memberImages?.[current.right.tag]
+
   return (
     <div className="fixed inset-0 z-[999] overflow-hidden font-body bg-white">
       {/* Nền Gradient tươi sáng */}
@@ -61,9 +69,19 @@ export function LineupReveal({ onComplete }: { onComplete: () => void }) {
               transition={transitionConfig}
               className="absolute inset-0 bg-sky-50/40 flex items-center justify-center"
             >
-              <span className="text-sky-200/50 text-9xl font-display font-black italic select-none">
-                {current.left.tag}
-              </span>
+              {leftImage ? (
+                <img
+                  src={leftImage}
+                  alt={current.left.name}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : null}
+              <div className="absolute inset-0 bg-white/30" />
+              {!leftImage ? (
+                <span className="text-sky-200/50 text-9xl font-display font-black italic select-none">
+                  {current.left.tag}
+                </span>
+              ) : null}
             </motion.div>
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }} 
@@ -87,9 +105,19 @@ export function LineupReveal({ onComplete }: { onComplete: () => void }) {
               transition={transitionConfig}
               className="absolute inset-0 bg-pink-50/40 flex items-center justify-center"
             >
-              <span className="text-pink-200/50 text-9xl font-display font-black italic select-none">
-                {current.right.tag}
-              </span>
+              {rightImage ? (
+                <img
+                  src={rightImage}
+                  alt={current.right.name}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : null}
+              <div className="absolute inset-0 bg-white/30" />
+              {!rightImage ? (
+                <span className="text-pink-200/50 text-9xl font-display font-black italic select-none">
+                  {current.right.tag}
+                </span>
+              ) : null}
             </motion.div>
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }} 

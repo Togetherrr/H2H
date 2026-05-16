@@ -19,12 +19,12 @@ type HeaderAccount = {
   isAdmin: boolean
 }
 
-function TimeZoneSwitcher({ 
-  currentTimeZone, 
-  onTimeZoneChange 
-}: { 
-  currentTimeZone: TimeZone, 
-  onTimeZoneChange?: (tz: TimeZone) => void 
+function TimeZoneSwitcher({
+  currentTimeZone,
+  onTimeZoneChange
+}: {
+  currentTimeZone: TimeZone,
+  onTimeZoneChange?: (tz: TimeZone) => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const options: TimeZone[] = ["KST", "EDT", "UTC", "LOCAL"]
@@ -52,8 +52,8 @@ function TimeZoneSwitcher({
               }}
               className={cn(
                 "w-full px-4 py-2 text-left text-[11px] font-black uppercase tracking-widest transition-colors rounded-xl",
-                currentTimeZone === tz 
-                  ? "bg-sky-50 text-sky-600" 
+                currentTimeZone === tz
+                  ? "bg-sky-50 text-sky-600"
                   : "text-slate-500 hover:bg-slate-50"
               )}
             >
@@ -180,12 +180,12 @@ function HeaderNavLink({ href, label }: { href: string; label: string }) {
   )
 }
 
-export function Navbar({ 
-  timeZone, 
-  onTimeZoneChange 
-}: { 
-  timeZone?: TimeZone, 
-  onTimeZoneChange?: (tz: TimeZone) => void 
+export function Navbar({
+  timeZone,
+  onTimeZoneChange
+}: {
+  timeZone?: TimeZone,
+  onTimeZoneChange?: (tz: TimeZone) => void
 }) {
   const { t } = useTranslation()
   const storedTimeZone = useTimeZoneStore((s) => s.timeZone)
@@ -238,7 +238,7 @@ export function Navbar({
             />
             <div className="h-4 w-px bg-slate-300/50" />
           </div>
-          
+
           {mounted && <HeaderAccountButton />}
         </div>
       </div>
