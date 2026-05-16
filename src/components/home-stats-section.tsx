@@ -238,14 +238,14 @@ function DebutVideoModal({ isOpen, onClose, status, video, onRetry, errorMessage
       <div className="relative w-full max-w-2xl bg-[#0a0a0a] rounded-3xl overflow-hidden border border-white/10" onClick={e => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-4 right-4 text-white/50 hover:text-white"><X className="size-6" /></button>
         <div className="p-8">
-            <h3 className="text-white font-bold mb-4">Random Performance</h3>
-            <p className="mb-4 text-sm leading-6 text-white/50">
-              This opens a random official Hearts2Hearts video.
-            </p>
-            <div className="aspect-video bg-black rounded-xl overflow-hidden">
-                {status === 'ready' && video ? <iframe src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1`} className="w-full h-full" allowFullScreen /> : <div className="flex items-center justify-center h-full text-white/40">{status === 'loading' ? 'Loading...' : 'Error loading video'}</div>}
-            </div>
-            <button onClick={onRetry} className="mt-6 w-full py-3 rounded-xl bg-[#FF708A] text-white font-bold hover:opacity-90 transition-opacity">Another Random Video</button>
+          <h3 className="text-white font-bold mb-4">Random Performance</h3>
+          <p className="mb-4 text-sm leading-6 text-white/50">
+            This opens a random official Hearts2Hearts video.
+          </p>
+          <div className="aspect-video bg-black rounded-xl overflow-hidden">
+            {status === 'ready' && video ? <iframe src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1`} className="w-full h-full" allowFullScreen /> : <div className="flex items-center justify-center h-full text-white/40">{status === 'loading' ? 'Loading...' : 'Error loading video'}</div>}
+          </div>
+          <button onClick={onRetry} className="mt-6 w-full py-3 rounded-xl bg-[#FF708A] text-white font-bold hover:opacity-90 transition-opacity">Another Random Video</button>
         </div>
       </div>
     </div>, document.body
@@ -292,7 +292,7 @@ export function HomeStatsSection({ snapshot, filmStripFrames = [] }: HomeStatsSe
       <div className="max-w-5xl mx-auto relative z-10 px-4 md:px-0">
         <div className="card-premium shimmer-border p-6 md:p-10 relative overflow-hidden">
           <DebutVideoModal isOpen={videoModalOpen} onClose={() => setVideoModalOpen(false)} status={videoStatus} video={randomVideo} onRetry={fetchRandomVideo} />
-          
+
           <div className="mb-10">
             <div className="flex items-center gap-3 text-pink-500 mb-3">
               <Sparkles className="size-5 fill-current animate-pulse" />
@@ -308,9 +308,9 @@ export function HomeStatsSection({ snapshot, filmStripFrames = [] }: HomeStatsSe
 
               return (
                 <div key={card.key} className={cn("group relative flex flex-col justify-between overflow-hidden rounded-[3rem] p-6 border border-white/60 shadow-xl transition-all duration-500 hover:-translate-y-2", isDebut ? "md:p-10" : "md:p-8", card.className)}>
-                  
+
                   {card.hasFilmStrip && <FilmStrip frames={filmStripFrames} />}
-                  
+
                   {card.hasHearts && (
                     <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
                       {[...Array(5)].map((_, idx) => (
@@ -335,18 +335,18 @@ export function HomeStatsSection({ snapshot, filmStripFrames = [] }: HomeStatsSe
                           </div>
 
                           {mounted && isVisible ? <FlipNumber value={card.value} size="lg" /> : <div className="w-14 h-20 md:w-24 md:h-30 rounded-lg bg-[#FFF9F0]/80" />}
-                          
+
                           <p className="mt-2 text-[10px] font-black uppercase tracking-[0.35em] text-slate-700/80 mb-2">days</p>
 
                           <div className="mt-2 w-full flex flex-col items-center gap-2">
-                             <p className="text-[13px] font-black uppercase tracking-[0.35em] text-[#FF708A]">{card.debutDate}</p>
-                             <LiveTicker />
+                            <p className="text-[13px] font-black uppercase tracking-[0.35em] text-[#FF708A]">{card.debutDate}</p>
+                            <LiveTicker />
                           </div>
                         </div>
                       ) : (
                         /* ── Thẻ Award ── */
                         <Link href={`/records/${card.slug}`} className="flex flex-col items-center rounded-[2rem] bg-[#FFF9F0]/60 backdrop-blur-md border border-white/80 py-6">
-                           {mounted && isVisible ? <FlipNumber value={card.countUpValue ?? card.value} size="lg" /> : <div className="w-16 h-22 bg-[#FFF9F0]/80 rounded-lg" />}
+                          {mounted && isVisible ? <FlipNumber value={card.countUpValue ?? card.value} size="lg" /> : <div className="w-16 h-22 bg-[#FFF9F0]/80 rounded-lg" />}
                         </Link>
                       )}
                     </div>
