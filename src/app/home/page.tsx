@@ -5,6 +5,7 @@ import { memberProfiles as staticMemberProfiles } from "@/lib/member-profiles"
 import { hearts2heartsOfficialProfile } from "@/lib/group-official-profile"
 import { getHomeStatsSnapshot } from "@/lib/home-stats"
 import { getRealtimeSnapshotFromDb } from "@/lib/realtime/db-snapshot"
+import type { FilmFrame } from "@/lib/release-catalog"
 
 import { createStaticClient } from "@/lib/supabase/static"
 import { hasSupabaseEnv } from "@/lib/supabase/env"
@@ -12,17 +13,46 @@ import { getActiveAwardsVoteApps } from "@/lib/supabase/voting-service-server"
 
 export const revalidate = 60 // Enable ISR: Revalidate every 60 seconds
 
+function normalizeCareerRecordsFilmFrames(metadata: unknown): FilmFrame[] | undefined {
+  const rawFrames = (metadata as any)?.career_records_film_strip
+
+  if (!Array.isArray(rawFrames)) {
+    return undefined
+  }
+
+  const normalized = rawFrames
+    .map((frame: any, index: number) => ({
+      src: typeof frame?.src === "string"
+        ? frame.src.trim()
+        : typeof frame?.url === "string"
+          ? frame.url.trim()
+          : "",
+      alt: typeof frame?.alt === "string" && frame.alt.trim().length > 0
+        ? frame.alt.trim()
+        : typeof frame?.title === "string" && frame.title.trim().length > 0
+          ? frame.title.trim()
+          : `Career records frame ${index + 1}`,
+      label: typeof frame?.title === "string" && frame.title.trim().length > 0
+        ? frame.title.trim()
+        : `Frame ${index + 1}`,
+    }))
+    .filter((frame) => frame.src.length > 0)
+
+  return normalized.length > 0 ? normalized : undefined
+}
+
 export default async function HomePage() {
   // ── Parallel Data Fetching ──
   // We fetch everything in parallel to minimize waiting time (TTFB)
   const [
     timelineEvents, 
     filmFrames, 
-    homeStatsSnapshot, 
+    homeStatsSnapshot,
     trackPerformanceSnapshot,
     dbMembersResult,
     dbLinksResult,
-    activeVoteAppsResult
+    activeVoteAppsResult,
+    siteSettingsResult,
   ] = await Promise.all([
     getTimelineEvents(),
     getFilmFrames(4),
@@ -37,7 +67,10 @@ export default async function HomePage() {
       : Promise.resolve({ data: null }),
     hasSupabaseEnv()
       ? getActiveAwardsVoteApps()
-      : Promise.resolve({ apps: [], error: null })
+      : Promise.resolve({ apps: [], error: null }),
+    hasSupabaseEnv()
+      ? createStaticClient().from("site_settings").select("metadata").eq("id", 1).maybeSingle()
+      : Promise.resolve({ data: null }),
   ])
 
   let memberProfiles = staticMemberProfiles
@@ -93,9 +126,12 @@ export default async function HomePage() {
     }))
   }
 
+  const careerRecordsFilmFrames = normalizeCareerRecordsFilmFrames((siteSettingsResult as any).data?.metadata)
+
   return (
     <HomePageClient
       filmFrames={filmFrames}
+      careerRecordsFilmFrames={careerRecordsFilmFrames}
       timelineEvents={timelineEvents}
       memberProfiles={memberProfiles}
       officialLinks={officialLinks}
