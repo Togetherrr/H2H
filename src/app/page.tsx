@@ -1,4 +1,5 @@
 "use client"
+/* eslint-disable @next/next/no-img-element */
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -65,7 +66,7 @@ export default function LandingPage() {
     // chuyển hướng sau khi hiệu ứng fade-out đã bắt đầu
     setTimeout(() => {
       router.replace("/home")
-    }, 100) 
+    }, 100)
   }
 
   return (
@@ -84,23 +85,23 @@ export default function LandingPage() {
           >
             {/* Hiệu ứng ánh sáng trắng dịu nhẹ phía sau logo */}
             <div className="absolute size-96 bg-white/40 blur-[120px] rounded-full animate-pulse" />
-            
+
             <div className="relative flex flex-col items-center">
               <motion.div
-                animate={{ 
+                animate={{
                   scale: [1, 1.03, 1],
                   opacity: [0.8, 1, 0.8]
                 }}
-                transition={{ 
+                transition={{
                   duration: 2.5,
                   repeat: Infinity,
                   ease: "easeInOut"
                 }}
                 className="relative z-10 flex flex-col items-center gap-6"
               >
-                <img 
-                  src="/logo-official-removebg-.png" 
-                  alt="Loading Logo" 
+                <img
+                  src="/logo-official-removebg-.png"
+                  alt="Loading Logo"
                   className="size-24 md:size-28 object-contain filter drop-shadow-sm"
                   onError={(e) => (e.currentTarget.style.display = 'none')}
                 />
