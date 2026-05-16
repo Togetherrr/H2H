@@ -74,7 +74,43 @@ export default function LandingPage() {
     */
     <main className="min-h-[100dvh] relative bg-[#1a2238] overflow-hidden">
       <AnimatePresence mode="wait">
-        {!isRevealReady ? null : !isIntroDone ? (
+        {!isRevealReady ? (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[2000] flex items-center justify-center bg-[#A2D2FF]"
+          >
+            {/* Hiệu ứng ánh sáng trắng dịu nhẹ phía sau logo */}
+            <div className="absolute size-96 bg-white/40 blur-[120px] rounded-full animate-pulse" />
+            
+            <div className="relative flex flex-col items-center">
+              <motion.div
+                animate={{ 
+                  scale: [1, 1.03, 1],
+                  opacity: [0.8, 1, 0.8]
+                }}
+                transition={{ 
+                  duration: 2.5,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="relative z-10 flex flex-col items-center gap-6"
+              >
+                <img 
+                  src="/logo-official-removebg-.png" 
+                  alt="Loading Logo" 
+                  className="size-24 md:size-28 object-contain filter drop-shadow-sm"
+                  onError={(e) => (e.currentTarget.style.display = 'none')}
+                />
+                <h1 className="text-slate-800/80 font-black uppercase tracking-[0.6em] text-[10px] md:text-xs text-center">
+                  HEARTS2HEARTS
+                </h1>
+              </motion.div>
+            </div>
+          </motion.div>
+        ) : !isIntroDone ? (
           <LineupReveal key="intro" onComplete={handleIntroComplete} memberImages={memberImages} />
         ) : (
           /* Sử dụng các class Tailwind để khớp hoàn toàn với globals.css:

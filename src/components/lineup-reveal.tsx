@@ -47,9 +47,9 @@ export function LineupReveal({ onComplete, memberImages }: LineupRevealProps) {
   const rightImage = memberImages?.[current.right.tag]
 
   return (
-    <div className="fixed inset-0 z-[999] overflow-hidden font-body bg-white">
-      {/* Nền Gradient tươi sáng */}
-      <div className="absolute inset-0 bg-gradient-to-br from-sky-100 via-white to-pink-100 opacity-60" />
+    <div className="fixed inset-0 z-[999] overflow-hidden font-body bg-[#A2D2FF]">
+      {/* Nền Gradient tươi sáng chuẩn phong cách Baby Blue */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-sky-100/20 to-white/30 opacity-90" />
       
       <AnimatePresence mode="wait">
         <motion.div 
