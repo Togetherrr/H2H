@@ -203,6 +203,7 @@ const strings: Record<string, string> = {
   "home.comeback.standby": "Standby Mode",
   "home.comeback.preparing": "Preparing for next era",
   "home.comeback.preOrder": "Pre-order",
+  "home.comeback.stream": "Stream",
   "home.comeback.preSave": "Pre-save",
   "home.comeback.notifyMe": "Notify me",
 

@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      award_event_apps: {
+        Row: {
+          id: string
+          event_id: string
+          app_id: string
+          description: string | null
+          sort_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          app_id: string
+          description?: string | null
+          sort_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          event_id?: string
+          app_id?: string
+          description?: string | null
+          sort_order?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "award_event_apps_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "voting_apps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "award_event_apps_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "award_events"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      award_events: {
+        Row: {
+          id: string
+          name: string
+          nominations: Json
+          ceremony_at: string | null
+          reflection_rate: Json
+          is_active: boolean
+          sort_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          nominations?: Json
+          ceremony_at?: string | null
+          reflection_rate?: Json
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          nominations?: Json
+          ceremony_at?: string | null
+          reflection_rate?: Json
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
       h2h_item_snapshots: {
         Row: {
           created_at: string
@@ -531,17 +606,19 @@ export type Database = {
           },
         ]
       }
-   voting_apps: {
+    voting_apps: {
         Row: {
           id: string
           name: string
           category: string
           program_name: string | null
           logo_url: string | null
+          guide_url: string | null
           currencies: string[] | null
           collection_methods: string[] | null
           android_url: string | null
           ios_url: string | null
+          website_url: string | null
           description: string | null
           reflection_rate: string[] | null
           ceremony_at: string | null
@@ -554,10 +631,12 @@ export type Database = {
           category: string
           program_name?: string | null
           logo_url?: string | null
+          guide_url?: string | null
           currencies?: string[] | null
           collection_methods?: string[] | null
           android_url?: string | null
           ios_url?: string | null
+          website_url?: string | null
           description?: string | null
           reflection_rate?: string[] | null
           ceremony_at?: string | null
@@ -570,10 +649,12 @@ export type Database = {
           category?: string
           program_name?: string | null
           logo_url?: string | null
+          guide_url?: string | null
           currencies?: string[] | null
           collection_methods?: string[] | null
           android_url?: string | null
           ios_url?: string | null
+          website_url?: string | null
           description?: string | null
           reflection_rate?: string[] | null
           ceremony_at?: string | null
@@ -654,6 +735,7 @@ export type Database = {
         Row: {
           id: string
           app_id: string
+          event_id: string | null
           round_name: string
           start_at: string
           end_at: string
@@ -664,6 +746,7 @@ export type Database = {
         Insert: {
           id?: string
           app_id: string
+          event_id?: string | null
           round_name: string
           start_at: string
           end_at: string
@@ -674,6 +757,7 @@ export type Database = {
         Update: {
           id?: string
           app_id?: string
+          event_id?: string | null
           round_name?: string
           start_at?: string
           end_at?: string
@@ -685,7 +769,15 @@ export type Database = {
           {
             foreignKeyName: "voting_rounds_app_id_fkey"
             columns: ["app_id"]
+            isOneToOne: false
             referencedRelation: "voting_apps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voting_rounds_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "award_events"
             referencedColumns: ["id"]
           }
         ]

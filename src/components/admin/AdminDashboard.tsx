@@ -13,8 +13,10 @@ import { ThemesManager } from "@/components/admin/ThemesManager"
 import { MediaLibrary } from "@/components/admin/MediaManager"
 import { Image as ImageIcon } from "lucide-react"
 import { VotingAppsManager } from "@/components/admin/VotingAppsManager"
+import { AwardEventsManager } from "@/components/admin/AwardEventsManager"
 import { LineupRevealManager } from "@/components/admin/LineupRevealManager"
 import { CareerRecordsManager } from "@/components/admin/CareerRecordsManager"
+import { ComebackWatchManager } from "@/components/admin/ComebackWatchManager"
 
 type AdminStats = {
   users: number
@@ -31,6 +33,8 @@ type AdminTabData = {
   themes?: any[]
   siteSettings?: any
   votingApps?: any[]
+  awardEvents?: any[]
+  availableApps?: any[]
   stats?: AdminStats
 }
 
@@ -39,7 +43,7 @@ type AdminDashboardProps = {
   profile: any
 }
 
-const VALID_TABS = new Set(["overview", "users", "members", "themes", "socials", "settings", "media", "voting", "lineup-reveal", "career-records"])
+const VALID_TABS = new Set(["overview", "users", "members", "themes", "socials", "settings", "media", "voting", "award-events", "lineup-reveal", "career-records", "comeback"])
 
 function normalizeTab(tab: string) {
   return VALID_TABS.has(tab) ? tab : "overview"
@@ -295,6 +299,17 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
                 </div>
                 <ImageIcon className="size-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
               </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange("comeback")}
+                className="group flex items-center justify-between rounded-xl border border-slate-800 bg-slate-800/50 p-4 text-left transition-colors hover:bg-slate-800 hover:border-slate-700"
+              >
+                <div>
+                  <h4 className="font-medium text-slate-200">Comeback Watch</h4>
+                  <p className="text-sm text-slate-400">Set the album title, countdown, and release links</p>
+                </div>
+                <BadgeCheck className="size-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
+              </button>
             </CardContent>
           </Card>
 
@@ -376,6 +391,14 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
         const apps = dataByTab.voting?.votingApps
         return apps ? <VotingAppsManager initialApps={apps} /> : <TabLoadingState title="Loading voting apps..." />
       }
+      case "award-events": {
+        const awardEventsData = dataByTab["award-events"]
+        return awardEventsData?.awardEvents && awardEventsData?.availableApps ? (
+          <AwardEventsManager initialEvents={awardEventsData.awardEvents} availableApps={awardEventsData.availableApps} />
+        ) : (
+          <TabLoadingState title="Loading award events..." />
+        )
+      }
       case "lineup-reveal": {
         const settingsData = dataByTab["lineup-reveal"]
         return settingsData?.siteSettings ? (
@@ -390,6 +413,14 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
           <CareerRecordsManager initialSettings={settingsData.siteSettings} />
         ) : (
           <TabLoadingState title="Loading career records..." />
+        )
+      }
+      case "comeback": {
+        const settingsData = dataByTab["comeback"]
+        return settingsData?.siteSettings ? (
+          <ComebackWatchManager initialSettings={settingsData.siteSettings} />
+        ) : (
+          <TabLoadingState title="Loading comeback settings..." />
         )
       }
       case "overview":

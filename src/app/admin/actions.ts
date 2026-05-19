@@ -3,11 +3,12 @@
 import { createClient } from "@/lib/supabase/server"
 import { requireAdmin } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
-
+import { createStaticClient } from "@/lib/supabase/static"
+import { createServiceClient } from "@/lib/supabase/service"
 export async function uploadImage(formData: FormData) {
   try {
     await requireAdmin()
-    const supabase = await createClient()
+  const supabase = createServiceClient()
     const file = formData.get("file") as File
     if (!file) throw new Error("No file provided")
 
@@ -33,7 +34,7 @@ export async function uploadImage(formData: FormData) {
 
 export async function getAdminTabData(tab: string) {
   const { profile } = await requireAdmin()
-  const supabase = await createClient()
+  const supabase = createServiceClient()
 
   if (tab === "users") {
     const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false })
@@ -77,6 +78,12 @@ export async function getAdminTabData(tab: string) {
     return { siteSettings: data }
   }
 
+  if (tab === "comeback") {
+    const { data, error } = await supabase.from("site_settings").select("*").eq("id", 1).maybeSingle()
+    if (error) return { error: error.message }
+    return { siteSettings: data }
+  }
+
   if (tab === "voting") {
     const { data, error } = await supabase
       .from("voting_apps")
@@ -84,6 +91,60 @@ export async function getAdminTabData(tab: string) {
       .order("created_at", { ascending: false })
     if (error) return { error: error.message }
     return { votingApps: data || [] }
+  }
+
+  if (tab === "award-events") {
+    const [{ data: eventsData, error: eventsError }, { data: appsData, error: appsError }] = await Promise.all([
+      (supabase as any)
+        .from("award_events")
+        .select("*, event_apps:award_event_apps(*, voting_apps(*))")
+        .order("sort_order", { ascending: true })
+        .limit(50),
+      supabase
+        .from("voting_apps")
+        .select("id, name, logo_url, category, guide_url")
+        .order("created_at", { ascending: false })
+        .limit(200),
+    ])
+
+    if (eventsError) return { error: eventsError.message }
+    if (appsError) return { error: appsError.message }
+
+    const events = (eventsData || []) as any[]
+    const eventIds = events.map((e) => e.id).filter(Boolean)
+
+    if (eventIds.length === 0) {
+      return { awardEvents: [], availableApps: appsData || [] }
+    }
+
+    const { data: roundsData, error: roundsError } = await (supabase as any)
+      .from("voting_rounds")
+      .select("*")
+      .in("event_id", eventIds)
+      .order("start_at", { ascending: true })
+      .limit(500)
+
+    if (roundsError) return { error: roundsError.message }
+
+    const rounds = (roundsData || []) as any[]
+    const roundsByEventApp = new Map<string, any[]>()
+    for (const round of rounds) {
+      if (!round.event_id || !round.app_id) continue
+      const key = `${round.event_id}:${round.app_id}`
+      const arr = roundsByEventApp.get(key) ?? []
+      arr.push(round)
+      roundsByEventApp.set(key, arr)
+    }
+
+    const hydrated = events.map((event) => {
+      const eventApps = (event.event_apps || []).map((ea: any) => {
+        const key = `${event.id}:${ea.app_id}`
+        return { ...ea, rounds: roundsByEventApp.get(key) ?? [] }
+      })
+      return { ...event, event_apps: eventApps }
+    })
+
+    return { awardEvents: hydrated, availableApps: appsData || [] }
   }
 
   const [
@@ -146,7 +207,7 @@ export async function createVotingApp(payload: {
 }) {
   try {
     await requireAdmin()
-    const supabase = await createClient()
+  const supabase = createServiceClient()
 
     const { data: app, error: appError } = await supabase
       .from("voting_apps")
@@ -243,7 +304,7 @@ export async function createVotingApp(payload: {
 export async function deleteVotingApp(id: string) {
   try {
     await requireAdmin()
-    const supabase = await createClient()
+  const supabase = createServiceClient()
 
     const { error } = await supabase.from("voting_apps").delete().eq("id", id)
     if (error) return { error: error.message }
@@ -260,7 +321,7 @@ export async function deleteVotingApp(id: string) {
 export async function updateVotingApp(id: string, payload: any) {
   try {
     await requireAdmin()
-    const supabase = await createClient()
+  const supabase = createServiceClient()
 
     // 1. First, verify we have the app
     const { data: existing, error: findError } = await supabase.from("voting_apps").select("id").eq("id", id).single()
@@ -359,7 +420,7 @@ export async function updateVotingApp(id: string, payload: any) {
 export async function upsertMember(data: any) {
   try {
     await requireAdmin()
-    const supabase = await createClient()
+  const supabase = createServiceClient()
 
     const { error } = await supabase.from("members").upsert(data)
     if (error) return { error: error.message }
@@ -375,7 +436,7 @@ export async function upsertMember(data: any) {
 export async function updateMembersOrder(orders: { id: string, sort_order: number }[]) {
   try {
     await requireAdmin()
-    const supabase = await createClient()
+  const supabase = createServiceClient()
     const { error } = await supabase.from("members").upsert(orders as any)
     if (error) return { error: error.message }
 
@@ -390,7 +451,7 @@ export async function updateMembersOrder(orders: { id: string, sort_order: numbe
 export async function deleteMember(id: string) {
   try {
     await requireAdmin()
-    const supabase = await createClient()
+  const supabase = createServiceClient()
 
     const { error } = await supabase.from("members").delete().eq("id", id)
     if (error) return { error: error.message }
@@ -406,7 +467,7 @@ export async function deleteMember(id: string) {
 export async function upsertSocialLink(data: any) {
   try {
     await requireAdmin()
-    const supabase = await createClient()
+  const supabase = createServiceClient()
 
     const { error } = await supabase.from("social_links").upsert(data)
     if (error) return { error: error.message }
@@ -422,7 +483,7 @@ export async function upsertSocialLink(data: any) {
 export async function updateSocialLinksOrder(orders: { id: string, sort_order: number }[]) {
   try {
     await requireAdmin()
-    const supabase = await createClient()
+  const supabase = createServiceClient()
     const { error } = await supabase.from("social_links").upsert(orders as any)
     if (error) return { error: error.message }
 
@@ -437,7 +498,7 @@ export async function updateSocialLinksOrder(orders: { id: string, sort_order: n
 export async function deleteSocialLink(id: string) {
   try {
     await requireAdmin()
-    const supabase = await createClient()
+  const supabase = createServiceClient()
 
     const { error } = await supabase.from("social_links").delete().eq("id", id)
     if (error) return { error: error.message }
@@ -453,9 +514,16 @@ export async function deleteSocialLink(id: string) {
 export async function upsertSiteSettings(data: any) {
   try {
     await requireAdmin()
-    const supabase = await createClient()
+  const supabase = createServiceClient()
 
-    const { error } = await supabase.from("site_settings").upsert(data)
+    // Avoid sending unexpected/unstable fields from the client; keep this upsert narrow and serializable.
+    const payload = {
+      id: typeof data?.id === "number" ? data.id : 1,
+      group_name: typeof data?.group_name === "string" && data.group_name.trim() ? data.group_name.trim() : "H2H",
+      metadata: (data?.metadata ?? null) as any,
+    }
+
+    const { error } = await supabase.from("site_settings").upsert(payload)
     if (error) return { error: error.message }
 
     revalidatePath("/admin")
@@ -468,7 +536,7 @@ export async function upsertSiteSettings(data: any) {
 
 export async function updateUserRole(userId: string, role: "user" | "admin") {
   await requireAdmin()
-  const supabase = await createClient()
+  const supabase = createServiceClient()
 
   const { error } = await supabase.from("profiles").update({ role }).eq("id", userId)
   if (error) throw new Error(error.message)
@@ -479,7 +547,7 @@ export async function updateUserRole(userId: string, role: "user" | "admin") {
 export async function upsertTheme(data: any) {
   try {
     await requireAdmin()
-    const supabase = await createClient()
+  const supabase = createServiceClient()
 
     const { error } = await (supabase as any).from("themes").upsert(data)
     if (error) return { error: error.message }
@@ -495,11 +563,11 @@ export async function upsertTheme(data: any) {
 export async function activateTheme(id: string) {
   try {
     await requireAdmin()
-    const supabase = await createClient()
+  const supabase = createServiceClient()
 
     await (supabase as any).from("themes").update({ is_active: false }).neq("id", id)
     const { error } = await (supabase as any).from("themes").update({ is_active: true }).eq("id", id)
-    
+
     if (error) return { error: error.message }
 
     revalidatePath("/admin")
@@ -513,7 +581,7 @@ export async function activateTheme(id: string) {
 export async function deleteTheme(id: string) {
   try {
     await requireAdmin()
-    const supabase = await createClient()
+  const supabase = createServiceClient()
 
     const { error } = await (supabase as any).from("themes").delete().eq("id", id)
     if (error) return { error: error.message }
@@ -524,4 +592,200 @@ export async function deleteTheme(id: string) {
   } catch (err: any) {
     return { error: err.message }
   }
+}
+export async function createAwardEvent(data: {
+  name: string
+  nominations: string[]
+  ceremony_at: string | null
+  reflection_rate: string[]
+  is_active: boolean
+  sort_order: number
+}) {
+  await requireAdmin()
+  const supabase = createServiceClient()
+  const { error } = await supabase.from("award_events").insert({
+    name: data.name,
+    nominations: data.nominations.filter(Boolean),
+    ceremony_at: data.ceremony_at || null,
+    reflection_rate: data.reflection_rate.filter(Boolean),
+    is_active: data.is_active,
+    sort_order: data.sort_order,
+  })
+
+  if (error) return { error: error.message }
+  revalidatePath("/home")
+  revalidatePath("/voting")
+  return { error: null }
+}
+
+export async function updateAwardEvent(
+  id: string,
+  data: {
+    name: string
+    nominations: string[]
+    ceremony_at: string | null
+    reflection_rate: string[]
+    is_active: boolean
+    sort_order: number
+  }
+) {
+  await requireAdmin()
+  const supabase = createServiceClient()
+  const { error } = await supabase
+    .from("award_events")
+    .update({
+      name: data.name,
+      nominations: data.nominations.filter(Boolean),
+      ceremony_at: data.ceremony_at || null,
+      reflection_rate: data.reflection_rate.filter(Boolean),
+      is_active: data.is_active,
+      sort_order: data.sort_order,
+    })
+    .eq("id", id)
+
+  if (error) return { error: error.message }
+  revalidatePath("/home")
+  revalidatePath("/voting")
+  return { error: null }
+}
+
+export async function deleteAwardEvent(id: string) {
+  await requireAdmin()
+  const supabase = createServiceClient()
+  const { error } = await supabase.from("award_events").delete().eq("id", id)
+  if (error) return { error: error.message }
+  revalidatePath("/home")
+  revalidatePath("/voting")
+  return { error: null }
+}
+
+// ── Award Event Apps (junction) ───────────────────────────────────────────
+
+export async function addAppToEvent(data: {
+  event_id: string
+  app_id: string
+  description: string | null
+  guide_url?: string | null
+  award_name?: string | null
+  awards?: string[]
+  sort_order: number
+}) {
+  await requireAdmin()
+  const supabase = createServiceClient()
+  const { error } = await (supabase as any).from("award_event_apps").insert({
+    event_id: data.event_id,
+    app_id: data.app_id,
+    description: data.description,
+    guide_url: data.guide_url || null,
+    award_name: data.award_name || null,
+    awards: (data.awards ?? []).filter(Boolean),
+    sort_order: data.sort_order,
+  })
+  if (error) return { error: error.message }
+  revalidatePath("/home")
+  revalidatePath("/voting")
+  return { error: null }
+}
+
+export async function updateEventApp(
+  id: string,
+  data: {
+    description: string | null
+    guide_url?: string | null
+    award_name?: string | null
+    awards?: string[]
+    sort_order: number
+  }
+) {
+  await requireAdmin()
+  const supabase = createServiceClient()
+  const { error } = await (supabase as any)
+    // Cast to any until Supabase generated types are updated for new columns
+    .from("award_event_apps")
+    .update({
+      description: data.description,
+      guide_url: data.guide_url || null,
+      award_name: data.award_name || null,
+      awards: (data.awards ?? []).filter(Boolean),
+      sort_order: data.sort_order,
+    })
+    .eq("id", id)
+  if (error) return { error: error.message }
+  revalidatePath("/home")
+  revalidatePath("/voting")
+  return { error: null }
+}
+
+export async function removeAppFromEvent(id: string) {
+  await requireAdmin()
+  const supabase = createServiceClient()
+  const { error } = await supabase.from("award_event_apps").delete().eq("id", id)
+  if (error) return { error: error.message }
+  revalidatePath("/home")
+  revalidatePath("/voting")
+  return { error: null }
+}
+
+// ── Event Rounds (voting_rounds với event_id) ─────────────────────────────
+
+export async function createEventRound(data: {
+  event_id: string
+  app_id: string
+  round_name: string
+  start_at: string   // UTC ISO string
+  end_at: string     // UTC ISO string
+  display_timezone: string
+  is_active: boolean
+}) {
+  await requireAdmin()
+  const supabase = createServiceClient()
+  const { error } = await supabase.from("voting_rounds").insert(data)
+  if (error) return { error: error.message }
+  revalidatePath("/home")
+  revalidatePath("/voting")
+  return { error: null }
+}
+
+export async function updateEventRound(
+  id: string,
+  data: {
+    round_name: string
+    start_at: string
+    end_at: string
+    display_timezone: string
+    is_active: boolean
+  }
+) {
+  await requireAdmin()
+  const supabase = createServiceClient()
+  const { error } = await supabase.from("voting_rounds").update(data).eq("id", id)
+  if (error) return { error: error.message }
+  revalidatePath("/home")
+  revalidatePath("/voting")
+  return { error: null }
+}
+
+export async function deleteEventRound(id: string) {
+  await requireAdmin()
+  const supabase = createServiceClient()
+  const { error } = await supabase.from("voting_rounds").delete().eq("id", id)
+  if (error) return { error: error.message }
+  revalidatePath("/home")
+  revalidatePath("/voting")
+  return { error: null }
+}
+
+// ── Update guide_url on existing voting_apps ──────────────────────────────
+
+export async function updateVotingAppGuideUrl(appId: string, guideUrl: string | null) {
+  await requireAdmin()
+  const supabase = createServiceClient()
+  const { error } = await supabase
+    .from("voting_apps")
+    .update({ guide_url: guideUrl || null })
+    .eq("id", appId)
+
+  if (error) return { error: error.message }
+  revalidatePath("/voting")
+  return { error: null }
 }

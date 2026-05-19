@@ -1,7 +1,8 @@
 "use client"
 
 import Image from "next/image"
-
+import { useAwardEvents } from "@/hooks/useAwardEvents"
+import { AwardEventCard } from "@/components/award-event-card"
 import { useState } from "react"
 import {
   BookOpen,
@@ -280,7 +281,33 @@ function VotingAppCard({ app }: { app: MappedApp }) {
                   {app.description && (
                     <div className="rounded-2xl bg-white/40 border border-white p-5 shadow-sm">
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Description</p>
-                      <p className="text-[13px] font-bold text-slate-700 leading-relaxed italic">{app.description}</p>
+                      {(() => {
+                        const lines = String(app.description)
+                          .split(/\r?\n/)
+                          .map((line) => line.trim())
+                          .filter(Boolean)
+
+                        // Prefer a list when multiple lines exist; otherwise keep the original rendering
+                        // but preserve any embedded newlines from older/hand-edited content.
+                        if (lines.length <= 1) {
+                          return (
+                            <p className="text-[13px] font-bold text-slate-700 leading-relaxed italic whitespace-pre-line">
+                              {String(app.description)}
+                            </p>
+                          )
+                        }
+
+                        return (
+                          <ul className="mt-1 space-y-2 text-[13px] font-bold text-slate-700 leading-relaxed italic">
+                            {lines.map((line, idx) => (
+                              <li key={idx} className="flex items-start gap-2.5">
+                                <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#FF708A] shrink-0" />
+                                <span className="whitespace-pre-line">{line}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )
+                      })()}
                     </div>
                   )}
                   {app.reflection_rate && app.reflection_rate.length > 0 && (
@@ -292,7 +319,7 @@ function VotingAppCard({ app }: { app: MappedApp }) {
                         {(() => {
                           const rawRate = app.reflection_rate as any;
                           let rates: string[] = [];
-                          
+
                           if (Array.isArray(rawRate)) {
                             rates = rawRate;
                           } else if (typeof rawRate === 'string') {
@@ -308,7 +335,7 @@ function VotingAppCard({ app }: { app: MappedApp }) {
                               rates = [trimmed];
                             }
                           }
-                          
+
                           return rates
                             .filter(rate => rate && String(rate).trim().length > 0)
                             .map((rate, idx) => (
@@ -413,8 +440,8 @@ function VotingAppCard({ app }: { app: MappedApp }) {
                 onClick={() => setExpanded(!expanded)}
                 className={cn(
                   "flex items-center gap-3 px-7 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg",
-                  expanded 
-                    ? "bg-[#0F172A] text-white" 
+                  expanded
+                    ? "bg-[#0F172A] text-white"
                     : "bg-white border border-white text-slate-500 hover:bg-slate-50"
                 )}
               >
@@ -455,14 +482,32 @@ function Skeleton() {
     </div>
   )
 }
+// Thay thế toàn bộ function VotingPageClient() trong voting-page-client.tsx bằng đoạn này.
+// Phần còn lại của file (AppIcon, GuideModal, VotingAppCard, Skeleton) giữ nguyên.
+//
+// Thêm 2 import sau vào đầu file:
+//   import { useAwardEvents } from "@/hooks/useAwardEvents"
+//   import { AwardEventCard } from "@/components/voting/AwardEventCard"
 
 export function VotingPageClient() {
-  const [activeTab, setActiveTab] = useState<"guide" | "tracking">("guide")
+  const [activeTab, setActivetab] = useState<"guide" | "tracking">("guide")
   const [activeCategoryId, setActiveCategoryId] = useState<VotingAppCategoryId>("music_shows")
-  const { apps, loading, error } = useVotingApps(activeCategoryId)
 
-  const scrollToApp = (id: string) => {
-    const element = document.getElementById(`app-${id}`)
+  // ── hooks (luôn gọi cả 2 — không được gọi conditional) ──────────────────
+  // Hook cũ: dùng cho music_shows, birthday, stream_support
+  const { apps, loading: appsLoading, error: appsError } = useVotingApps(activeCategoryId)
+  // Hook mới: dùng riêng cho awards tab
+  const { events, loading: eventsLoading, error: eventsError } = useAwardEvents()
+
+  const isAwards = activeCategoryId === "awards"
+  const loading = isAwards ? eventsLoading : appsLoading
+  const error = isAwards ? eventsError : appsError
+  // ────────────────────────────────────────────────────────────────────────
+
+  const scrollToItem = (id: string) => {
+    // Awards dùng id "event-{id}", các tab khác dùng "app-{id}"
+    const elementId = isAwards ? `event-${id}` : `app-${id}`
+    const element = document.getElementById(elementId)
     if (!element) return
     element.scrollIntoView({ behavior: "smooth", block: "start" })
   }
@@ -474,7 +519,7 @@ export function VotingPageClient() {
           <button
             key={tab}
             type="button"
-            onClick={() => setActiveTab(tab)}
+            onClick={() => setActivetab(tab)}
             className={cn(
               "rounded-2xl px-8 py-4 text-[11px] font-black uppercase tracking-widest transition-all",
               activeTab === tab
@@ -520,7 +565,7 @@ export function VotingPageClient() {
                 {activeCategoryId === "birthday" ? "Birthday Events" : "Vote Donate"}
               </h3>
               <p className="text-slate-500 font-bold italic opacity-60 text-lg max-w-xl mx-auto leading-relaxed">
-                {activeCategoryId === "birthday" 
+                {activeCategoryId === "birthday"
                   ? "Birthday and anniversary support campaigns will appear here in the next era. Stay tuned for official birthday goals!"
                   : "Community donation projects for voting support are currently being organized. This section will open when donation channels are finalized."}
               </p>
@@ -541,7 +586,7 @@ export function VotingPageClient() {
                       <LayoutGrid className="size-5" />
                     </div>
                     <h4 className="text-[16px] font-black uppercase tracking-tighter text-slate-900 leading-none">
-                      apps directory
+                      {isAwards ? "active campaigns" : "apps directory"}
                     </h4>
                     {loading && <Loader2 className="size-4 animate-spin text-[#FF708A]" />}
                   </div>
@@ -552,12 +597,33 @@ export function VotingPageClient() {
                         <div key={item} className="h-10 w-28 rounded-xl bg-white/60 animate-pulse" />
                       ))}
                     </div>
+                  ) : isAwards ? (
+                    // Awards: quick-nav bằng event
+                    <div className="flex flex-wrap gap-3">
+                      {events.map((event) => (
+                        <button
+                          key={event.id}
+                          onClick={() => scrollToItem(event.id)}
+                          className="flex items-center gap-3 rounded-xl border border-white bg-white/60 px-5 py-3 text-[12px] font-bold text-slate-700 transition hover:bg-[#FFC2D1]/20 hover:border-[#FFC2D1]/60 hover:shadow-sm"
+                        >
+                          <div className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                          {event.name}
+                          {event.hasActiveVoting && (
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#FF3B57] animate-ping" />
+                          )}
+                        </button>
+                      ))}
+                      {events.length === 0 && !loading && (
+                        <p className="text-slate-400 text-sm font-medium italic">No active award events at this time.</p>
+                      )}
+                    </div>
                   ) : (
+                    // Music shows / other: quick-nav bằng app (logic cũ)
                     <div className="flex flex-wrap gap-3">
                       {apps.map((app) => (
                         <button
                           key={app.id}
-                          onClick={() => scrollToApp(app.id)}
+                          onClick={() => scrollToItem(app.id)}
                           className="flex items-center gap-3 rounded-xl border border-white bg-white/60 px-5 py-3 text-[12px] font-bold text-slate-700 transition hover:bg-[#FFC2D1]/20 hover:border-[#FFC2D1]/60 hover:shadow-sm"
                         >
                           <div className="h-1.5 w-1.5 rounded-full bg-[#FF708A]" />
@@ -570,41 +636,46 @@ export function VotingPageClient() {
               )}
 
               <div className="grid gap-10">
-                {loading
-                  ? [1, 2].map((item) => <Skeleton key={item} />)
-                  : (() => {
-                      // Group apps by name to avoid duplicates on the voting page
-                      const uniqueAppsMap = new Map<string, MappedApp>();
-                      const now = new Date();
+                {loading ? (
+                  [1, 2].map((item) => <Skeleton key={item} />)
+                ) : isAwards ? (
+                  // ── Awards: dùng AwardEventCard (multi-app, multi-nomination) ──
+                  events.map((event) => (
+                    <AwardEventCard key={event.id} event={event} />
+                  ))
+                ) : (
+                  // ── Music shows / other: logic cũ (dedup by name) ──────────────
+                  (() => {
+                    const uniqueAppsMap = new Map<string, MappedApp>()
+                    const now = new Date()
 
-                      apps.forEach(app => {
-                        const key = app.name.toLowerCase().trim();
-                        const existing = uniqueAppsMap.get(key);
-                        
-                        const hasActiveRound = app.rounds.some(r => 
-                          r.is_active && now >= new Date(r.start_at) && now <= new Date(r.end_at)
-                        );
+                    apps.forEach((app) => {
+                      const key = app.name.toLowerCase().trim()
+                      const existing = uniqueAppsMap.get(key)
 
-                        if (!existing) {
-                          uniqueAppsMap.set(key, app);
-                        } else {
-                          const existingHasActive = existing.rounds.some(r => 
-                            r.is_active && now >= new Date(r.start_at) && now <= new Date(r.end_at)
-                          );
-                          
-                          // Priority: Active App > Newer App
-                          if (hasActiveRound && !existingHasActive) {
-                            uniqueAppsMap.set(key, app);
-                          } else if (hasActiveRound === existingHasActive) {
-                            if (app.id > existing.id) uniqueAppsMap.set(key, app);
-                          }
+                      const hasActiveRound = app.rounds.some(
+                        (r) => r.is_active && now >= new Date(r.start_at) && now <= new Date(r.end_at)
+                      )
+
+                      if (!existing) {
+                        uniqueAppsMap.set(key, app)
+                      } else {
+                        const existingHasActive = existing.rounds.some(
+                          (r) => r.is_active && now >= new Date(r.start_at) && now <= new Date(r.end_at)
+                        )
+                        if (hasActiveRound && !existingHasActive) {
+                          uniqueAppsMap.set(key, app)
+                        } else if (hasActiveRound === existingHasActive) {
+                          if (app.id > existing.id) uniqueAppsMap.set(key, app)
                         }
-                      });
+                      }
+                    })
 
-                      return Array.from(uniqueAppsMap.values()).map((app) => (
-                        <VotingAppCard key={app.id} app={app} />
-                      ));
-                    })()}
+                    return Array.from(uniqueAppsMap.values()).map((app) => (
+                      <VotingAppCard key={app.id} app={app} />
+                    ))
+                  })()
+                )}
               </div>
             </>
           )}
