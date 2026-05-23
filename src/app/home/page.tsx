@@ -9,9 +9,26 @@ import type { FilmFrame } from "@/lib/release-catalog"
 
 import { createStaticClient } from "@/lib/supabase/static"
 import { hasSupabaseEnv } from "@/lib/supabase/env"
-import { getActiveAwardsVoteApps } from "@/lib/supabase/voting-service-server"
+import { getActiveAwardsVoteApps, getLegacyActiveVoteApps } from "@/lib/supabase/voting-service-server"
+import type { PopulatedAwardEvent, PopulatedEventApp } from "@/lib/supabase/voting-service-server"
+import type { MappedAwardEvent, MappedEventApp } from "@/hooks/useAwardEvents"
 
 export const revalidate = 60 // Enable ISR: Revalidate every 60 seconds
+
+async function safeSupabaseResult<T>(work: () => PromiseLike<T>, fallback: T): Promise<T> {
+  try {
+    return await work()
+  } catch {
+    return fallback
+  }
+}
+
+function formatIsoDateToDdMmYyyy(input: string) {
+  const match = input.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!match) return ""
+  const [, yyyy, mm, dd] = match
+  return `${dd}/${mm}/${yyyy}`
+}
 
 function normalizeCareerRecordsFilmFrames(metadata: unknown): FilmFrame[] | undefined {
   const rawFrames = (metadata as any)?.career_records_film_strip
@@ -41,16 +58,52 @@ function normalizeCareerRecordsFilmFrames(metadata: unknown): FilmFrame[] | unde
   return normalized.length > 0 ? normalized : undefined
 }
 
+function mapAwardEventApp(ea: PopulatedEventApp): MappedEventApp {
+  return {
+    id: ea.app.id,
+    eventAppId: ea.eventAppId,
+    name: ea.app.name,
+    iconImageSrc: ea.app.logo_url ?? undefined,
+    androidHref: ea.app.android_url ?? undefined,
+    iosHref: ea.app.ios_url ?? undefined,
+    websiteHref: (ea.app as any).website_url ?? undefined,
+    guideUrl: (ea.guideUrl ?? (ea.app as any).guide_url) ?? undefined,
+    awardName: ea.awardName ?? undefined,
+    awards: ea.awards ?? [],
+    description: ea.description ?? ea.app.description,
+    currencies: ea.app.currencies ?? [],
+    collection: ea.app.collection_methods ?? [],
+    strategies: ea.strategies.map((s) => s.content),
+    guideSteps: ea.guideSteps,
+    rounds: ea.rounds,
+    activeRound: ea.activeRound,
+    isActiveNow: ea.activeRound !== null,
+  }
+}
+
+function mapAwardEvent(event: PopulatedAwardEvent): MappedAwardEvent {
+  return {
+    id: event.id,
+    name: event.name,
+    nominations: event.nominations ?? [],
+    ceremony_at: event.ceremony_at,
+    reflection_rate: event.reflection_rate ?? [],
+    hasActiveVoting: event.hasActiveVoting,
+    apps: event.eventApps.map(mapAwardEventApp),
+  }
+}
+
 export default async function HomePage() {
   // ── Parallel Data Fetching ──
   // We fetch everything in parallel to minimize waiting time (TTFB)
   const [
-    timelineEvents, 
-    filmFrames, 
+    timelineEventsFromCatalog,
+    filmFrames,
     homeStatsSnapshot,
     trackPerformanceSnapshot,
     dbMembersResult,
     dbLinksResult,
+    awardEventsResult,
     activeVoteAppsResult,
     siteSettingsResult,
   ] = await Promise.all([
@@ -59,19 +112,60 @@ export default async function HomePage() {
     getHomeStatsSnapshot(hearts2heartsOfficialProfile.debutDate),
     getRealtimeSnapshotFromDb(),
     // Fetch members and links in the same parallel batch if Supabase is enabled
-    hasSupabaseEnv() 
-      ? createStaticClient().from("members").select("*").order("sort_order", { ascending: true }).limit(20)
+    hasSupabaseEnv()
+      ? safeSupabaseResult(
+          () => createStaticClient().from("members").select("*").order("sort_order", { ascending: true }).limit(20),
+          { data: null, error: null } as any,
+        )
       : Promise.resolve({ data: null }),
     hasSupabaseEnv()
-      ? createStaticClient().from("social_links").select("*").order("sort_order", { ascending: true }).limit(50)
+      ? safeSupabaseResult(
+          () => createStaticClient().from("social_links").select("*").order("sort_order", { ascending: true }).limit(50),
+          { data: null, error: null } as any,
+        )
       : Promise.resolve({ data: null }),
     hasSupabaseEnv()
       ? getActiveAwardsVoteApps()
+      : Promise.resolve({ events: [], error: null }),
+    hasSupabaseEnv()
+      ? getLegacyActiveVoteApps()
       : Promise.resolve({ apps: [], error: null }),
     hasSupabaseEnv()
-      ? createStaticClient().from("site_settings").select("metadata").eq("id", 1).maybeSingle()
+      ? safeSupabaseResult(
+          () => createStaticClient().from("site_settings").select("metadata").eq("id", 1).maybeSingle(),
+          { data: null, error: null } as any,
+        )
       : Promise.resolve({ data: null }),
   ])
+
+  const timelineEvents = await (async () => {
+    if (!hasSupabaseEnv()) return timelineEventsFromCatalog
+
+    const { data, error } = await safeSupabaseResult(
+      () =>
+        createStaticClient()
+          .from("timeline_events")
+          .select("slug,event_date,title,event_type,cover_url")
+          .eq("is_published", true)
+          .order("event_date", { ascending: true })
+          .limit(2000),
+      { data: null, error: null } as any,
+    )
+
+    if (error || !data || data.length === 0) return timelineEventsFromCatalog
+
+    const mapped = data
+      .map((row: any) => ({
+        slug: row.slug,
+        date: formatIsoDateToDdMmYyyy(row.event_date) || row.event_date,
+        title: row.title,
+        type: row.event_type,
+        cover: row.cover_url || "",
+      }))
+      .filter((row: any) => row.slug && row.date && row.title && row.type)
+
+    return mapped.length > 0 ? mapped : timelineEventsFromCatalog
+  })()
 
   let memberProfiles = staticMemberProfiles
   let officialLinks = staticOfficialLinks
@@ -121,8 +215,8 @@ export default async function HomePage() {
       id: l.id,
       name: l.label,
       href: l.url,
-      note: l.note || "", 
-      platform: l.note || undefined, 
+      note: l.note || "",
+      platform: l.note || undefined,
     }))
   }
 
@@ -138,6 +232,7 @@ export default async function HomePage() {
       officialProfile={hearts2heartsOfficialProfile}
       homeStatsSnapshot={homeStatsSnapshot}
       trackPerformanceSnapshot={trackPerformanceSnapshot}
+      awardEvents={(awardEventsResult.events ?? []).map(mapAwardEvent)}
       activeVoteApps={activeVoteAppsResult.apps}
     />
   )

@@ -165,8 +165,10 @@ function getElapsed() {
 function pad2(n: number) { return n.toString().padStart(2, "0") }
 
 function LiveTicker() {
-  const [elapsed, setElapsed] = useState(getElapsed)
+  const [elapsed, setElapsed] = useState({ hours: 0, minutes: 0, seconds: 0 })
   useEffect(() => {
+    const update = () => setElapsed(getElapsed())
+    update()
     const id = setInterval(() => setElapsed(getElapsed()), 1000)
     return () => clearInterval(id)
   }, [])

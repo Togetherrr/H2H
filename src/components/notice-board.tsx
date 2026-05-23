@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { Pin, X, ExternalLink, Megaphone, ShoppingCart, Info, ArrowRight, Plus } from "lucide-react"
 import { useTranslation } from "@/hooks/useTranslation"
 import { ALL_NOTICES } from "@/lib/notices"
@@ -11,17 +12,24 @@ export function NoticeBoard() {
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const [hasNew, setHasNew] = useState(true)
+  const [mounted, setMounted] = useState(false)
 
   // Reset "new" badge when opened
   useEffect(() => {
     if (isOpen) setHasNew(false)
   }, [isOpen])
 
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   // Get only top 3 notices for the quick board
   const recentNotices = ALL_NOTICES.slice(0, 3)
 
-  return (
-    <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-6 print:hidden pointer-events-none">
+  if (!mounted) return null
+
+  return createPortal(
+    <div className="fixed bottom-16 right-8 md:bottom-20 z-[9999] flex flex-col items-end gap-6 print:hidden pointer-events-none">
       {/* The Board */}
       <div 
         className={cn(
@@ -120,7 +128,7 @@ export function NoticeBoard() {
         <button
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
-            "flex h-16 w-16 items-center justify-center rounded-full shadow-[0_15px_40px_rgba(255,182,193,0.4)] transition-all duration-500 hover:scale-110 active:scale-95 group relative",
+            "flex h-14 w-14 items-center justify-center rounded-full shadow-[0_15px_40px_rgba(255,182,193,0.4)] transition-all duration-500 hover:scale-110 active:scale-95 group relative",
             isOpen 
               ? "bg-black text-white" 
               : "bg-gradient-to-br from-[#FFF0F5] to-[#FFD1DC] text-[#FF708A] border-2 border-white/80"
@@ -130,16 +138,17 @@ export function NoticeBoard() {
             "transition-transform duration-500",
             isOpen ? "rotate-90" : "rotate-0"
           )}>
-            {isOpen ? <X className="size-7" /> : <Megaphone className="size-7 group-hover:animate-bounce" />}
+            {isOpen ? <X className="size-6" /> : <Megaphone className="size-6 group-hover:animate-bounce" />}
           </div>
           
           {!isOpen && (
-            <span className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#FF708A] text-[11px] font-black text-white ring-4 ring-white shadow-lg pointer-events-none">
+            <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#FF708A] text-[10px] font-black text-white ring-4 ring-white shadow-lg pointer-events-none">
               {ALL_NOTICES.length}
             </span>
           )}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

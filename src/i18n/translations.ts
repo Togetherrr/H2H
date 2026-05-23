@@ -65,6 +65,10 @@ const strings: Record<string, string> = {
   "performance.korea": "South Korea",
   "performance.korea.desc": "Quick access to official domestic charts in South Korea. Click to visit each platform's live ranking page.",
   "performance.korea.visit": "Visit Chart",
+  "performance.global": "Global",
+  "performance.global.desc": "Quick access to worldwide chart rankings and official chart pages.",
+  "performance.apple": "Apple Music",
+  "performance.apple.desc": "Quick access to Apple Music chart pages across regions.",
   "performance.totalStreams": "Total streams",
   "performance.dailyStreams": "Total daily streams",
   "performance.totalViews": "Total views",
@@ -203,6 +207,7 @@ const strings: Record<string, string> = {
   "home.comeback.standby": "Standby Mode",
   "home.comeback.preparing": "Preparing for next era",
   "home.comeback.preOrder": "Pre-order",
+  "home.comeback.stream": "Stream",
   "home.comeback.preSave": "Pre-save",
   "home.comeback.notifyMe": "Notify me",
 

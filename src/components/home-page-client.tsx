@@ -13,8 +13,9 @@ import { TrackPerformanceSection } from "@/components/track-performance-section"
 import { TimelineSection } from "@/components/timeline-section"
 import { ComebackWatchHeader } from "@/components/comeback-watch-header"
 import { SpotlightNotice } from "@/components/spotlight-notice"
-import { Navbar, type TimeZone } from "@/components/navbar"
+import { FeedbackWidget } from "@/components/feedback-section"
 import { NoticeBoard } from "@/components/notice-board"
+import { Navbar, type TimeZone } from "@/components/navbar"
 import { useTranslation } from "@/hooks/useTranslation"
 import { Building2, Disc, Calendar, HeartPulse, Palette, Hash } from "lucide-react"
 
@@ -25,8 +26,10 @@ import type { GroupOfficialProfile } from "@/lib/group-official-profile"
 import type { HomeStatsSnapshot } from "@/lib/home-stats"
 import type { TrackPerformanceSnapshot } from "@/lib/track-performance"
 import type { ActiveVoteApp } from "@/lib/supabase/voting-service-server"
+import { AwardEventCard } from "@/components/award-event-card"
 import { useTimeZoneStore } from "@/lib/timezone-store"
 import { formatDateTime, formatDateOnly } from "@/lib/timezone"
+import type { MappedAwardEvent } from "@/hooks/useAwardEvents"
 
 type OfficialLink = { id?: string; name: string; href: string; note: string; platform?: string }
 
@@ -110,6 +113,7 @@ interface HomePageClientProps {
   officialLinks: OfficialLink[]
   homeStatsSnapshot: HomeStatsSnapshot
   trackPerformanceSnapshot: TrackPerformanceSnapshot
+  awardEvents: MappedAwardEvent[]
   activeVoteApps: ActiveVoteApp[]
 }
 
@@ -271,9 +275,9 @@ function ActiveVoteSection({ apps }: { apps: ActiveVoteApp[] }) {
     return acc
   }, {} as Record<string, ActiveVoteApp[]>)
 
-  // Only show groups that have at least one featured app
+  // Only show groups that have at least one live voting round.
   const groupKeys = Object.keys(groupedApps).filter(programName =>
-    groupedApps[programName].some(app => !!app.is_featured)
+    groupedApps[programName].some(app => !!app.active_round)
   )
 
   if (groupKeys.length === 0) return null
@@ -334,6 +338,43 @@ function ActiveVoteSection({ apps }: { apps: ActiveVoteApp[] }) {
   )
 }
 
+function ActiveAwardEventsSection({ events }: { events: MappedAwardEvent[] }) {
+  const activeEvents = (events ?? []).filter((e) => e.apps.length > 0)
+  if (activeEvents.length === 0) return null
+
+  return (
+    <section id="active-awards" className="py-14 select-none relative overflow-hidden">
+      <div className="max-w-5xl mx-auto px-4 relative z-10">
+        <div className="card-premium shimmer-border p-6 md:p-10 relative overflow-hidden">
+          <div className="absolute top-0 right-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 size-96 bg-amber-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" />
+
+          <div className="relative z-10">
+            <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="space-y-3">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-pink-200 bg-white/70 backdrop-blur-sm shadow-sm w-fit">
+                  <Trophy className="size-3.5 text-pink-500" />
+                  <span className="text-pink-600 font-black uppercase tracking-widest text-[9px]">award voting</span>
+                </div>
+                <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-slate-900 leading-none">Active award events</h2>
+                <p className="text-[13px] text-slate-500 font-medium max-w-xl leading-relaxed italic opacity-80">
+                  Switch between apps to see currencies, strategies, and the correct guide for each platform.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-10">
+              {activeEvents.map((event) => (
+                <AwardEventCard key={event.id} event={event} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function AwardGroup({
   programName,
   apps,
@@ -349,8 +390,8 @@ function AwardGroup({
 }) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
 
-  // Find the featured app, fallback to UPICK, or just the first app
-  const mainApp = apps.find(a => a.is_featured) || apps[0]
+  // Prefer a live round, then featured app, then the first app as a fallback.
+  const mainApp = apps.find(a => a.active_round) || apps.find(a => a.is_featured) || apps[0]
 
   if (!mainApp) return null
 
@@ -465,14 +506,26 @@ function AwardGroup({
                 )}
               </div>
 
-              {(mainApp.description || (mainApp.reflection_rate && mainApp.reflection_rate.length > 0)) && (
+              {(mainApp.awards?.length > 0 || mainApp.description || (mainApp.reflection_rate && mainApp.reflection_rate.length > 0)) && (
                 <div className="grid gap-5 sm:grid-cols-2">
-                  {mainApp.description && (
+                  {mainApp.awards && mainApp.awards.length > 0 ? (
+                    <div className="rounded-3xl bg-white/50 border border-white p-6 shadow-sm">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5">Nominations</p>
+                      <ul className="space-y-3 text-[14px] font-bold text-slate-700 leading-relaxed italic">
+                        {mainApp.awards.map((award, idx) => (
+                          <li key={`${award}-${idx}`} className="flex items-start gap-3">
+                            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#FF708A] shrink-0" />
+                            <span>{award}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : mainApp.description ? (
                     <div className="rounded-3xl bg-white/50 border border-white p-6 shadow-sm">
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5">Description</p>
                       <p className="text-[14px] font-bold text-slate-700 leading-relaxed italic">{mainApp.description}</p>
                     </div>
-                  )}
+                  ) : null}
                   {mainApp.reflection_rate && mainApp.reflection_rate.length > 0 && (
                     <div className="rounded-3xl bg-white/50 border border-white p-7 shadow-sm">
                       <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] mb-5 flex items-center gap-2">
@@ -1003,6 +1056,7 @@ export function HomePageClient({
   officialLinks,
   homeStatsSnapshot,
   trackPerformanceSnapshot,
+  awardEvents,
   activeVoteApps,
 }: HomePageClientProps) {
   const { t } = useTranslation()
@@ -1035,7 +1089,9 @@ export function HomePageClient({
         </div>
       </div>
 
-      <ActiveVoteSection apps={activeVoteApps} />
+      {activeVoteApps.length > 0 && <ActiveVoteSection apps={activeVoteApps} />}
+
+      {awardEvents.length > 0 && <ActiveAwardEventsSection events={awardEvents} />}
 
       {/* ── SECTION PROFILE (GIAO DIỆN MỚI) ── */}
       {/* ── SECTION PROFILE (GIAO DIỆN MỚI) ── */}
@@ -1220,28 +1276,8 @@ export function HomePageClient({
         </div>
       </motion.section>
 
-      <footer className="max-w-5xl mx-auto px-4 pb-12">
-        <div className="card-premium shimmer-border !rounded-[2.5rem] p-10 text-center relative overflow-hidden">
-          {/* Background blobs */}
-          <div className="absolute top-0 right-0 size-96 bg-pink-200/10 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" ></div>
-          <div className="absolute bottom-0 left-0 size-96 bg-sky-200/10 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" ></div>
-
-          <div className="relative z-10 flex flex-col items-center gap-6">
-            <div className="flex items-center gap-6 text-sky-400">
-              <Heart className="size-5 fill-current" />
-              <div className="h-px w-24 bg-gradient-to-r from-transparent via-sky-400/60 to-transparent" ></div>
-              <Star className="size-5 fill-current" />
-            </div>
-            <p className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-500">
-              {t("footer.copyright")}
-            </p>
-            <p className="text-[11px] text-slate-400 max-w-2xl mx-auto leading-relaxed">
-              {t("footer.disclaimer")}
-            </p>
-          </div>
-        </div>
-      </footer>
       <NoticeBoard />
+      <FeedbackWidget />
 
       <MemberDetailModal
         member={selectedMember}

@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "@/lib/supabase/database.types"
 import { requireSupabaseEnv } from "@/lib/supabase/env"
+import { safeFetch } from "@/lib/supabase/safe-fetch"
 
 /**
  * Creates a Supabase client that does not use cookies.
@@ -13,6 +14,9 @@ export function createStaticClient() {
   return createClient<Database>(url, anonKey, {
     auth: {
       persistSession: false,
-    }
+    },
+    global: {
+      fetch: safeFetch,
+    },
   })
 }

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { LineupReveal } from "@/components/lineup-reveal"
 import { AnimatePresence, motion } from "framer-motion"
 import { createClient } from "@/lib/supabase/client"
+import type { Database } from "@/lib/supabase/database.types"
 
 export default function LandingPage() {
   const router = useRouter()
@@ -23,35 +24,52 @@ export default function LandingPage() {
 
     const loadLineupRevealImages = async () => {
       const supabase = createClient()
-      const { data } = await supabase.from("site_settings").select("metadata").eq("id", 1).maybeSingle()
-      const rawImages = (data?.metadata as any)?.lineup_reveal_images
+      type SiteSettingsMetadata = Database["public"]["Tables"]["site_settings"]["Row"]["metadata"]
 
-      if (!isMounted) return
+      try {
+        const { data, error } = await supabase
+          .from("site_settings")
+          .select("metadata")
+          .eq("id", 1)
+          .maybeSingle<{ metadata: SiteSettingsMetadata }>()
 
-      if (rawImages && typeof rawImages === "object") {
-        const normalized = Object.fromEntries(
-          Object.entries(rawImages)
-            .filter(([, value]) => typeof value === "string" && value.trim().length > 0)
-            .map(([key, value]) => [key, (value as string).trim()])
-        )
+        if (error) {
+          console.warn("LandingPage: site_settings query failed", error)
+          return
+        }
 
-        setMemberImages(normalized)
+        const rawImages = (data?.metadata as { lineup_reveal_images?: Record<string, string> } | null)
+          ?.lineup_reveal_images
 
-        // Preload all images before starting the reveal
-        const imageUrls = [...Object.values(normalized), "/background.jpg"] as string[]
-        await Promise.all(
-          imageUrls.map((url) => {
-            return new Promise((resolve) => {
-              const img = new Image()
-              img.src = url
-              img.onload = resolve
-              img.onerror = resolve
+        if (!isMounted) return
+
+        if (rawImages && typeof rawImages === "object") {
+          const normalized = Object.fromEntries(
+            Object.entries(rawImages)
+              .filter(([, value]) => typeof value === "string" && value.trim().length > 0)
+              .map(([key, value]) => [key, (value as string).trim()])
+          )
+
+          setMemberImages(normalized)
+
+          // Preload all images before starting the reveal
+          const imageUrls = [...Object.values(normalized), "/background.jpg"] as string[]
+          await Promise.all(
+            imageUrls.map((url) => {
+              return new Promise((resolve) => {
+                const img = new Image()
+                img.src = url
+                img.onload = resolve
+                img.onerror = resolve
+              })
             })
-          })
-        )
+          )
+        }
+      } catch (error) {
+        console.warn("LandingPage: failed to load lineup images", error)
+      } finally {
+        if (isMounted) setIsRevealReady(true)
       }
-
-      setIsRevealReady(true)
     }
 
     void loadLineupRevealImages()

@@ -13,8 +13,13 @@ import { ThemesManager } from "@/components/admin/ThemesManager"
 import { MediaLibrary } from "@/components/admin/MediaManager"
 import { Image as ImageIcon } from "lucide-react"
 import { VotingAppsManager } from "@/components/admin/VotingAppsManager"
+import { AwardEventsManager } from "@/components/admin/AwardEventsManager"
 import { LineupRevealManager } from "@/components/admin/LineupRevealManager"
 import { CareerRecordsManager } from "@/components/admin/CareerRecordsManager"
+import { ComebackWatchManager } from "@/components/admin/ComebackWatchManager"
+import { FeedbackManager } from "@/components/admin/FeedbackManager"
+import { MessageSquare } from "lucide-react"
+import { SyncManager } from "@/components/admin/SyncManager"
 
 type AdminStats = {
   users: number
@@ -22,6 +27,7 @@ type AdminStats = {
   socials: number
   timeline: number
   themes: number
+  feedbacks: number
 }
 
 type AdminTabData = {
@@ -31,7 +37,10 @@ type AdminTabData = {
   themes?: any[]
   siteSettings?: any
   votingApps?: any[]
+  awardEvents?: any[]
+  availableApps?: any[]
   stats?: AdminStats
+  feedbackMessages?: any[]
 }
 
 type AdminDashboardProps = {
@@ -39,7 +48,7 @@ type AdminDashboardProps = {
   profile: any
 }
 
-const VALID_TABS = new Set(["overview", "users", "members", "themes", "socials", "settings", "media", "voting", "lineup-reveal", "career-records"])
+const VALID_TABS = new Set(["overview", "sync", "users", "members", "themes", "socials", "settings", "media", "voting", "award-events", "lineup-reveal", "career-records", "comeback", "feedback"])
 
 function normalizeTab(tab: string) {
   return VALID_TABS.has(tab) ? tab : "overview"
@@ -163,7 +172,7 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
           Monitor key metrics and manage your group&apos;s online presence.
         </p>
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
           <Card className="border-slate-800 bg-slate-900/60 shadow-sm backdrop-blur-sm transition-all hover:shadow-md">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-slate-400">Total Users</CardTitle>
@@ -240,6 +249,25 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
               )}
             </CardContent>
           </Card>
+          <Card className="border-slate-800 bg-slate-900/60 shadow-sm backdrop-blur-sm transition-all hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-slate-400">Feedback</CardTitle>
+              <MessageSquare className="size-4 text-amber-400" />
+            </CardHeader>
+            <CardContent>
+              {stats ? (
+                <>
+                  <div className="text-3xl font-bold text-white">{stats.feedbacks}</div>
+                  <p className="text-xs text-slate-400 mt-1">Messages from fans</p>
+                </>
+              ) : (
+                <>
+                  <LoadingBlock className="h-9 w-16" />
+                  <LoadingBlock className="mt-3 h-3 w-28" />
+                </>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
@@ -295,6 +323,28 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
                 </div>
                 <ImageIcon className="size-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
               </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange("comeback")}
+                className="group flex items-center justify-between rounded-xl border border-slate-800 bg-slate-800/50 p-4 text-left transition-colors hover:bg-slate-800 hover:border-slate-700"
+              >
+                <div>
+                  <h4 className="font-medium text-slate-200">Comeback Watch</h4>
+                  <p className="text-sm text-slate-400">Set the album title, countdown, and release links</p>
+                </div>
+                <BadgeCheck className="size-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange("feedback")}
+                className="group flex items-center justify-between rounded-xl border border-slate-800 bg-slate-800/50 p-4 text-left transition-colors hover:bg-slate-800 hover:border-slate-700"
+              >
+                <div>
+                  <h4 className="font-medium text-slate-200">View Feedback</h4>
+                  <p className="text-sm text-slate-400">Review user messages and mark their status</p>
+                </div>
+                <MessageSquare className="size-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
+              </button>
             </CardContent>
           </Card>
 
@@ -345,6 +395,14 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
     }
 
     switch (tab) {
+      case "sync": {
+        const syncData = dataByTab.sync
+        return syncData ? (
+          <SyncManager siteSettings={syncData.siteSettings} timelineCount={syncData.stats?.timeline} />
+        ) : (
+          <TabLoadingState title="Loading sync tools..." />
+        )
+      }
       case "users": {
         const profiles = dataByTab.users?.profiles
         return profiles ? <UsersManager profiles={profiles} /> : <TabLoadingState title="Loading users..." />
@@ -376,6 +434,14 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
         const apps = dataByTab.voting?.votingApps
         return apps ? <VotingAppsManager initialApps={apps} /> : <TabLoadingState title="Loading voting apps..." />
       }
+      case "award-events": {
+        const awardEventsData = dataByTab["award-events"]
+        return awardEventsData?.awardEvents && awardEventsData?.availableApps ? (
+          <AwardEventsManager initialEvents={awardEventsData.awardEvents} availableApps={awardEventsData.availableApps} />
+        ) : (
+          <TabLoadingState title="Loading award events..." />
+        )
+      }
       case "lineup-reveal": {
         const settingsData = dataByTab["lineup-reveal"]
         return settingsData?.siteSettings ? (
@@ -390,6 +456,22 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
           <CareerRecordsManager initialSettings={settingsData.siteSettings} />
         ) : (
           <TabLoadingState title="Loading career records..." />
+        )
+      }
+      case "comeback": {
+        const settingsData = dataByTab["comeback"]
+        return settingsData?.siteSettings ? (
+          <ComebackWatchManager initialSettings={settingsData.siteSettings} />
+        ) : (
+          <TabLoadingState title="Loading comeback settings..." />
+        )
+      }
+      case "feedback": {
+        const feedbackMessages = dataByTab.feedback?.feedbackMessages
+        return feedbackMessages ? (
+          <FeedbackManager initialFeedbackMessages={feedbackMessages} />
+        ) : (
+          <TabLoadingState title="Loading feedback..." />
         )
       }
       case "overview":

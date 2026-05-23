@@ -9,6 +9,7 @@ import {
   Trophy,
   Radio,
   CalendarDays,
+  RefreshCw,
 } from "lucide-react"
 import { Navbar, type TimeZone } from "@/components/navbar"
 import { useTranslation } from "@/hooks/useTranslation"
@@ -17,6 +18,115 @@ import {
   getHomeStatDetailPage,
 } from "@/lib/home-stat-details"
 import type { HomeStatSlug, HomeStatDetailPage } from "@/lib/home-stat-details"
+
+// ─── Types từ API /api/wins ───────────────────────────────────────────────────
+
+type MusicShowWin = {
+  id: string
+  date: string
+  song: string
+  program: string
+  headline: string
+  href: string
+}
+
+type AwardCeremonyWin = {
+  id: string
+  ceremony: string
+  year: string
+  category: string
+  href: string
+}
+
+type WinsApiResponse = {
+  musicShowWins: MusicShowWin[]
+  awardCeremonyWins: AwardCeremonyWin[]
+  syncedAt: string | null
+  fetchedAt: string
+}
+
+// ─── Transform API data → HomeStatDetailPage format ──────────────────────────
+
+function transformMusicShowWins(wins: MusicShowWin[]): HomeStatDetailPage {
+  // Group by program
+  const byProgram = new Map<string, MusicShowWin[]>()
+  for (const win of wins) {
+    const list = byProgram.get(win.program) ?? []
+    list.push(win)
+    byProgram.set(win.program, list)
+  }
+
+  const sections = Array.from(byProgram.entries()).map(([program, items]) => ({
+    title: program,
+    description: `${items.length} win${items.length !== 1 ? "s" : ""}`,
+    items: items.map((win) => ({
+      title: win.song,
+      subtitle: win.headline || undefined,
+      meta: win.date
+        ? new Date(win.date).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          timeZone: "UTC",
+        })
+        : undefined,
+      href: win.href || undefined,
+      hrefLabel: "Wikipedia",
+    })),
+  }))
+
+  return {
+    slug: "music-show-wins",
+    eyebrow: "Records",
+    title: "Music Show Wins",
+    total: wins.length,
+    totalLabel: "wins",
+    summary:
+      "Every music show win earned by Hearts2Hearts, sourced automatically from Wikipedia chart winner lists.",
+    sourceHref: "https://en.wikipedia.org",
+    sourceLabel: "Wikipedia",
+    sourceNote: "Data is automatically synced from Wikipedia chart winner pages.",
+    sections,
+  }
+}
+
+function transformAwardCeremonyWins(wins: AwardCeremonyWin[]): HomeStatDetailPage {
+  // Group by year
+  const byYear = new Map<string, AwardCeremonyWin[]>()
+  for (const win of wins) {
+    const list = byYear.get(win.year) ?? []
+    list.push(win)
+    byYear.set(win.year, list)
+  }
+
+  const sections = Array.from(byYear.entries())
+    .sort(([a], [b]) => b.localeCompare(a))
+    .map(([year, items]) => ({
+      title: year,
+      description: `${items.length} award${items.length !== 1 ? "s" : ""}`,
+      items: items.map((win) => ({
+        title: win.category,
+        subtitle: win.ceremony,
+        chips: [win.ceremony],
+        href: win.href || undefined,
+        hrefLabel: "Wikipedia",
+      })),
+    }))
+
+  return {
+    slug: "award-ceremony-wins",
+    eyebrow: "Records",
+    title: "Award Ceremony Wins",
+    total: wins.length,
+    totalLabel: "awards",
+    summary:
+      "All award ceremony wins by Hearts2Hearts, sourced automatically from Wikipedia.",
+    sourceHref: "https://en.wikipedia.org",
+    sourceLabel: "Wikipedia",
+    sourceNote: "Data is automatically synced from the Hearts2Hearts Wikipedia page.",
+    sections,
+  }
+}
 
 // ─── Slug meta ────────────────────────────────────────────────────────────────
 
@@ -65,6 +175,8 @@ const SLUG_META: Record<
   },
 }
 
+const WINS_SLUGS: HomeStatSlug[] = ["music-show-wins", "award-ceremony-wins"]
+
 // ─── Count-up hook ────────────────────────────────────────────────────────────
 
 function useCountUp(target: number, trigger: boolean, duration = 1400) {
@@ -92,22 +204,18 @@ function useCountUp(target: number, trigger: boolean, duration = 1400) {
 function FloatingOrbs({ accent, accentLight }: { accent: string; accentLight: string }) {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {/* Large slow orb */}
       <div
         className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full blur-[100px] opacity-25 animate-[pulse_8s_ease-in-out_infinite]"
         style={{ background: accentLight }}
       />
-      {/* Small fast orb */}
       <div
         className="absolute top-1/3 -left-20 w-[300px] h-[300px] rounded-full blur-[80px] opacity-20 animate-[pulse_5s_ease-in-out_infinite_1s]"
         style={{ background: accent }}
       />
-      {/* Bottom right */}
       <div
         className="absolute -bottom-20 right-1/3 w-[250px] h-[250px] rounded-full blur-[60px] opacity-15 animate-[pulse_7s_ease-in-out_infinite_2s]"
         style={{ background: accentLight }}
       />
-      {/* Noise grain overlay */}
       <div
         className="absolute inset-0 opacity-[0.025] mix-blend-overlay"
         style={{
@@ -158,7 +266,6 @@ function AnimatedRow({
         transition: `opacity 0.4s ease ${index * 40}ms, transform 0.4s ease ${index * 40}ms`,
       }}
     >
-      {/* Hover accent bar */}
       <td
         className="absolute left-0 top-0 bottom-0 w-0 group-hover/row:w-1 transition-all duration-300 rounded-r-full"
         style={{ background: accent }}
@@ -248,7 +355,10 @@ function StickySummary({
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[22px] font-black tabular-nums tracking-tighter" style={{ color: accent }}>
+          <span
+            className="text-[22px] font-black tabular-nums tracking-tighter"
+            style={{ color: accent }}
+          >
             {total.toLocaleString()}
           </span>
           <span className="text-[9px] font-black text-black/30 uppercase tracking-[0.2em] hidden sm:block mt-1">
@@ -260,15 +370,43 @@ function StickySummary({
   )
 }
 
+// ─── Live data badge ──────────────────────────────────────────────────────────
+
+function LiveBadge({ syncedAt, accent }: { syncedAt: string | null; accent: string }) {
+  if (!syncedAt) return null
+  const formatted = new Date(syncedAt).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  })
+  return (
+    <div
+      className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold border"
+      style={{ background: `${accent}10`, borderColor: `${accent}25`, color: accent }}
+    >
+      <span
+        className="h-1.5 w-1.5 rounded-full animate-pulse"
+        style={{ background: accent }}
+      />
+      Live · synced {formatted} UTC
+    </div>
+  )
+}
+
 // ─── Main content ─────────────────────────────────────────────────────────────
 
 function RecordDetailContent({
   page,
   slug,
+  syncedAt,
   t,
 }: {
   page: HomeStatDetailPage
   slug: HomeStatSlug
+  syncedAt?: string | null
   t: (key: string) => string
 }) {
   const meta = SLUG_META[slug]
@@ -281,7 +419,6 @@ function RecordDetailContent({
     return () => clearTimeout(t)
   }, [])
 
-  // Total for progress bar calculation
   const maxSectionItems = Math.max(...page.sections.map((s) => s.items.length), 1)
 
   return (
@@ -295,10 +432,11 @@ function RecordDetailContent({
       />
 
       {/* ── Hero ─────────────────────────────────────────────────── */}
-      <div className={`relative bg-gradient-to-br ${meta.bg} border-b border-black/5 pt-36 pb-16 overflow-hidden`}>
+      <div
+        className={`relative bg-gradient-to-br ${meta.bg} border-b border-black/5 pt-36 pb-16 overflow-hidden`}
+      >
         <FloatingOrbs accent={meta.accent} accentLight={meta.accentLight} />
 
-        {/* Giant decorative icon */}
         <div
           className="absolute right-[-60px] top-1/2 -translate-y-1/2 opacity-[0.04] pointer-events-none select-none"
           style={{ transform: "translateY(-50%) rotate(-8deg)" }}
@@ -307,14 +445,14 @@ function RecordDetailContent({
         </div>
 
         <div className="section-shell relative z-10">
-          {/* Back link */}
           <Link
             href="/home#records"
             className="group inline-flex items-center gap-2.5 mb-10 px-4 py-2 rounded-full bg-white/40 backdrop-blur-md border border-white/60 shadow-sm text-[10px] font-black uppercase tracking-[0.3em] text-black/50 hover:text-[#FF708A] hover:bg-white/80 transition-all"
             style={{
               opacity: heroVisible ? 1 : 0,
               transform: heroVisible ? "translateX(0)" : "translateX(-8px)",
-              transition: "opacity 0.5s ease, transform 0.5s ease, color 0.3s ease, background-color 0.3s ease",
+              transition:
+                "opacity 0.5s ease, transform 0.5s ease, color 0.3s ease, background-color 0.3s ease",
             }}
           >
             <ArrowLeft className="size-3 transition-transform group-hover:-translate-x-1" />
@@ -322,7 +460,6 @@ function RecordDetailContent({
           </Link>
 
           <div className="flex items-start gap-6">
-            {/* Icon badge */}
             <div
               className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[1.75rem] shadow-2xl border-2"
               style={{
@@ -366,6 +503,19 @@ function RecordDetailContent({
               >
                 {page.summary}
               </p>
+
+              {/* Live badge — chỉ hiện cho wins slugs */}
+              {WINS_SLUGS.includes(slug) && syncedAt && (
+                <div
+                  className="mt-4"
+                  style={{
+                    opacity: heroVisible ? 1 : 0,
+                    transition: "opacity 0.5s ease 0.4s",
+                  }}
+                >
+                  <LiveBadge syncedAt={syncedAt} accent={meta.accent} />
+                </div>
+              )}
             </div>
           </div>
 
@@ -378,7 +528,6 @@ function RecordDetailContent({
               transition: "opacity 0.5s ease 0.45s, transform 0.5s ease 0.45s",
             }}
           >
-            {/* Count-up total */}
             <div
               className="flex items-baseline gap-4 px-8 py-6 rounded-[2.5rem] border-2 shadow-2xl relative overflow-hidden group"
               style={{
@@ -386,7 +535,6 @@ function RecordDetailContent({
                 borderColor: `${meta.accent}15`,
               }}
             >
-              {/* Subtle shimmer */}
               <div
                 className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000"
                 style={{
@@ -404,7 +552,6 @@ function RecordDetailContent({
               </span>
             </div>
 
-            {/* Source link */}
             <a
               href={page.sourceHref}
               target="_blank"
@@ -424,7 +571,6 @@ function RecordDetailContent({
       <div className="section-shell py-16 space-y-14">
         {page.sections.map((section, si) => (
           <section key={`${section.title}-${si}`}>
-            {/* Section header */}
             <div className="flex items-center gap-4 mb-3">
               <div
                 className="h-7 w-2 rounded-full shadow-sm"
@@ -459,32 +605,36 @@ function RecordDetailContent({
               />
             )}
 
-            {/* Table card */}
             <div
               className="mt-6 rounded-[2.5rem] bg-[#FFF9F0]/90 backdrop-blur-xl border border-white/60 overflow-hidden shadow-2xl relative transition-all duration-500 hover:shadow-[0_30px_70px_rgba(0,0,0,0.12)]"
               style={{ boxShadow: `0 20px 60px ${meta.accent}08` }}
             >
-              {/* Top accent line */}
               <div
                 className="absolute top-0 left-0 right-0 h-[3px] opacity-60"
-                style={{ background: `linear-gradient(90deg, ${meta.accent}, ${meta.accentLight}, transparent)` }}
+                style={{
+                  background: `linear-gradient(90deg, ${meta.accent}, ${meta.accentLight}, transparent)`,
+                }}
               />
               <table className="w-full text-sm">
                 <tbody>
                   {section.items.map((item, ii) => (
-                    <AnimatedRow key={`${section.title}-${item.title}-${ii}`} index={ii} accent={meta.accent}>
-                      {/* Index */}
+                    <AnimatedRow
+                      key={`${section.title}-${item.title}-${ii}`}
+                      index={ii}
+                      accent={meta.accent}
+                    >
                       <td className="w-16 pl-8 py-6 text-[12px] font-black text-black/15 tabular-nums">
                         {String(ii + 1).padStart(2, "0")}
                       </td>
 
-                      {/* Main content */}
                       <td className="px-4 py-6">
                         <p className="font-bold text-black text-[15px] leading-snug group-hover/row:text-black transition-colors">
                           {item.title}
                         </p>
                         {item.subtitle && (
-                          <p className="text-[12px] font-medium text-black/35 mt-0.5 tracking-tight">{item.subtitle}</p>
+                          <p className="text-[12px] font-medium text-black/35 mt-0.5 tracking-tight">
+                            {item.subtitle}
+                          </p>
                         )}
                         {item.chips && item.chips.length > 0 && (
                           <div className="flex flex-wrap gap-2 mt-3">
@@ -492,10 +642,7 @@ function RecordDetailContent({
                               <span
                                 key={`${item.title}-${chip}-${ci}`}
                                 className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all shadow-sm border border-white/40"
-                                style={{
-                                  background: `white`,
-                                  color: meta.accent,
-                                }}
+                                style={{ background: `white`, color: meta.accent }}
                               >
                                 {chip}
                               </span>
@@ -504,7 +651,6 @@ function RecordDetailContent({
                         )}
                       </td>
 
-                      {/* Meta date */}
                       {item.meta && (
                         <td className="px-4 py-6 text-right hidden sm:table-cell">
                           <span className="text-[11px] font-black uppercase tracking-widest text-black/25 whitespace-nowrap">
@@ -513,28 +659,25 @@ function RecordDetailContent({
                         </td>
                       )}
 
-                      {/* Value badge */}
                       {item.value && (
                         <td className="px-4 py-6 text-right">
                           <span
                             className="inline-flex px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.15em] whitespace-nowrap transition-all shadow-sm border border-white/60 group-hover/row:scale-105"
-                            style={{
-                              background: `white`,
-                              color: meta.accent,
-                            }}
+                            style={{ background: `white`, color: meta.accent }}
                           >
                             {item.value}
                           </span>
                         </td>
                       )}
 
-                      {/* External link */}
                       {item.href && (
                         <td className="pr-8 py-6 text-right">
                           <a
                             href={item.href}
                             target={item.href.startsWith("http") ? "_blank" : undefined}
-                            rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                            rel={
+                              item.href.startsWith("http") ? "noopener noreferrer" : undefined
+                            }
                             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/5 text-[9px] font-black uppercase tracking-[0.2em] text-black/30 hover:text-black/60 hover:bg-black/10 opacity-0 group-hover/row:opacity-100 transition-all whitespace-nowrap"
                           >
                             <ExternalLink className="size-3" />
@@ -578,7 +721,6 @@ function RecordDetailContent({
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="section-shell pb-12">
         <div className="card-premium !rounded-[2.5rem] p-10 text-center">
           <p className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-500">
@@ -590,6 +732,50 @@ function RecordDetailContent({
   )
 }
 
+// ─── Loading skeleton ─────────────────────────────────────────────────────────
+
+function LoadingSkeleton({ accent }: { accent: string }) {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="flex flex-col items-center gap-4">
+        <div
+          className="h-10 w-10 rounded-full border-2 border-t-transparent animate-spin"
+          style={{ borderColor: `${accent} transparent transparent transparent` }}
+        />
+        <p className="text-[11px] font-black uppercase tracking-widest text-black/30">
+          Loading…
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ─── Error state ──────────────────────────────────────────────────────────────
+
+function ErrorState({ accent, onRetry }: { accent: string; onRetry: () => void }) {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="flex flex-col items-center gap-6 text-center px-6">
+        <p className="text-[13px] font-medium text-black/50">
+          Couldn&apos;t load data. Wikipedia may be temporarily unavailable.
+        </p>
+        <button
+          onClick={onRetry}
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-[11px] font-black uppercase tracking-widest border transition-all hover:scale-105"
+          style={{
+            color: accent,
+            borderColor: `${accent}30`,
+            background: `${accent}08`,
+          }}
+        >
+          <RefreshCw className="size-3" />
+          Retry
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function RecordDetailPage() {
@@ -598,14 +784,47 @@ export default function RecordDetailPage() {
   const { t } = useTranslation()
   const [timeZone, setTimeZone] = useState<TimeZone>("KST")
   const [page, setPage] = useState<HomeStatDetailPage | null>(null)
+  const [syncedAt, setSyncedAt] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [error, setError] = useState(false)
+
+  const isWinsSlug = WINS_SLUGS.includes(slug as HomeStatSlug)
+  const meta = SLUG_META[slug as HomeStatSlug]
+
+  const loadData = async () => {
+    setError(false)
+    setMounted(false)
+
+    try {
+      if (isWinsSlug) {
+        // ── Wins slugs: fetch live từ /api/wins (Wikipedia → Supabase) ──────
+        const res = await fetch("/api/wins", { cache: "no-store" })
+        if (!res.ok) throw new Error(`API error ${res.status}`)
+
+        const data: WinsApiResponse = await res.json()
+        setSyncedAt(data.syncedAt)
+
+        if (slug === "music-show-wins") {
+          setPage(transformMusicShowWins(data.musicShowWins))
+        } else {
+          setPage(transformAwardCeremonyWins(data.awardCeremonyWins))
+        }
+      } else {
+        // ── Các slug khác: giữ nguyên source cũ ─────────────────────────────
+        const data = await getHomeStatDetailPage(slug)
+        setPage(data)
+      }
+
+      setMounted(true)
+    } catch {
+      setError(true)
+    }
+  }
 
   useEffect(() => {
     if (!HOME_STAT_SLUGS.includes(slug as HomeStatSlug)) return
-    getHomeStatDetailPage(slug).then((data) => {
-      setPage(data)
-      setMounted(true)
-    })
+    loadData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug])
 
   if (!HOME_STAT_SLUGS.includes(slug as HomeStatSlug)) {
@@ -614,7 +833,6 @@ export default function RecordDetailPage() {
 
   return (
     <main className="relative min-h-screen selection:bg-[#A2D2FF]/30">
-      {/* Background decor */}
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] size-[500px] rounded-full bg-[#A2D2FF]/10 blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] size-[500px] rounded-full bg-[#FFC2D1]/10 blur-[120px]" />
@@ -622,17 +840,17 @@ export default function RecordDetailPage() {
 
       <Navbar timeZone={timeZone} onTimeZoneChange={setTimeZone} />
 
-      {mounted && page ? (
-        <RecordDetailContent page={page} slug={slug} t={t} />
+      {error ? (
+        <ErrorState accent={meta?.accent ?? "#0ea5e9"} onRetry={loadData} />
+      ) : mounted && page ? (
+        <RecordDetailContent
+          page={page}
+          slug={slug}
+          syncedAt={syncedAt}
+          t={t}
+        />
       ) : (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="flex flex-col items-center gap-4">
-            <div className="h-10 w-10 rounded-full border-2 border-[#FF708A] border-t-transparent animate-spin" />
-            <p className="text-[11px] font-black uppercase tracking-widest text-black/30">
-              {t("records.loading")}
-            </p>
-          </div>
-        </div>
+        <LoadingSkeleton accent={meta?.accent ?? "#0ea5e9"} />
       )}
     </main>
   )

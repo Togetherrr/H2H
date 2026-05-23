@@ -3,7 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { TrendingUp, TrendingDown, Activity, ExternalLink } from "lucide-react"
+import { TrendingUp, TrendingDown, Activity, ExternalLink, Globe } from "lucide-react"
 import { useTranslation } from "@/hooks/useTranslation"
 import { cn } from "@/lib/utils"
 import type { TrackPerformanceSnapshot, PerformanceItem } from "@/lib/track-performance"
@@ -128,7 +128,7 @@ export function PerformanceItemRow({
 }
 
 // ─── Platform tab button ─────────────────────────────────────────────────────
-type PlatformTab = "spotify" | "youtube" | "korea"
+type PlatformTab = "spotify" | "youtube" | "korea" | "global" | "apple"
 
 function PlatformTabButton({
   active, onClick, children, variant,
@@ -142,6 +142,8 @@ function PlatformTabButton({
     spotify: "bg-sky-50 border-sky-200 text-sky-700 shadow-sm",
     youtube: "bg-pink-50 border-pink-200 text-pink-700 shadow-sm",
     korea: "bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm",
+    global: "bg-cyan-50 border-cyan-200 text-cyan-700 shadow-sm",
+    apple: "bg-rose-50 border-rose-200 text-rose-700 shadow-sm",
   }
   return (
     <button
@@ -156,12 +158,21 @@ function PlatformTabButton({
   )
 }
 
+function GlobalMark({ className = "" }: { className?: string }) {
+  return (
+    <div className={cn("flex items-center justify-center rounded-lg bg-cyan-500 text-white shadow-md", className)}>
+      <Globe className="size-3.5" />
+    </div>
+  )
+}
+
 // ─── Korea Chart Group ──────────────────────────────────────────────────────
-function KoreaChartGroup({ platform, icon, color, links }: {
+function KoreaChartGroup({ platform, icon, color, links, centerLinks = false }: {
   platform: string
   icon: string
   color: string
   links: { label: string; url: string }[]
+  centerLinks?: boolean
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -171,22 +182,28 @@ function KoreaChartGroup({ platform, icon, color, links }: {
         </div>
         <span className="text-[12px] font-black uppercase tracking-[0.2em] text-slate-800">{platform}</span>
       </div>
-      <div className="grid gap-2 pl-2">
+      <div className={cn("grid gap-2", centerLinks ? "pl-0" : "pl-2")}>
         {links.map((link) => (
           <a
             key={`${link.url}-${link.label}`}
             href={link.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:translate-x-1 hover:bg-slate-50 hover:shadow-md"
+            className={cn(
+              "group relative flex items-center rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:translate-x-1 hover:bg-slate-50 hover:shadow-md",
+              centerLinks ? "justify-center px-6 pr-12 text-center" : "justify-between"
+            )}
           >
-            <div className="flex items-center gap-3">
+            <div className={cn("flex items-center gap-3", centerLinks && "justify-center")}>
               <div className={cn("size-1.5 rounded-full", color)} />
               <span className="text-[13px] font-bold text-slate-700 transition-colors group-hover:text-slate-900">
                 {link.label}
               </span>
             </div>
-            <ExternalLink className="size-3.5 text-slate-300 transition-colors group-hover:text-slate-500" />
+            <ExternalLink className={cn(
+              "size-3.5 text-slate-300 transition-colors group-hover:text-slate-500",
+              centerLinks ? "absolute right-4 top-1/2 -translate-y-1/2" : ""
+            )} />
           </a>
         ))}
       </div>
@@ -279,7 +296,44 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
     : null
 
   const activePlatformData =
-    activePlatform === "korea" ? null : liveSnapshot[activePlatform as "spotify" | "youtube"]
+    activePlatform === "korea" || activePlatform === "global" || activePlatform === "apple" ? null : liveSnapshot[activePlatform as "spotify" | "youtube"]
+
+  const activePlatformAccent =
+    activePlatform === "spotify"
+      ? "text-[#1DB954]"
+      : activePlatform === "youtube"
+        ? "text-[#FF4444]"
+        : activePlatform === "global"
+          ? "text-cyan-600"
+          : activePlatform === "apple"
+            ? "text-rose-600"
+            : "text-[#FF708A]"
+
+  const activePlatformCard =
+    activePlatform === "spotify"
+      ? {
+          icon: <Image src="/spotify.png" alt="Spotify" width={56} height={56} className="h-full w-full object-cover" />,
+          iconWrap: "bg-black border-black",
+        }
+      : activePlatform === "youtube"
+        ? {
+            icon: <Image src="/Youtube.png" alt="YouTube" width={36} height={36} className="h-9 w-9 object-contain" />,
+            iconWrap: "bg-white border-white/20",
+          }
+        : activePlatform === "global"
+          ? {
+              icon: <GlobalMark className="size-14" />,
+              iconWrap: "border-transparent bg-transparent shadow-none",
+            }
+          : activePlatform === "apple"
+            ? {
+                icon: <Image src="/AM.png" alt="Apple Music" width={56} height={56} className="h-full w-full object-cover" />,
+                iconWrap: "bg-white border-rose-100",
+              }
+          : {
+              icon: <Activity className="size-8" />,
+              iconWrap: "bg-white border-white/20",
+            }
 
   const koreaChartGroups = [
     {
@@ -346,6 +400,50 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
     },
   ]
 
+  const globalChartGroups = [
+    {
+      platform: "Major Charts",
+      icon: "G",
+      color: "bg-cyan-500 shadow-cyan-200",
+      links: [
+        { label: "TME Chart", url: "https://yobang.tencentmusic.com/chart/korean-chart/rankList/" },
+        { label: "Billboard", url: "https://www.billboard.com/" },
+      ],
+    },
+    {
+      platform: "Billboard Charts",
+      icon: "B",
+      color: "bg-cyan-500 shadow-cyan-200",
+      links: [
+        { label: "Billboard Hot 100", url: "https://www.billboard.com/charts/hot-100/" },
+        { label: "Billboard 200", url: "https://www.billboard.com/charts/billboard-200/" },
+        { label: "Billboard Global Excl. US", url: "https://www.billboard.com/charts/billboard-global-excl-us/" },
+      ],
+    },
+    {
+      platform: "Sales & Regional",
+      icon: "R",
+      color: "bg-cyan-500 shadow-cyan-200",
+      links: [
+        { label: "Billboard Top Album Sales", url: "https://www.billboard.com/charts/top-album-sales/" },
+        { label: "Oricon Chart", url: "https://www.oricon.co.jp/rank/" },
+      ],
+    },
+  ]
+
+  const appleMusicGroups = [
+    {
+      platform: "Apple Music",
+      icon: "AM",
+      color: "bg-rose-500 shadow-rose-200",
+      links: [
+        { label: "Apple Music Korea Top Songs", url: "https://music.apple.com/kr/new/top-charts/songs" },
+        { label: "Apple Music Charts", url: "https://music.apple.com/ca/new/top-charts" },
+        { label: "Apple Music Global Top Song", url: "https://music.apple.com/us/playlist/top-100-global/pl.d25f5d1181894928af76c85c967f8f31" },
+      ],
+    },
+  ]
+
   const displayedKoreaGroups = koreaChartGroups.filter(g => g.page === koreaPage)
 
   return (
@@ -395,6 +493,16 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
                 <div className="flex size-4 items-center justify-center rounded-sm bg-emerald-500 text-[8px] font-bold text-white">KR</div>
                 {t("performance.korea")}
               </PlatformTabButton>
+              <PlatformTabButton variant="global" active={activePlatform === "global"} onClick={() => setActivePlatform("global") }>
+                <GlobalMark className="size-4 shrink-0" />
+                {t("performance.global")}
+              </PlatformTabButton>
+              <PlatformTabButton variant="apple" active={activePlatform === "apple"} onClick={() => setActivePlatform("apple") }>
+                <div className="flex size-4 items-center justify-center overflow-hidden rounded-sm bg-white shrink-0">
+                  <Image src="/AM.png" alt="Apple Music" width={16} height={16} className="h-full w-full object-cover" />
+                </div>
+                {t("performance.apple")}
+              </PlatformTabButton>
             </div>
 
             {/* Main Content */}
@@ -436,24 +544,66 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
                   ))}
                 </div>
               </div>
+            ) : activePlatform === "global" ? (
+              <div className="mx-auto w-full max-w-4xl rounded-[2.5rem] border border-white/70 bg-white/40 p-6 shadow-lg backdrop-blur-xl lg:p-10">
+                <div className="mb-10 flex flex-col items-center gap-5 text-center">
+                  <div className="flex items-center gap-5">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500 text-white shadow-xl border border-cyan-100">
+                      <Globe className="size-8" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.5em] text-black">{t("performance.global")}</p>
+                      <p className="text-2xl font-black uppercase tracking-tight text-black">Global Charts</p>
+                    </div>
+                  </div>
+                </div>
+                <p className="mx-auto mb-10 max-w-2xl text-center text-[14px] font-medium leading-relaxed text-black/70">
+                  {t("performance.global.desc")}
+                </p>
+                <div className="flex flex-wrap justify-center gap-10">
+                  {globalChartGroups.map((group, idx) => (
+                    <div key={idx} className="w-full max-w-[260px] flex-none">
+                      <KoreaChartGroup {...group} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : activePlatform === "apple" ? (
+              <div className="mx-auto w-full max-w-4xl rounded-[2.5rem] border border-white/70 bg-white/40 p-6 shadow-lg backdrop-blur-xl lg:p-10">
+                <div className="mb-10 flex flex-col items-center gap-5 text-center">
+                  <div className="flex items-center gap-5">
+                    <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-xl">
+                      <Image src="/AM.png" alt="Apple Music" width={56} height={56} className="h-full w-full object-cover" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.5em] text-black">{t("performance.apple")}</p>
+                      <p className="text-2xl font-black uppercase tracking-tight text-black">Apple Music Charts</p>
+                    </div>
+                  </div>
+                </div>
+                <p className="mx-auto mb-10 max-w-2xl text-center text-[14px] font-medium leading-relaxed text-black/70">
+                  {t("performance.apple.desc")}
+                </p>
+                <div className="flex flex-wrap justify-center gap-10">
+                  {appleMusicGroups.map((group, idx) => (
+                    <div key={idx} className="w-full max-w-[260px] flex-none">
+                      <KoreaChartGroup {...group} />
+                    </div>
+                  ))}
+                </div>
+              </div>
             ) : (
               <div className="space-y-10">
                 {/* Platform Header inside Content area */}
                 <div className="flex items-center gap-5 px-2">
-                  <div className={cn(
-                    "flex h-14 w-14 items-center justify-center rounded-2xl shadow-xl border overflow-hidden shrink-0",
-                    activePlatform === "spotify" ? "bg-black border-black" : "bg-white border-white/20"
-                  )}>
-                    {activePlatform === "spotify"
-                      ? <Image src="/spotify.png" alt="Spotify" width={56} height={56} className="h-full w-full object-cover" />
-                      : <Image src="/Youtube.png" alt="YouTube" width={36} height={36} className="h-9 w-9 object-contain" />
-                    }
+                  <div className={cn("flex h-14 w-14 items-center justify-center rounded-2xl shadow-xl border overflow-hidden shrink-0", activePlatformCard.iconWrap)}>
+                    {activePlatformCard.icon}
                   </div>
                   <div>
-                    <p className={cn("text-xl font-black uppercase tracking-[0.3em]", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
+                    <p className={cn("text-xl font-black uppercase tracking-[0.3em]", activePlatformAccent)}>
                       {t(`performance.${activePlatform}` as any)}
                     </p>
-                    <p className={cn("text-4xl font-black uppercase tracking-tight", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
+                    <p className={cn("text-4xl font-black uppercase tracking-tight", activePlatformAccent)}>
                       {activePlatform === "youtube" ? t("home.performance.officialMv") : t("home.performance.rankings")}
                     </p>
                   </div>
@@ -481,17 +631,17 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
                 {/* Track table */}
                 <div>
                   <div className="mb-2 grid items-center px-6 py-3 grid-cols-[48px_1fr_100px] lg:grid-cols-[48px_1fr_160px_180px_150px]">
-                    <div className={cn("text-center text-[13px] font-black uppercase tracking-widest", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>#</div>
-                    <div className={cn("text-[13px] font-black uppercase tracking-widest", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
+                    <div className={cn("text-center text-[13px] font-black uppercase tracking-widest", activePlatformAccent)}>#</div>
+                    <div className={cn("text-[13px] font-black uppercase tracking-widest", activePlatformAccent)}>
                       {t("charts.trackInfo").split(" ")[0]}
                     </div>
-                    <div className={cn("text-right text-[13px] font-black uppercase tracking-widest max-lg:hidden", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
+                    <div className={cn("text-right text-[13px] font-black uppercase tracking-widest max-lg:hidden", activePlatformAccent)}>
                       {t("charts.total")}
                     </div>
-                    <div className={cn("text-right text-[13px] font-black uppercase tracking-widest max-lg:hidden", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
+                    <div className={cn("text-right text-[13px] font-black uppercase tracking-widest max-lg:hidden", activePlatformAccent)}>
                       {t("charts.daily")}
                     </div>
-                    <div className={cn("text-right text-[13px] font-black uppercase tracking-widest", activePlatform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
+                    <div className={cn("text-right text-[13px] font-black uppercase tracking-widest", activePlatformAccent)}>
                       {t("charts.trend")}
                     </div>
                   </div>

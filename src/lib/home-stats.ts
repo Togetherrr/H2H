@@ -1,5 +1,6 @@
 import { getReleaseCatalog, type ReleaseRecord } from "@/lib/release-catalog"
 import { getUpcomingComeback, type HomeStatSource, type UpcomingComeback } from "@/lib/comeback-provider"
+import { getWinsCount } from "@/lib/supabase/wins-service"
 
 export type HomeStatsSnapshot = {
   debutDate: string
@@ -25,12 +26,8 @@ export type HomeStatsSnapshot = {
   upcomingComeback: UpcomingComeback | null
 }
 
-const MUSIC_SHOW_WINS = 7
-const MUSIC_SHOW_SOURCE_NOTE =
-  "Counted public weekly wins: The Show (The Chase, FOCUS) and RUDE! on M Countdown, Music Core twice, and Inkigayo."
-const AWARD_CEREMONY_WINS = 19
-const AWARD_CEREMONY_SOURCE_NOTE =
-  "Wikipedia accolades snapshot counted group award-ceremony wins only as of April 27, 2026."
+const MUSIC_SHOW_SOURCE_NOTE = "Auto-synced from Wikipedia winner lists for major music programs."
+const AWARD_CEREMONY_SOURCE_NOTE = "Auto-synced from Wikipedia Accolades when available."
 const RELEASE_VIDEO_MAP: Record<string, string> = {
   "the-chase": "https://www.youtube.com/results?search_query=Hearts2Hearts+The+Chase+MV",
   style: "https://www.youtube.com/results?search_query=Hearts2Hearts+Style+MV",
@@ -93,13 +90,16 @@ export async function getHomeStatsSnapshot(debutDate: string): Promise<HomeStats
       tracks: [],
     } satisfies ReleaseRecord)
   const latestReleaseMvUrl = getLatestReleaseVideoUrl(latestRelease)
+  const { musicShowWins, awardCeremonyWins } = await getWinsCount()
+  const safeMusicShowWins = musicShowWins > 0 ? musicShowWins : 0
+  const safeAwardCeremonyWins = awardCeremonyWins > 0 ? awardCeremonyWins : 0
 
   return {
     debutDate,
     albumCount: catalog.filter(isAlbumProject).length,
-    musicShowWins: MUSIC_SHOW_WINS,
+    musicShowWins: safeMusicShowWins,
     musicShowSourceNote: MUSIC_SHOW_SOURCE_NOTE,
-    awardCeremonyWins: AWARD_CEREMONY_WINS,
+    awardCeremonyWins: safeAwardCeremonyWins,
     awardCeremonySourceNote: AWARD_CEREMONY_SOURCE_NOTE,
     latestRelease: {
       slug: latestRelease.slug,
@@ -119,11 +119,11 @@ export async function getHomeStatsSnapshot(debutDate: string): Promise<HomeStats
         href: "https://en.wikipedia.org/wiki/Hearts2Hearts#Discography",
       },
       musicShows: {
-        label: "Music show wins references",
-        href: "https://kpop.fandom.com/wiki/List_of_awards_and_nominations_received_by_Hearts2Hearts",
+        label: "Wikipedia - Music show winners lists",
+        href: "https://en.wikipedia.org/wiki/List_of_M_Countdown_Chart_winners_(2026)",
       },
       awardCeremonies: {
-        label: "Accolades snapshot",
+        label: "Wikipedia - Accolades",
         href: "https://en.wikipedia.org/wiki/Hearts2Hearts#Accolades",
       },
     },
