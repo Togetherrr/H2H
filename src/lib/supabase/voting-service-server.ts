@@ -149,143 +149,145 @@ export async function getActiveAwardsVoteApps(now: Date = new Date()): Promise<{
   events: PopulatedAwardEvent[]
   error: string | null
 }> {
-  const supabase = createStaticClient()
+  try {
+    const supabase = createStaticClient()
 
-  // 1. Fetch active events
-  const { data: eventsData, error: eventsError } = await supabase
-    .from("award_events")
-    .select("*")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true })
-    .limit(20)
+    // 1. Fetch active events
+    const { data: eventsData, error: eventsError } = await supabase
+      .from("award_events")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .limit(20)
 
-  if (eventsError) return { events: [], error: eventsError.message }
-  const events = ((eventsData ?? []) as AwardEventRow[]).map((event) => ({
-    ...event,
-    nominations: normalizeStringList(event.nominations),
-    reflection_rate: normalizeStringList(event.reflection_rate),
-  }))
-  if (events.length === 0) return { events: [], error: null }
+    if (eventsError) return { events: [], error: eventsError.message }
+    const events = ((eventsData ?? []) as AwardEventRow[]).map((event) => ({
+      ...event,
+      nominations: normalizeStringList(event.nominations),
+      reflection_rate: normalizeStringList(event.reflection_rate),
+    }))
+    if (events.length === 0) return { events: [], error: null }
 
-  const eventIds = events.map((e) => e.id)
+    const eventIds = events.map((e) => e.id)
 
-  // 2. Fetch junction: which apps are in each event
-  const { data: eventAppsData, error: eventAppsError } = await supabase
-    .from("award_event_apps")
-    .select("*")
-    .in("event_id", eventIds)
-    .order("sort_order", { ascending: true })
-    .limit(100)
-
-  if (eventAppsError) return { events: [], error: eventAppsError.message }
-  const eventApps = (eventAppsData ?? []) as AwardEventAppRow[]
-
-  if (eventApps.length === 0) {
-    return {
-      events: events.map((e) => ({ ...e, eventApps: [], hasActiveVoting: false })),
-      error: null,
-    }
-  }
-
-  const appIds = [...new Set(eventApps.map((ea) => ea.app_id))]
-
-  // 3. Parallel fetch: apps + rounds (event-scoped) + strategies + guide steps
-  const [
-    { data: appsData, error: appsError },
-    { data: roundsData, error: roundsError },
-    { data: strategiesData, error: strategiesError },
-    { data: stepsData, error: stepsError },
-  ] = await Promise.all([
-    supabase.from("voting_apps").select("*").in("id", appIds).limit(50),
-    supabase
-      .from("voting_rounds")
+    // 2. Fetch junction: which apps are in each event
+    const { data: eventAppsData, error: eventAppsError } = await supabase
+      .from("award_event_apps")
       .select("*")
       .in("event_id", eventIds)
-      .in("app_id", appIds)
-      .order("start_at", { ascending: true })
-      .limit(200),
-    supabase
-      .from("app_strategies")
-      .select("*")
-      .in("app_id", appIds)
-      .order("order_num", { ascending: true })
-      .limit(200),
-    supabase
-      .from("guide_steps")
-      .select("*")
-      .in("app_id", appIds)
-      .order("step_num", { ascending: true })
-      .limit(200),
-  ])
+      .order("sort_order", { ascending: true })
+      .limit(100)
 
-  if (appsError) return { events: [], error: appsError.message }
-  if (roundsError) return { events: [], error: roundsError.message }
-  if (strategiesError) return { events: [], error: strategiesError.message }
-  if (stepsError) return { events: [], error: stepsError.message }
+    if (eventAppsError) return { events: [], error: eventAppsError.message }
+    const eventApps = (eventAppsData ?? []) as AwardEventAppRow[]
 
-  // 4. Build lookup maps
-  const appsMap = new Map<string, VotingAppRow>(
-    ((appsData ?? []) as VotingAppRow[]).map((a) => [a.id, a])
-  )
+    if (eventApps.length === 0) {
+      return {
+        events: events.map((e) => ({ ...e, eventApps: [], hasActiveVoting: false })),
+        error: null,
+      }
+    }
 
-  // Rounds keyed by "event_id:app_id"
-  const roundsByEventApp = new Map<string, VotingRoundRow[]>()
-  for (const round of (roundsData ?? []) as VotingRoundRow[]) {
-    if (!round.event_id) continue
-    const key = `${round.event_id}:${round.app_id}`
-    const arr = roundsByEventApp.get(key) ?? []
-    arr.push(round)
-    roundsByEventApp.set(key, arr)
+    const appIds = [...new Set(eventApps.map((ea) => ea.app_id))]
+
+    // 3. Parallel fetch: apps + rounds (event-scoped) + strategies + guide steps
+    const [
+      { data: appsData, error: appsError },
+      { data: roundsData, error: roundsError },
+      { data: strategiesData, error: strategiesError },
+      { data: stepsData, error: stepsError },
+    ] = await Promise.all([
+      supabase.from("voting_apps").select("*").in("id", appIds).limit(50),
+      supabase
+        .from("voting_rounds")
+        .select("*")
+        .in("event_id", eventIds)
+        .in("app_id", appIds)
+        .order("start_at", { ascending: true })
+        .limit(200),
+      supabase
+        .from("app_strategies")
+        .select("*")
+        .in("app_id", appIds)
+        .order("order_num", { ascending: true })
+        .limit(200),
+      supabase
+        .from("guide_steps")
+        .select("*")
+        .in("app_id", appIds)
+        .order("step_num", { ascending: true })
+        .limit(200),
+    ])
+
+    if (appsError) return { events: [], error: appsError.message }
+    if (roundsError) return { events: [], error: roundsError.message }
+    if (strategiesError) return { events: [], error: strategiesError.message }
+    if (stepsError) return { events: [], error: stepsError.message }
+
+    // 4. Build lookup maps
+    const appsMap = new Map<string, VotingAppRow>(((appsData ?? []) as VotingAppRow[]).map((a) => [a.id, a]))
+
+    // Rounds keyed by "event_id:app_id"
+    const roundsByEventApp = new Map<string, VotingRoundRow[]>()
+    for (const round of (roundsData ?? []) as VotingRoundRow[]) {
+      if (!round.event_id) continue
+      const key = `${round.event_id}:${round.app_id}`
+      const arr = roundsByEventApp.get(key) ?? []
+      arr.push(round)
+      roundsByEventApp.set(key, arr)
+    }
+
+    const strategiesByApp = new Map<string, AppStrategyRow[]>()
+    for (const s of (strategiesData ?? []) as AppStrategyRow[]) {
+      const arr = strategiesByApp.get(s.app_id) ?? []
+      arr.push(s)
+      strategiesByApp.set(s.app_id, arr)
+    }
+
+    const stepsByApp = new Map<string, GuideStepRow[]>()
+    for (const step of (stepsData ?? []) as GuideStepRow[]) {
+      const arr = stepsByApp.get(step.app_id) ?? []
+      arr.push(step)
+      stepsByApp.set(step.app_id, arr)
+    }
+
+    // 5. Assemble final structure
+    const populated: PopulatedAwardEvent[] = events.map((event) => {
+      const linkedApps = eventApps.filter((ea) => ea.event_id === event.id)
+
+      const populatedApps: PopulatedEventApp[] = linkedApps
+        .map((ea) => {
+          const app = appsMap.get(ea.app_id)
+          if (!app) return null
+
+          const key = `${event.id}:${ea.app_id}`
+          const rounds = roundsByEventApp.get(key) ?? []
+          const activeRound = rounds.find((r) => isRoundActiveNow(r, now)) ?? null
+
+          return {
+            eventAppId: ea.id,
+            app,
+            rounds,
+            activeRound,
+            strategies: strategiesByApp.get(ea.app_id) ?? [],
+            guideSteps: stepsByApp.get(ea.app_id) ?? [],
+            description: ea.description,
+            guideUrl: ea.guide_url ?? null,
+            awardName: ea.award_name ?? null,
+            awards: (ea.awards as any) ?? [],
+          } satisfies PopulatedEventApp
+        })
+        .filter(Boolean) as PopulatedEventApp[]
+
+      const hasActiveVoting = populatedApps.some((ea) => ea.activeRound !== null)
+
+      return { ...event, eventApps: populatedApps, hasActiveVoting }
+    })
+
+    return { events: populated, error: null }
+  } catch (err) {
+    return { events: [], error: (err as Error)?.message ?? "Failed to load award events" }
   }
-
-  const strategiesByApp = new Map<string, AppStrategyRow[]>()
-  for (const s of (strategiesData ?? []) as AppStrategyRow[]) {
-    const arr = strategiesByApp.get(s.app_id) ?? []
-    arr.push(s)
-    strategiesByApp.set(s.app_id, arr)
-  }
-
-  const stepsByApp = new Map<string, GuideStepRow[]>()
-  for (const step of (stepsData ?? []) as GuideStepRow[]) {
-    const arr = stepsByApp.get(step.app_id) ?? []
-    arr.push(step)
-    stepsByApp.set(step.app_id, arr)
-  }
-
-  // 5. Assemble final structure
-  const populated: PopulatedAwardEvent[] = events.map((event) => {
-    const linkedApps = eventApps.filter((ea) => ea.event_id === event.id)
-
-    const populatedApps: PopulatedEventApp[] = linkedApps
-      .map((ea) => {
-        const app = appsMap.get(ea.app_id)
-        if (!app) return null
-
-        const key = `${event.id}:${ea.app_id}`
-        const rounds = roundsByEventApp.get(key) ?? []
-        const activeRound = rounds.find((r) => isRoundActiveNow(r, now)) ?? null
-
-        return {
-          eventAppId: ea.id,
-          app,
-          rounds,
-          activeRound,
-          strategies: strategiesByApp.get(ea.app_id) ?? [],
-          guideSteps: stepsByApp.get(ea.app_id) ?? [],
-          description: ea.description,
-          guideUrl: ea.guide_url ?? null,
-          awardName: ea.award_name ?? null,
-          awards: (ea.awards as any) ?? [],
-        } satisfies PopulatedEventApp
-      })
-      .filter(Boolean) as PopulatedEventApp[]
-
-    const hasActiveVoting = populatedApps.some((ea) => ea.activeRound !== null)
-
-    return { ...event, eventApps: populatedApps, hasActiveVoting }
-  })
-
-  return { events: populated, error: null }
 }
 
 // ── LEGACY: Non-award categories (music_shows, etc.) ─────────────────────
@@ -298,22 +300,23 @@ export async function getLegacyActiveVoteApps(now: Date = new Date()): Promise<{
   apps: ActiveVoteApp[]
   error: string | null
 }> {
-  const supabase = createStaticClient()
+  try {
+    const supabase = createStaticClient()
 
-  const { data: appsData, error: appsError } = await supabase
-    .from("voting_apps")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(100)
+    const { data: appsData, error: appsError } = await supabase
+      .from("voting_apps")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(100)
 
-  if (appsError) return { apps: [], error: appsError.message }
-  const apps = ((appsData ?? []) as VotingAppRow[]).map((app) => ({
-    ...app,
-    reflection_rate: normalizeStringList(app.reflection_rate),
-  }))
-  if (apps.length === 0) return { apps: [], error: null }
+    if (appsError) return { apps: [], error: appsError.message }
+    const apps = ((appsData ?? []) as VotingAppRow[]).map((app) => ({
+      ...app,
+      reflection_rate: normalizeStringList(app.reflection_rate),
+    }))
+    if (apps.length === 0) return { apps: [], error: null }
 
-  const appIds = apps.map((a) => a.id)
+    const appIds = apps.map((a) => a.id)
 
   const [
     { data: roundsData, error: roundsError },
@@ -394,5 +397,8 @@ export async function getLegacyActiveVoteApps(now: Date = new Date()): Promise<{
     })
   }
 
-  return { apps: activeApps, error: null }
+    return { apps: activeApps, error: null }
+  } catch (err) {
+    return { apps: [], error: (err as Error)?.message ?? "Failed to load legacy vote apps" }
+  }
 }

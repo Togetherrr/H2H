@@ -90,6 +90,8 @@ function buildPlatformPerformance(
   return { platform, updatedAt: computed.updatedAt }
 }
 export async function getRealtimeSnapshotFromDb(): Promise<TrackPerformanceSnapshot> {
+  try {
+    return await (async () => {
   const supabase = createStaticClient()
   const { data: items, error: itemsError } = await supabase
     .from("h2h_items")
@@ -172,5 +174,19 @@ export async function getRealtimeSnapshotFromDb(): Promise<TrackPerformanceSnaps
       note: kworkUpdatedAt ? `Kworb • Updated ${kworkUpdatedAt}` : undefined,
     },
     isSample: false,
+  }
+    })()
+  } catch (err) {
+    return {
+      updatedAt: "",
+      spotify: EMPTY_PLATFORM("Spotify"),
+      youtube: EMPTY_PLATFORM("YouTube"),
+      sources: {
+        spotify: "Supabase snapshots",
+        youtube: "Supabase snapshots",
+        note: (err as Error)?.message ?? "Supabase unavailable",
+      },
+      isSample: false,
+    }
   }
 }

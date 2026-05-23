@@ -13,8 +13,9 @@ import { TrackPerformanceSection } from "@/components/track-performance-section"
 import { TimelineSection } from "@/components/timeline-section"
 import { ComebackWatchHeader } from "@/components/comeback-watch-header"
 import { SpotlightNotice } from "@/components/spotlight-notice"
-import { Navbar, type TimeZone } from "@/components/navbar"
+import { FeedbackWidget } from "@/components/feedback-section"
 import { NoticeBoard } from "@/components/notice-board"
+import { Navbar, type TimeZone } from "@/components/navbar"
 import { useTranslation } from "@/hooks/useTranslation"
 import { Building2, Disc, Calendar, HeartPulse, Palette, Hash } from "lucide-react"
 
@@ -1275,28 +1276,8 @@ export function HomePageClient({
         </div>
       </motion.section>
 
-      <footer className="max-w-5xl mx-auto px-4 pb-12">
-        <div className="card-premium shimmer-border !rounded-[2.5rem] p-10 text-center relative overflow-hidden">
-          {/* Background blobs */}
-          <div className="absolute top-0 right-0 size-96 bg-pink-200/10 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" ></div>
-          <div className="absolute bottom-0 left-0 size-96 bg-sky-200/10 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" ></div>
-
-          <div className="relative z-10 flex flex-col items-center gap-6">
-            <div className="flex items-center gap-6 text-sky-400">
-              <Heart className="size-5 fill-current" />
-              <div className="h-px w-24 bg-gradient-to-r from-transparent via-sky-400/60 to-transparent" ></div>
-              <Star className="size-5 fill-current" />
-            </div>
-            <p className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-500">
-              {t("footer.copyright")}
-            </p>
-            <p className="text-[11px] text-slate-400 max-w-2xl mx-auto leading-relaxed">
-              {t("footer.disclaimer")}
-            </p>
-          </div>
-        </div>
-      </footer>
       <NoticeBoard />
+      <FeedbackWidget />
 
       <MemberDetailModal
         member={selectedMember}

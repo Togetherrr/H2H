@@ -5,10 +5,31 @@ import { requireAdmin } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { createStaticClient } from "@/lib/supabase/static"
 import { createServiceClient } from "@/lib/supabase/service"
+import { getAwardCeremonyWins, getMusicShowWins } from "@/lib/supabase/wins-service"
+import { syncWinsFromSources } from "@/lib/wins/sync-wins"
+import { getReleaseCatalog } from "@/lib/release-catalog"
+
+function serializeReflectionRate(input: unknown): string | null {
+  if (Array.isArray(input)) {
+    const values = input
+      .map((value) => (typeof value === "string" ? value.trim() : String(value).trim()))
+      .filter(Boolean)
+    return values.length > 0 ? JSON.stringify(values) : null
+  }
+
+  if (typeof input === "string") {
+    const trimmed = input.trim()
+    if (!trimmed) return null
+    return trimmed.startsWith("[") ? trimmed : JSON.stringify([trimmed])
+  }
+
+  return null
+}
+
 export async function uploadImage(formData: FormData) {
   try {
     await requireAdmin()
-  const supabase = createServiceClient()
+    const supabase = createServiceClient()
     const file = formData.get("file") as File
     if (!file) throw new Error("No file provided")
 
@@ -35,6 +56,24 @@ export async function uploadImage(formData: FormData) {
 export async function getAdminTabData(tab: string) {
   const { profile } = await requireAdmin()
   const supabase = createServiceClient()
+
+  if (tab === "sync") {
+    const [{ data: settings, error: settingsError }, { count: timelineCount, error: timelineError }] = await Promise.all([
+      supabase.from("site_settings").select("*").eq("id", 1).maybeSingle(),
+      supabase.from("timeline_events").select("*", { count: "exact", head: true }),
+    ])
+
+    const error = settingsError || timelineError
+    if (error) return { error: error.message }
+
+    return {
+      profile,
+      siteSettings: settings,
+      stats: {
+        timeline: timelineCount || 0,
+      },
+    }
+  }
 
   if (tab === "users") {
     const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false })
@@ -73,9 +112,14 @@ export async function getAdminTabData(tab: string) {
   }
 
   if (tab === "career-records") {
-    const { data, error } = await supabase.from("site_settings").select("*").eq("id", 1).maybeSingle()
-    if (error) return { error: error.message }
-    return { siteSettings: data }
+    const [{ data: settings, error: settingsError }, musicWins, awardWins] = await Promise.all([
+      supabase.from("site_settings").select("*").eq("id", 1).maybeSingle(),
+      getMusicShowWins(),
+      getAwardCeremonyWins(),
+    ])
+
+    if (settingsError) return { error: settingsError.message }
+    return { siteSettings: settings, musicWins, awardWins }
   }
 
   if (tab === "comeback") {
@@ -147,6 +191,17 @@ export async function getAdminTabData(tab: string) {
     return { awardEvents: hydrated, availableApps: appsData || [] }
   }
 
+  if (tab === "feedback") {
+    const { data, error } = await supabase
+      .from("feedback_messages")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(100)
+
+    if (error) return { error: error.message }
+    return { feedbackMessages: data || [] }
+  }
+
   const [
     { count: usersCount, error: usersError },
     { count: membersCount, error: membersError },
@@ -154,6 +209,7 @@ export async function getAdminTabData(tab: string) {
     { count: timelineCount, error: timelineError },
     { data: settings, error: settingsError },
     { count: themesCount, error: themesError },
+    { count: feedbackCount, error: feedbackError },
   ] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }),
     supabase.from("members").select("*", { count: "exact", head: true }),
@@ -161,9 +217,10 @@ export async function getAdminTabData(tab: string) {
     supabase.from("timeline_events").select("*", { count: "exact", head: true }),
     supabase.from("site_settings").select("*").eq("id", 1).maybeSingle(),
     (supabase as any).from("themes").select("*", { count: "exact", head: true }),
+    supabase.from("feedback_messages").select("*", { count: "exact", head: true }),
   ])
 
-  const error = usersError || membersError || socialsError || timelineError || settingsError || themesError
+  const error = usersError || membersError || socialsError || timelineError || settingsError || themesError || feedbackError
   if (error) return { error: error.message }
 
   return {
@@ -174,6 +231,7 @@ export async function getAdminTabData(tab: string) {
       members: membersCount || 0,
       socials: socialsCount || 0,
       timeline: timelineCount || 0,
+      feedbacks: feedbackCount || 0,
     },
   }
 }
@@ -207,7 +265,7 @@ export async function createVotingApp(payload: {
 }) {
   try {
     await requireAdmin()
-  const supabase = createServiceClient()
+    const supabase = createServiceClient()
 
     const { data: app, error: appError } = await supabase
       .from("voting_apps")
@@ -221,7 +279,7 @@ export async function createVotingApp(payload: {
         android_url: payload.android_url ?? null,
         ios_url: payload.ios_url ?? null,
         description: payload.description ?? null,
-        reflection_rate: payload.reflection_rate ?? [],
+        reflection_rate: serializeReflectionRate(payload.reflection_rate),
         ceremony_at: payload.ceremony_at ?? null,
         is_featured: Boolean(payload.is_featured),
       })
@@ -257,7 +315,7 @@ export async function createVotingApp(payload: {
       const guideSteps = guideStepsPayload.map((step, index) => ({
         app_id: app.id,
         step_num: index + 1,
-        title: step.title || null,
+        title: step.title || `Step ${index + 1}`,
         description: step.description || null,
         image_url: step.image_url || null,
       }))
@@ -304,7 +362,7 @@ export async function createVotingApp(payload: {
 export async function deleteVotingApp(id: string) {
   try {
     await requireAdmin()
-  const supabase = createServiceClient()
+    const supabase = createServiceClient()
 
     const { error } = await supabase.from("voting_apps").delete().eq("id", id)
     if (error) return { error: error.message }
@@ -321,7 +379,7 @@ export async function deleteVotingApp(id: string) {
 export async function updateVotingApp(id: string, payload: any) {
   try {
     await requireAdmin()
-  const supabase = createServiceClient()
+    const supabase = createServiceClient()
 
     // 1. First, verify we have the app
     const { data: existing, error: findError } = await supabase.from("voting_apps").select("id").eq("id", id).single()
@@ -340,7 +398,7 @@ export async function updateVotingApp(id: string, payload: any) {
         android_url: payload.android_url ?? null,
         ios_url: payload.ios_url ?? null,
         description: payload.description ?? null,
-        reflection_rate: payload.reflection_rate ?? [],
+        reflection_rate: serializeReflectionRate(payload.reflection_rate),
         ceremony_at: payload.ceremony_at ?? null,
         is_featured: Boolean(payload.is_featured),
       })
@@ -375,7 +433,7 @@ export async function updateVotingApp(id: string, payload: any) {
       const guideSteps = guideStepsPayload.map((step: any, index: number) => ({
         app_id: id,
         step_num: index + 1,
-        title: step.title || null,
+        title: step.title || `Step ${index + 1}`,
         description: step.description || null,
         image_url: step.image_url || null,
       }))
@@ -420,7 +478,7 @@ export async function updateVotingApp(id: string, payload: any) {
 export async function upsertMember(data: any) {
   try {
     await requireAdmin()
-  const supabase = createServiceClient()
+    const supabase = createServiceClient()
 
     const { error } = await supabase.from("members").upsert(data)
     if (error) return { error: error.message }
@@ -436,7 +494,7 @@ export async function upsertMember(data: any) {
 export async function updateMembersOrder(orders: { id: string, sort_order: number }[]) {
   try {
     await requireAdmin()
-  const supabase = createServiceClient()
+    const supabase = createServiceClient()
     const { error } = await supabase.from("members").upsert(orders as any)
     if (error) return { error: error.message }
 
@@ -451,7 +509,7 @@ export async function updateMembersOrder(orders: { id: string, sort_order: numbe
 export async function deleteMember(id: string) {
   try {
     await requireAdmin()
-  const supabase = createServiceClient()
+    const supabase = createServiceClient()
 
     const { error } = await supabase.from("members").delete().eq("id", id)
     if (error) return { error: error.message }
@@ -467,7 +525,7 @@ export async function deleteMember(id: string) {
 export async function upsertSocialLink(data: any) {
   try {
     await requireAdmin()
-  const supabase = createServiceClient()
+    const supabase = createServiceClient()
 
     const { error } = await supabase.from("social_links").upsert(data)
     if (error) return { error: error.message }
@@ -483,7 +541,7 @@ export async function upsertSocialLink(data: any) {
 export async function updateSocialLinksOrder(orders: { id: string, sort_order: number }[]) {
   try {
     await requireAdmin()
-  const supabase = createServiceClient()
+    const supabase = createServiceClient()
     const { error } = await supabase.from("social_links").upsert(orders as any)
     if (error) return { error: error.message }
 
@@ -498,7 +556,7 @@ export async function updateSocialLinksOrder(orders: { id: string, sort_order: n
 export async function deleteSocialLink(id: string) {
   try {
     await requireAdmin()
-  const supabase = createServiceClient()
+    const supabase = createServiceClient()
 
     const { error } = await supabase.from("social_links").delete().eq("id", id)
     if (error) return { error: error.message }
@@ -514,7 +572,7 @@ export async function deleteSocialLink(id: string) {
 export async function upsertSiteSettings(data: any) {
   try {
     await requireAdmin()
-  const supabase = createServiceClient()
+    const supabase = createServiceClient()
 
     // Avoid sending unexpected/unstable fields from the client; keep this upsert narrow and serializable.
     const payload = {
@@ -544,10 +602,20 @@ export async function updateUserRole(userId: string, role: "user" | "admin") {
   revalidatePath("/admin")
 }
 
+export async function updateFeedbackStatus(feedbackId: string, status: "new" | "reviewed" | "resolved") {
+  await requireAdmin()
+  const supabase = createServiceClient()
+
+  const { error } = await supabase.from("feedback_messages").update({ status }).eq("id", feedbackId)
+  if (error) throw new Error(error.message)
+
+  revalidatePath("/admin")
+}
+
 export async function upsertTheme(data: any) {
   try {
     await requireAdmin()
-  const supabase = createServiceClient()
+    const supabase = createServiceClient()
 
     const { error } = await (supabase as any).from("themes").upsert(data)
     if (error) return { error: error.message }
@@ -563,7 +631,7 @@ export async function upsertTheme(data: any) {
 export async function activateTheme(id: string) {
   try {
     await requireAdmin()
-  const supabase = createServiceClient()
+    const supabase = createServiceClient()
 
     await (supabase as any).from("themes").update({ is_active: false }).neq("id", id)
     const { error } = await (supabase as any).from("themes").update({ is_active: true }).eq("id", id)
@@ -581,7 +649,7 @@ export async function activateTheme(id: string) {
 export async function deleteTheme(id: string) {
   try {
     await requireAdmin()
-  const supabase = createServiceClient()
+    const supabase = createServiceClient()
 
     const { error } = await (supabase as any).from("themes").delete().eq("id", id)
     if (error) return { error: error.message }
@@ -788,4 +856,212 @@ export async function updateVotingAppGuideUrl(appId: string, guideUrl: string | 
   if (error) return { error: error.message }
   revalidatePath("/voting")
   return { error: null }
+}
+
+export async function syncWins() {
+  try {
+    await requireAdmin()
+    const result = await syncWinsFromSources()
+    revalidatePath("/admin")
+    revalidatePath("/home")
+    revalidatePath("/")
+    return { success: true, result }
+  } catch (err: any) {
+    return { error: err.message }
+  }
+}
+
+function parseDdMmYyyyToIso(input: string) {
+  const match = String(input ?? "").trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+  if (!match) return ""
+  const [, dd, mm, yyyy] = match
+  return `${yyyy}-${mm}-${dd}`
+}
+
+export async function syncTimeline() {
+  try {
+    await requireAdmin()
+    const supabase = createServiceClient()
+
+    const syncedAt = new Date().toISOString()
+
+    const { data: settings } = await supabase
+      .from("site_settings")
+      .select("metadata")
+      .eq("id", 1)
+      .maybeSingle()
+
+    const existingMetadata = (settings?.metadata as Record<string, unknown>) ?? {}
+
+    const catalog = await getReleaseCatalog()
+
+    const timelineRows = catalog
+      .map((release) => {
+        const event_date = parseDdMmYyyyToIso(release.date)
+        if (!event_date) return null
+
+        return {
+          slug: release.slug,
+          event_date,
+          event_type: release.type,
+          title: release.title,
+          summary: release.summary ?? null,
+          cover_url: release.cover ?? null,
+          source_url: release.sourceUrl ?? null,
+          is_published: true,
+        }
+      })
+      .filter(Boolean) as any[]
+
+    if (timelineRows.length > 0) {
+      const slugs = Array.from(new Set(timelineRows.map((row) => row.slug)))
+
+      const { data: existingRows } = await supabase
+        .from("timeline_events")
+        .select("id,slug,event_date")
+        .in("slug", slugs)
+        .limit(2000)
+
+      const existingIdByKey = new Map<string, string>()
+      for (const row of existingRows ?? []) {
+        if (!row?.id || !row?.slug || !row?.event_date) continue
+        existingIdByKey.set(`${row.slug}::${row.event_date}`, row.id)
+      }
+
+      const upsertRows = timelineRows.map((row) => {
+        const id = existingIdByKey.get(`${row.slug}::${row.event_date}`)
+        return id ? { id, ...row } : row
+      })
+
+      const { error: upsertError } = await supabase.from("timeline_events").upsert(upsertRows as any)
+      if (upsertError) return { error: upsertError.message }
+    }
+
+    await supabase
+      .from("site_settings")
+      .update({
+        metadata: {
+          ...existingMetadata,
+          timeline_sync: {
+            syncedAt,
+            timelineEvents: timelineRows.length,
+          },
+        },
+      })
+      .eq("id", 1)
+
+    revalidatePath("/admin")
+    revalidatePath("/home")
+    revalidatePath("/")
+
+    return { success: true, result: { syncedAt, timelineEvents: timelineRows.length } }
+  } catch (err: any) {
+    return { error: err.message }
+  }
+}
+
+type AutoSyncSettings = {
+  wins?: { enabled?: boolean; times?: string[] } | null
+  timeline?: { enabled?: boolean; time?: string } | null
+  realtime?: { enabled?: boolean; intervalMinutes?: number } | null
+}
+
+export async function updateAutoSyncSettings(input: AutoSyncSettings) {
+  try {
+    await requireAdmin()
+    const supabase = createServiceClient()
+
+    const { data: settings, error: settingsError } = await supabase
+      .from("site_settings")
+      .select("metadata")
+      .eq("id", 1)
+      .maybeSingle()
+
+    if (settingsError) return { error: settingsError.message }
+
+    const existingMetadata = (settings?.metadata as Record<string, unknown>) ?? {}
+    const currentAutoSync = (existingMetadata.auto_sync as AutoSyncSettings | undefined) ?? {}
+
+    const nextAutoSync: AutoSyncSettings = {
+      ...currentAutoSync,
+      ...input,
+    }
+
+    const { error: updateError } = await supabase
+      .from("site_settings")
+      .update({
+        metadata: {
+          ...existingMetadata,
+          auto_sync: nextAutoSync,
+        },
+      })
+      .eq("id", 1)
+
+    if (updateError) return { error: updateError.message }
+
+    revalidatePath("/admin")
+    return { success: true }
+  } catch (err: any) {
+    return { error: err.message }
+  }
+}
+
+export async function upsertMusicShowWin(data: any) {
+  try {
+    await requireAdmin()
+    const supabase = createServiceClient()
+    const { error } = await (supabase as any).from("music_show_wins").upsert(data)
+    if (error) return { error: error.message }
+    revalidatePath("/admin")
+    revalidatePath("/home")
+    revalidatePath("/")
+    return { success: true }
+  } catch (err: any) {
+    return { error: err.message }
+  }
+}
+
+export async function deleteMusicShowWin(id: string) {
+  try {
+    await requireAdmin()
+    const supabase = createServiceClient()
+    const { error } = await (supabase as any).from("music_show_wins").delete().eq("id", id)
+    if (error) return { error: error.message }
+    revalidatePath("/admin")
+    revalidatePath("/home")
+    revalidatePath("/")
+    return { success: true }
+  } catch (err: any) {
+    return { error: err.message }
+  }
+}
+
+export async function upsertAwardWin(data: any) {
+  try {
+    await requireAdmin()
+    const supabase = createServiceClient()
+    const { error } = await (supabase as any).from("award_ceremony_wins").upsert(data)
+    if (error) return { error: error.message }
+    revalidatePath("/admin")
+    revalidatePath("/home")
+    revalidatePath("/")
+    return { success: true }
+  } catch (err: any) {
+    return { error: err.message }
+  }
+}
+
+export async function deleteAwardWin(id: string) {
+  try {
+    await requireAdmin()
+    const supabase = createServiceClient()
+    const { error } = await (supabase as any).from("award_ceremony_wins").delete().eq("id", id)
+    if (error) return { error: error.message }
+    revalidatePath("/admin")
+    revalidatePath("/home")
+    revalidatePath("/")
+    return { success: true }
+  } catch (err: any) {
+    return { error: err.message }
+  }
 }

@@ -10,7 +10,10 @@
     "realtime:poll:local": "bun scripts/poll-realtime-local.mjs",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
-    "perf-audit": "bun scripts/performance-audit.ts"
+    "perf-audit": "bun scripts/performance-audit.ts",
+    "sync:wins:local": "bun scripts/sync-wins-local.mjs",
+    "sync:timeline:local": "bun scripts/sync-timeline-local.mjs",
+    "auto-sync:worker": "bun --env-file .env.local scripts/auto-sync-worker.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

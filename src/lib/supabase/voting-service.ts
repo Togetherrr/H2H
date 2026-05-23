@@ -33,7 +33,7 @@ export type VotingApp = {
 
 export type AppStrategy = {
   id: string
-  app_id: string
+  app_id: string | null
   order_num: number
   content: string
 }

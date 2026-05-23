@@ -1,11 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { Users, Link as LinkIcon, Disc, ArrowLeft, LogOut, LayoutDashboard, Settings, Sparkles, Image as ImageIcon, BadgeCheck, Film, CalendarClock, Trophy } from "lucide-react"
+import { Users, Link as LinkIcon, Disc, ArrowLeft, LogOut, LayoutDashboard, Settings, Sparkles, Image as ImageIcon, BadgeCheck, Film, CalendarClock, Trophy, MessageSquare, RefreshCw } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const NAV_ITEMS = [
   { name: "Overview", value: "overview", icon: LayoutDashboard },
+  { name: "Sync", value: "sync", icon: RefreshCw },
   { name: "Users", value: "users", icon: Users },
   { name: "Members", value: "members", icon: Users },
   { name: "Voting Apps", value: "voting", icon: BadgeCheck },
@@ -14,6 +15,7 @@ const NAV_ITEMS = [
   { name: "Career Records", value: "career-records", icon: Film },
   { name: "Themes", value: "themes", icon: Sparkles },
   { name: "Comeback", value: "comeback", icon: CalendarClock },
+  { name: "Feedback", value: "feedback", icon: MessageSquare },
   { name: "Media", value: "media", icon: ImageIcon },
   { name: "Social Links", value: "socials", icon: LinkIcon },
   { name: "Site Settings", value: "settings", icon: Settings },

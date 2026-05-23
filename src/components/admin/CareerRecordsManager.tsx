@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { ArrowDown, ArrowUp, Film, Image as ImageIcon, Save, Upload } from "lucide-react"
 import { MediaManager } from "@/components/admin/MediaManager"
 import { uploadImage, upsertSiteSettings } from "@/app/admin/actions"
+import { WinsManager } from "@/components/admin/WinsManager"
 
 const FRAME_COUNT = 8
 
@@ -174,7 +175,15 @@ function FrameCard({
   )
 }
 
-export function CareerRecordsManager({ initialSettings }: { initialSettings: any }) {
+export function CareerRecordsManager({
+  initialSettings,
+  musicWins = [],
+  awardWins = [],
+}: {
+  initialSettings: any
+  musicWins?: any[]
+  awardWins?: any[]
+}) {
   const [frames, setFrames] = useState<CareerFrame[]>(() => normalizeFrames(initialSettings))
   const [isSaving, setIsSaving] = useState(false)
   const [uploadingId, setUploadingId] = useState<string | null>(null)
@@ -192,7 +201,7 @@ export function CareerRecordsManager({ initialSettings }: { initialSettings: any
       const next = [...current]
       const targetIndex = index + direction
       if (targetIndex < 0 || targetIndex >= next.length) return current
-      ;[next[index], next[targetIndex]] = [next[targetIndex], next[index]]
+        ;[next[index], next[targetIndex]] = [next[targetIndex], next[index]]
       return next
     })
   }
@@ -243,43 +252,55 @@ export function CareerRecordsManager({ initialSettings }: { initialSettings: any
   }
 
   return (
-    <div className="animate-in fade-in duration-300">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-4xl font-light tracking-tight text-white sm:text-5xl">Career Records</h1>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400">
-            Manage the 8 fixed film strip slots used in the Career Records section. Use URL, upload, or the media library, then save to sync the landing page.
+    <div className="animate-in fade-in duration-300 space-y-16">
+      <section>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-4xl font-light tracking-tight text-white sm:text-5xl">Career Records</h1>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400">
+              Manage the 8 fixed film strip slots used in the Career Records section. Use URL, upload, or the media library, then save to sync the landing page.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving}
+              className="h-11 rounded-xl bg-sky-600 px-5 font-semibold text-white hover:bg-sky-700"
+            >
+              <Save className="size-4" />
+              {isSaving ? "Saving..." : "Save template"}
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+          {frames.map((frame, index) => (
+            <FrameCard
+              key={frame.id}
+              frame={frame}
+              index={index}
+              onChange={(next) => updateFrame(frame.id, next)}
+              onMoveUp={() => moveFrame(index, -1)}
+              onMoveDown={() => moveFrame(index, 1)}
+              canMoveUp={index > 0}
+              canMoveDown={index < frames.length - 1}
+              onUpload={(file) => handleUpload(frame.id, file)}
+              isUploading={uploadingId === frame.id}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="border-t border-slate-800 pt-16">
+        <div className="flex flex-col gap-4">
+          <h2 className="text-3xl font-light tracking-tight text-white">Wins History</h2>
+          <p className="max-w-2xl text-base leading-7 text-slate-400">
+            Add or remove music show and award ceremony wins. These will automatically update the stats and detail pages on the site.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button
-            type="button"
-            onClick={handleSave}
-            disabled={isSaving}
-            className="h-11 rounded-xl bg-sky-600 px-5 font-semibold text-white hover:bg-sky-700"
-          >
-            <Save className="size-4" />
-            {isSaving ? "Saving..." : "Save template"}
-          </Button>
-        </div>
-      </div>
-
-      <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-        {frames.map((frame, index) => (
-          <FrameCard
-            key={frame.id}
-            frame={frame}
-            index={index}
-            onChange={(next) => updateFrame(frame.id, next)}
-            onMoveUp={() => moveFrame(index, -1)}
-            onMoveDown={() => moveFrame(index, 1)}
-            canMoveUp={index > 0}
-            canMoveDown={index < frames.length - 1}
-            onUpload={(file) => handleUpload(frame.id, file)}
-            isUploading={uploadingId === frame.id}
-          />
-        ))}
-      </div>
+        <WinsManager musicWins={musicWins} awardWins={awardWins} winsSync={(initialSettings?.metadata as any)?.wins_sync} />
+      </section>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 import { getSupabaseEnv, hasSupabaseEnv } from "@/lib/supabase/env"
+import { safeFetch } from "@/lib/supabase/safe-fetch"
 
 const ACCOUNT_PATH_PREFIX = "/account"
 
@@ -29,6 +30,9 @@ export async function updateSession(request: NextRequest) {
           response.cookies.set(name, value, options)
         })
       },
+    },
+    global: {
+      fetch: safeFetch,
     },
   })
 

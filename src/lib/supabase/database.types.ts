@@ -12,32 +12,122 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
-      award_event_apps: {
+      app_strategies: {
         Row: {
+          app_id: string | null
+          content: string
           id: string
-          event_id: string
-          app_id: string
-          description: string | null
-          sort_order: number
-          created_at: string
+          order_num: number
         }
         Insert: {
+          app_id?: string | null
+          content: string
           id?: string
-          event_id: string
-          app_id: string
-          description?: string | null
-          sort_order?: number
-          created_at?: string
+          order_num: number
         }
         Update: {
+          app_id?: string | null
+          content?: string
           id?: string
-          event_id?: string
-          app_id?: string
-          description?: string | null
-          sort_order?: number
+          order_num?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_strategies_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "voting_apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      award_ceremony_wins: {
+        Row: {
+          category: string
+          ceremony: string
+          created_at: string
+          href: string | null
+          id: string
+          year: string
+        }
+        Insert: {
+          category: string
+          ceremony: string
           created_at?: string
+          href?: string | null
+          id: string
+          year: string
+        }
+        Update: {
+          category?: string
+          ceremony?: string
+          created_at?: string
+          href?: string | null
+          id?: string
+          year?: string
+        }
+        Relationships: []
+      }
+      award_event_apps: {
+        Row: {
+          app_id: string
+          award_name: string | null
+          awards: Json
+          created_at: string
+          description: string | null
+          event_id: string
+          guide_url: string | null
+          id: string
+          sort_order: number
+        }
+        Insert: {
+          app_id: string
+          award_name?: string | null
+          awards?: Json
+          created_at?: string
+          description?: string | null
+          event_id: string
+          guide_url?: string | null
+          id?: string
+          sort_order?: number
+        }
+        Update: {
+          app_id?: string
+          award_name?: string | null
+          awards?: Json
+          created_at?: string
+          description?: string | null
+          event_id?: string
+          guide_url?: string | null
+          id?: string
+          sort_order?: number
         }
         Relationships: [
           {
@@ -53,41 +143,109 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "award_events"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       award_events: {
         Row: {
+          ceremony_at: string | null
+          created_at: string
           id: string
+          is_active: boolean
           name: string
           nominations: Json
-          ceremony_at: string | null
           reflection_rate: Json
-          is_active: boolean
           sort_order: number
-          created_at: string
         }
         Insert: {
+          ceremony_at?: string | null
+          created_at?: string
           id?: string
+          is_active?: boolean
           name: string
           nominations?: Json
-          ceremony_at?: string | null
           reflection_rate?: Json
-          is_active?: boolean
           sort_order?: number
-          created_at?: string
         }
         Update: {
+          ceremony_at?: string | null
+          created_at?: string
           id?: string
+          is_active?: boolean
           name?: string
           nominations?: Json
-          ceremony_at?: string | null
           reflection_rate?: Json
-          is_active?: boolean
           sort_order?: number
-          created_at?: string
         }
         Relationships: []
+      }
+      feedback_messages: {
+        Row: {
+          category: string
+          created_at: string
+          email: string | null
+          id: string
+          message: string
+          name: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          message: string
+          name?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          message?: string
+          name?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      guide_steps: {
+        Row: {
+          app_id: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          step_num: number
+          title: string
+        }
+        Insert: {
+          app_id?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          step_num: number
+          title: string
+        }
+        Update: {
+          app_id?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          step_num?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guide_steps_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "voting_apps"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       h2h_item_snapshots: {
         Row: {
@@ -316,6 +474,36 @@ export type Database = {
         }
         Relationships: []
       }
+      music_show_wins: {
+        Row: {
+          created_at: string
+          date: string
+          headline: string
+          href: string | null
+          id: string
+          program: string
+          song: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          headline: string
+          href?: string | null
+          id: string
+          program: string
+          song: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          headline?: string
+          href?: string | null
+          id?: string
+          program?: string
+          song?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -422,7 +610,7 @@ export type Database = {
         }
         Insert: {
           company?: string | null
-          created_at?: string
+          created_at?: string | null
           debut_date?: string | null
           description?: string | null
           dorms?: Json | null
@@ -444,7 +632,7 @@ export type Database = {
         }
         Update: {
           company?: string | null
-          created_at?: string
+          created_at?: string | null
           debut_date?: string | null
           description?: string | null
           dorms?: Json | null
@@ -606,164 +794,96 @@ export type Database = {
           },
         ]
       }
-    voting_apps: {
+      voting_apps: {
         Row: {
-          id: string
-          name: string
-          category: string
-          program_name: string | null
-          logo_url: string | null
-          guide_url: string | null
-          currencies: string[] | null
-          collection_methods: string[] | null
           android_url: string | null
-          ios_url: string | null
-          website_url: string | null
-          description: string | null
-          reflection_rate: string[] | null
+          category: string
           ceremony_at: string | null
+          collection_methods: string[] | null
+          created_at: string | null
+          currencies: string[] | null
+          description: string | null
+          guide_url: string | null
+          id: string
+          ios_url: string | null
           is_featured: boolean | null
-          created_at: string
+          logo_url: string | null
+          name: string
+          program_name: string | null
+          reflection_rate: string | null
+          website_url: string | null
         }
         Insert: {
-          id?: string
-          name: string
-          category: string
-          program_name?: string | null
-          logo_url?: string | null
-          guide_url?: string | null
-          currencies?: string[] | null
-          collection_methods?: string[] | null
           android_url?: string | null
-          ios_url?: string | null
-          website_url?: string | null
-          description?: string | null
-          reflection_rate?: string[] | null
+          category: string
           ceremony_at?: string | null
+          collection_methods?: string[] | null
+          created_at?: string | null
+          currencies?: string[] | null
+          description?: string | null
+          guide_url?: string | null
+          id?: string
+          ios_url?: string | null
           is_featured?: boolean | null
-          created_at?: string
+          logo_url?: string | null
+          name: string
+          program_name?: string | null
+          reflection_rate?: string | null
+          website_url?: string | null
         }
         Update: {
-          id?: string
-          name?: string
-          category?: string
-          program_name?: string | null
-          logo_url?: string | null
-          guide_url?: string | null
-          currencies?: string[] | null
-          collection_methods?: string[] | null
           android_url?: string | null
-          ios_url?: string | null
-          website_url?: string | null
-          description?: string | null
-          reflection_rate?: string[] | null
+          category?: string
           ceremony_at?: string | null
+          collection_methods?: string[] | null
+          created_at?: string | null
+          currencies?: string[] | null
+          description?: string | null
+          guide_url?: string | null
+          id?: string
+          ios_url?: string | null
           is_featured?: boolean | null
-          created_at?: string
+          logo_url?: string | null
+          name?: string
+          program_name?: string | null
+          reflection_rate?: string | null
+          website_url?: string | null
         }
         Relationships: []
       }
-      app_strategies: {
-        Row: {
-          id: string
-          app_id: string
-          content: string
-          order_num: number
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          app_id: string
-          content: string
-          order_num: number
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          app_id?: string
-          content?: string
-          order_num?: number
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "app_strategies_app_id_fkey"
-            columns: ["app_id"]
-            referencedRelation: "voting_apps"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      guide_steps: {
-        Row: {
-          id: string
-          app_id: string
-          step_num: number
-          title: string | null
-          description: string | null
-          image_url: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          app_id: string
-          step_num: number
-          title?: string | null
-          description?: string | null
-          image_url?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          app_id?: string
-          step_num?: number
-          title?: string | null
-          description?: string | null
-          image_url?: string | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "guide_steps_app_id_fkey"
-            columns: ["app_id"]
-            referencedRelation: "voting_apps"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
       voting_rounds: {
         Row: {
-          id: string
-          app_id: string
+          app_id: string | null
+          created_at: string | null
+          display_timezone: string | null
+          end_at: string
           event_id: string | null
+          id: string
+          is_active: boolean | null
           round_name: string
           start_at: string
-          end_at: string
-          display_timezone: string | null
-          is_active: boolean
-          created_at: string
         }
         Insert: {
-          id?: string
-          app_id: string
+          app_id?: string | null
+          created_at?: string | null
+          display_timezone?: string | null
+          end_at: string
           event_id?: string | null
+          id?: string
+          is_active?: boolean | null
           round_name: string
           start_at: string
-          end_at: string
-          display_timezone?: string | null
-          is_active?: boolean
-          created_at?: string
         }
         Update: {
-          id?: string
-          app_id?: string
+          app_id?: string | null
+          created_at?: string | null
+          display_timezone?: string | null
+          end_at?: string
           event_id?: string | null
+          id?: string
+          is_active?: boolean | null
           round_name?: string
           start_at?: string
-          end_at?: string
-          display_timezone?: string | null
-          is_active?: boolean
-          created_at?: string
         }
         Relationships: [
           {
@@ -779,7 +899,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "award_events"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
     }
@@ -916,6 +1036,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_role: ["user", "admin"],

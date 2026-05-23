@@ -1,5 +1,5 @@
 -- ============================================================
--- Migration: 20260517_award_events
+-- Migration: 2026051702_award_events
 -- Thêm: guide_url, award_events, award_event_apps, event_id on rounds
 -- Chạy file này trong Supabase SQL Editor
 -- ============================================================
@@ -48,9 +48,11 @@ ALTER TABLE award_events     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE award_event_apps ENABLE ROW LEVEL SECURITY;
 
 -- 7. Public read
+DROP POLICY IF EXISTS "enable read access for all users" ON award_events;
 CREATE POLICY "enable read access for all users" ON award_events
   FOR SELECT TO anon, authenticated USING (true);
 
+DROP POLICY IF EXISTS "enable read access for all users" ON award_event_apps;
 CREATE POLICY "enable read access for all users" ON award_event_apps
   FOR SELECT TO anon, authenticated USING (true);
 
@@ -58,10 +60,12 @@ CREATE POLICY "enable read access for all users" ON award_event_apps
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.award_events     TO service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.award_event_apps TO service_role;
 
+DROP POLICY IF EXISTS "service_role full access award_events" ON public.award_events;
 CREATE POLICY "service_role full access award_events"
   ON public.award_events AS permissive FOR ALL TO service_role
   USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "service_role full access award_event_apps" ON public.award_event_apps;
 CREATE POLICY "service_role full access award_event_apps"
   ON public.award_event_apps AS permissive FOR ALL TO service_role
   USING (true) WITH CHECK (true);
