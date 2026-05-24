@@ -229,16 +229,7 @@ const strings: Record<string, string> = {
   // Notice Board
   "notice.title": "Pin Board",
   "notice.pin": "Pinned",
-  "notice.new": "New",
-  "notice.close": "Close",
-  "notice.open": "Open notice board",
-  "notice.empty": "No important notices at this time.",
-  "notice.buyAlbum": "Buy Album",
   "notice.viewDetail": "View detail",
-  "notice.viewMore": "Notice Board",
-  "notice.viewAll": "View All",
-  "notice.allNotices": "Important Notice Board",
-  "notice.back": "Back",
 
   // Records Detail Page
   "records.backToRecords": "Back to Records",
