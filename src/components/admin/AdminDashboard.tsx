@@ -20,6 +20,8 @@ import { ComebackWatchManager } from "@/components/admin/ComebackWatchManager"
 import { FeedbackManager } from "@/components/admin/FeedbackManager"
 import { MessageSquare } from "lucide-react"
 import { SyncManager } from "@/components/admin/SyncManager"
+import { NoticesManager } from "@/components/admin/NoticesManager"
+import type { NoticeRow } from "@/lib/notices"
 
 type AdminStats = {
   users: number
@@ -41,6 +43,7 @@ type AdminTabData = {
   availableApps?: any[]
   stats?: AdminStats
   feedbackMessages?: any[]
+  notices?: NoticeRow[]
 }
 
 type AdminDashboardProps = {
@@ -48,7 +51,7 @@ type AdminDashboardProps = {
   profile: any
 }
 
-const VALID_TABS = new Set(["overview", "sync", "users", "members", "themes", "socials", "settings", "media", "voting", "award-events", "lineup-reveal", "career-records", "comeback", "feedback"])
+const VALID_TABS = new Set(["overview", "sync", "users", "members", "themes", "socials", "settings", "media", "voting", "award-events", "lineup-reveal", "career-records", "comeback", "notices", "feedback"])
 
 function normalizeTab(tab: string) {
   return VALID_TABS.has(tab) ? tab : "overview"
@@ -473,6 +476,10 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
         ) : (
           <TabLoadingState title="Loading feedback..." />
         )
+      }
+      case "notices": {
+        const notices = dataByTab.notices?.notices
+        return notices ? <NoticesManager initialNotices={notices} /> : <TabLoadingState title="Loading notices..." />
       }
       case "overview":
       default:

@@ -12,6 +12,7 @@ import { hasSupabaseEnv } from "@/lib/supabase/env"
 import { getActiveAwardsVoteApps, getLegacyActiveVoteApps } from "@/lib/supabase/voting-service-server"
 import type { PopulatedAwardEvent, PopulatedEventApp } from "@/lib/supabase/voting-service-server"
 import type { MappedAwardEvent, MappedEventApp } from "@/hooks/useAwardEvents"
+import { ALL_NOTICES, mapNoticeRow } from "@/lib/notices"
 
 export const revalidate = 60 // Enable ISR: Revalidate every 60 seconds
 
@@ -106,6 +107,7 @@ export default async function HomePage() {
     awardEventsResult,
     activeVoteAppsResult,
     siteSettingsResult,
+    noticesResult,
   ] = await Promise.all([
     getTimelineEvents(),
     getFilmFrames(4),
@@ -133,6 +135,18 @@ export default async function HomePage() {
     hasSupabaseEnv()
       ? safeSupabaseResult(
           () => createStaticClient().from("site_settings").select("metadata").eq("id", 1).maybeSingle(),
+          { data: null, error: null } as any,
+        )
+      : Promise.resolve({ data: null }),
+    hasSupabaseEnv()
+      ? safeSupabaseResult(
+          () => createStaticClient()
+            .from("notices")
+            .select("*")
+            .eq("is_active", true)
+            .order("is_pinned", { ascending: false })
+            .order("sort_order", { ascending: true })
+            .order("published_at", { ascending: false }),
           { data: null, error: null } as any,
         )
       : Promise.resolve({ data: null }),
@@ -221,6 +235,9 @@ export default async function HomePage() {
   }
 
   const careerRecordsFilmFrames = normalizeCareerRecordsFilmFrames((siteSettingsResult as any).data?.metadata)
+  const notices = noticesResult.data && !noticesResult.error
+    ? noticesResult.data.map(mapNoticeRow)
+    : ALL_NOTICES
 
   return (
     <HomePageClient
@@ -234,6 +251,7 @@ export default async function HomePage() {
       trackPerformanceSnapshot={trackPerformanceSnapshot}
       awardEvents={(awardEventsResult.events ?? []).map(mapAwardEvent)}
       activeVoteApps={activeVoteAppsResult.apps}
+      notices={notices}
     />
   )
 }

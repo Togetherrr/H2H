@@ -504,6 +504,51 @@ export type Database = {
         }
         Relationships: []
       }
+      notices: {
+        Row: {
+          content_en: string
+          created_at: string
+          id: string
+          is_active: boolean
+          is_pinned: boolean
+          link: string | null
+          link_text_en: string | null
+          published_at: string
+          sort_order: number
+          title_en: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          content_en: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_pinned?: boolean
+          link?: string | null
+          link_text_en?: string | null
+          published_at?: string
+          sort_order?: number
+          title_en: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          content_en?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_pinned?: boolean
+          link?: string | null
+          link_text_en?: string | null
+          published_at?: string
+          sort_order?: number
+          title_en?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

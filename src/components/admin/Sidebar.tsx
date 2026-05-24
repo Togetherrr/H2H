@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Users, Link as LinkIcon, Disc, ArrowLeft, LogOut, LayoutDashboard, Settings, Sparkles, Image as ImageIcon, BadgeCheck, Film, CalendarClock, Trophy, MessageSquare, RefreshCw } from "lucide-react"
+import { Users, Link as LinkIcon, Disc, ArrowLeft, LogOut, LayoutDashboard, Settings, Sparkles, Image as ImageIcon, BadgeCheck, Film, CalendarClock, Trophy, MessageSquare, RefreshCw, Megaphone } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const NAV_ITEMS = [
@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { name: "Career Records", value: "career-records", icon: Film },
   { name: "Themes", value: "themes", icon: Sparkles },
   { name: "Comeback", value: "comeback", icon: CalendarClock },
+  { name: "Notices", value: "notices", icon: Megaphone },
   { name: "Feedback", value: "feedback", icon: MessageSquare },
   { name: "Media", value: "media", icon: ImageIcon },
   { name: "Social Links", value: "socials", icon: LinkIcon },
@@ -29,8 +30,8 @@ export function Sidebar({
   onTabChange: (tab: string) => void
 }) {
   return (
-    <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-800 bg-slate-950 pb-6 pt-8 backdrop-blur-xl">
-      <div className="px-6">
+    <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col overflow-hidden border-r border-slate-800 bg-slate-950 pb-6 pt-8 backdrop-blur-xl">
+      <div className="shrink-0 px-6">
         <Link
           href="/home"
           className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 transition hover:bg-slate-800 hover:text-white"
@@ -38,13 +39,9 @@ export function Sidebar({
           <ArrowLeft className="size-4" />
           Home
         </Link>
-        <div className="mt-8">
-          <h1 className="text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-100">Admin Console</h1>
-          <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-500">H2H Content Hub</p>
-        </div>
       </div>
 
-      <nav className="mt-10 flex flex-1 flex-col gap-1 px-4">
+      <nav className="mt-10 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain px-4">
         {NAV_ITEMS.map((item) => {
           const isActive = currentTab === item.value
           return (
@@ -64,10 +61,7 @@ export function Sidebar({
             </button>
           )
         })}
-      </nav>
-
-      <div className="px-4 mt-auto">
-        <div className="flex flex-col gap-1">
+        <div className="mt-auto flex shrink-0 flex-col gap-1 pt-2">
           <Link
             href="/account"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-400 transition hover:bg-slate-900 hover:text-slate-200"
@@ -75,14 +69,17 @@ export function Sidebar({
             <Settings className="size-5 text-slate-500" />
             Account
           </Link>
-          <Link
-            href="/auth/signout"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-rose-500 transition hover:bg-slate-900/50 hover:text-rose-400"
-          >
-            <LogOut className="size-5 text-rose-500" />
-            Sign out
-          </Link>
         </div>
+      </nav>
+
+      <div className="shrink-0 px-4 pt-2">
+        <Link
+          href="/auth/signout"
+          className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-rose-500 transition hover:bg-slate-900/50 hover:text-rose-400"
+        >
+          <LogOut className="size-5 text-rose-500" />
+          Sign out
+        </Link>
       </div>
     </aside>
   )
