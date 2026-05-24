@@ -8,6 +8,58 @@ import { createServiceClient } from "@/lib/supabase/service"
 import { getAwardCeremonyWins, getMusicShowWins } from "@/lib/supabase/wins-service"
 import { syncWinsFromSources } from "@/lib/wins/sync-wins"
 import { getReleaseCatalog } from "@/lib/release-catalog"
+import type { NoticeType } from "@/lib/notices"
+
+export type NoticeInput = {
+  type: NoticeType
+  title_en: string
+  content_en: string
+  link?: string | null
+  link_text_en?: string | null
+  published_at: string
+  is_pinned: boolean
+  is_active: boolean
+  sort_order: number
+}
+
+function normalizeNoticeInput(input: NoticeInput) {
+  const title = input.title_en.trim()
+  const content = input.content_en.trim()
+
+  if (!title) throw new Error("Title is required.")
+  if (!content) throw new Error("Summary is required.")
+  if (input.is_pinned && !input.is_active) throw new Error("A pinned notice must be active.")
+
+  const link = input.link?.trim() || null
+
+  return {
+    type: input.type,
+    title_en: title,
+    content_en: content,
+    link,
+    link_text_en: link ? input.link_text_en?.trim() || null : null,
+    published_at: input.published_at,
+    is_pinned: input.is_pinned,
+    is_active: input.is_active,
+    sort_order: Math.max(0, Math.trunc(input.sort_order)),
+  }
+}
+
+async function clearExistingPinnedNotice(supabase: ReturnType<typeof createServiceClient>, id?: string) {
+  let query = supabase.from("notices").update({ is_pinned: false }).eq("is_active", true).eq("is_pinned", true)
+  if (id) query = query.neq("id", id)
+
+  const { error } = await query
+  if (error) throw new Error(formatNoticeMutationError(error.message))
+}
+
+function formatNoticeMutationError(message: string) {
+  if (message.includes("Only three notices can be active")) {
+    return "The database still has the old three-active-notice rule. Run the latest notices migration, then try again."
+  }
+
+  return message
+}
 
 function serializeReflectionRate(input: unknown): string | null {
   if (Array.isArray(input)) {
@@ -200,6 +252,19 @@ export async function getAdminTabData(tab: string) {
 
     if (error) return { error: error.message }
     return { feedbackMessages: data || [] }
+  }
+
+  if (tab === "notices") {
+    const { data, error } = await supabase
+      .from("notices")
+      .select("*")
+      .order("is_active", { ascending: false })
+      .order("is_pinned", { ascending: false })
+      .order("sort_order", { ascending: true })
+      .order("published_at", { ascending: false })
+
+    if (error) return { error: formatNoticeMutationError(error.message) }
+    return { notices: data || [] }
   }
 
   const [
@@ -610,6 +675,107 @@ export async function updateFeedbackStatus(feedbackId: string, status: "new" | "
   if (error) throw new Error(error.message)
 
   revalidatePath("/admin")
+}
+
+export async function createNotice(input: NoticeInput) {
+  try {
+    await requireAdmin()
+    const supabase = createServiceClient()
+    const payload = normalizeNoticeInput(input)
+
+    if (payload.is_pinned) await clearExistingPinnedNotice(supabase)
+
+    const { data, error } = await supabase.from("notices").insert(payload).select("*").single()
+    if (error) return { error: formatNoticeMutationError(error.message) }
+
+    revalidatePath("/admin")
+    revalidatePath("/home")
+    return { data }
+  } catch (err: any) {
+    return { error: err.message }
+  }
+}
+
+export async function updateNotice(id: string, input: NoticeInput) {
+  try {
+    await requireAdmin()
+    const supabase = createServiceClient()
+    const payload = normalizeNoticeInput(input)
+
+    if (payload.is_pinned) await clearExistingPinnedNotice(supabase, id)
+
+    const { data, error } = await supabase.from("notices").update(payload).eq("id", id).select("*").single()
+    if (error) return { error: error.message }
+
+    revalidatePath("/admin")
+    revalidatePath("/home")
+    return { data }
+  } catch (err: any) {
+    return { error: err.message }
+  }
+}
+
+export async function deleteNotice(id: string) {
+  try {
+    await requireAdmin()
+    const supabase = createServiceClient()
+    const { error } = await supabase.from("notices").delete().eq("id", id)
+    if (error) return { error: error.message }
+
+    revalidatePath("/admin")
+    revalidatePath("/home")
+    return { success: true }
+  } catch (err: any) {
+    return { error: err.message }
+  }
+}
+
+export async function updateNoticesOrder(orders: { id: string }[]) {
+  try {
+    await requireAdmin()
+    const supabase = createServiceClient()
+
+    const requestedIds = orders.map((order) => order.id)
+    if (new Set(requestedIds).size !== requestedIds.length) {
+      return { error: "Notice order contains duplicate entries." }
+    }
+
+    const { data: sortableNotices, error: sortableError } = await supabase
+      .from("notices")
+      .select("id")
+      .eq("is_active", true)
+      .eq("is_pinned", false)
+
+    if (sortableError) return { error: sortableError.message }
+
+    const sortableIds = new Set((sortableNotices || []).map((notice) => notice.id))
+    if (sortableIds.size !== requestedIds.length || requestedIds.some((id) => !sortableIds.has(id))) {
+      return { error: "Only active non-featured notices can be reordered." }
+    }
+
+    const { count: featuredCount, error: featuredError } = await supabase
+      .from("notices")
+      .select("*", { count: "exact", head: true })
+      .eq("is_active", true)
+      .eq("is_pinned", true)
+
+    if (featuredError) return { error: featuredError.message }
+
+    const activeStartPosition = featuredCount && featuredCount > 0 ? 1 : 0
+    for (const [index, order] of orders.entries()) {
+      const { error } = await supabase
+        .from("notices")
+        .update({ sort_order: activeStartPosition + index })
+        .eq("id", order.id)
+      if (error) return { error: error.message }
+    }
+
+    revalidatePath("/admin")
+    revalidatePath("/home")
+    return { success: true }
+  } catch (err: any) {
+    return { error: err.message }
+  }
 }
 
 export async function upsertTheme(data: any) {

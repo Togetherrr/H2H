@@ -14,7 +14,6 @@ import { TimelineSection } from "@/components/timeline-section"
 import { ComebackWatchHeader } from "@/components/comeback-watch-header"
 import { SpotlightNotice } from "@/components/spotlight-notice"
 import { FeedbackWidget } from "@/components/feedback-section"
-import { NoticeBoard } from "@/components/notice-board"
 import { Navbar, type TimeZone } from "@/components/navbar"
 import { useTranslation } from "@/hooks/useTranslation"
 import { Building2, Disc, Calendar, HeartPulse, Palette, Hash } from "lucide-react"
@@ -26,6 +25,7 @@ import type { GroupOfficialProfile } from "@/lib/group-official-profile"
 import type { HomeStatsSnapshot } from "@/lib/home-stats"
 import type { TrackPerformanceSnapshot } from "@/lib/track-performance"
 import type { ActiveVoteApp } from "@/lib/supabase/voting-service-server"
+import type { Notice } from "@/lib/notices"
 import { AwardEventCard } from "@/components/award-event-card"
 import { useTimeZoneStore } from "@/lib/timezone-store"
 import { formatDateTime, formatDateOnly } from "@/lib/timezone"
@@ -115,6 +115,7 @@ interface HomePageClientProps {
   trackPerformanceSnapshot: TrackPerformanceSnapshot
   awardEvents: MappedAwardEvent[]
   activeVoteApps: ActiveVoteApp[]
+  notices: Notice[]
 }
 
 // --- Sub-components cho giao diện mới ---
@@ -1058,6 +1059,7 @@ export function HomePageClient({
   trackPerformanceSnapshot,
   awardEvents,
   activeVoteApps,
+  notices,
 }: HomePageClientProps) {
   const { t } = useTranslation()
   const [timeZone, setTimeZone] = useState<TimeZone>("KST")
@@ -1085,7 +1087,7 @@ export function HomePageClient({
 
       <div className="section-shell">
         <div className="relative z-30">
-          <SpotlightNotice />
+          <SpotlightNotice notices={notices} />
         </div>
       </div>
 
@@ -1276,7 +1278,6 @@ export function HomePageClient({
         </div>
       </motion.section>
 
-      <NoticeBoard />
       <FeedbackWidget />
 
       <MemberDetailModal

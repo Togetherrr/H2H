@@ -1,76 +1,93 @@
 "use client"
 
-import { Megaphone, ShoppingCart, Info, Sparkles, ArrowRight, ExternalLink } from "lucide-react"
-import Link from "next/link"
+import { ArrowUpRight, Megaphone, Pin } from "lucide-react"
 import { useTranslation } from "@/hooks/useTranslation"
-import { ALL_NOTICES } from "@/lib/notices"
+import type { Notice } from "@/lib/notices"
 import { cn } from "@/lib/utils"
 
-export function SpotlightNotice() {
+export function SpotlightNotice({ notices }: { notices: Notice[] }) {
   const { t } = useTranslation()
-
-  // Get top 3 important notices
-  const displayNotices = ALL_NOTICES.slice(0, 3)
+  const displayNotices = notices
 
   if (displayNotices.length === 0) return null
 
   return (
-    <div className="w-full max-w-5xl mx-auto mb-20 animate-in fade-in slide-in-from-top-6 duration-1000 print:hidden px-4">
-      {/* Section Header */}
-      <div className="relative z-30 flex items-center justify-between mb-8 px-2">
-        <div className="flex items-center gap-5">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FFF0F5] to-[#FFD1DC] text-[#FF708A] shadow-xl border border-white">
-            <Megaphone className="size-7" />
+    <section className="mx-auto mb-12 w-full max-w-5xl px-4 print:hidden animate-in fade-in slide-in-from-top-4 duration-700">
+      <div className="overflow-hidden rounded-[1.75rem] border border-white/70 bg-white/60 shadow-[0_18px_55px_rgba(53,99,132,0.18)] backdrop-blur-2xl">
+        <div className="flex items-center justify-between gap-4 border-b border-white/70 px-5 py-5 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3.5 sm:gap-5">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-[1.25rem] bg-[#FFF0F5] text-[#E95676] ring-1 ring-[#F7D5DE] sm:size-14">
+              <Megaphone className="size-5 sm:size-6" />
+            </div>
+            <h2 className="section-title text-slate-900">
+              {t("notice.title")}
+            </h2>
           </div>
-          <h2 className="section-title">
-            {t("notice.title")}
-          </h2>
+          <span className="hidden rounded-full border border-[#F3A7B7]/70 bg-[#FFF5F8]/95 px-4 py-2 text-[11px] font-black uppercase tracking-[0.2em] text-[#D94F6A] shadow-sm ring-1 ring-white/80 sm:inline-flex">
+            {displayNotices.length} active
+          </span>
         </div>
 
-      </div>
+        <div className="space-y-3 bg-white/25 p-3 sm:p-4 lg:p-5">
+          {displayNotices.map((notice) => (
+            <div
+              key={notice.id}
+              className={cn(
+                "rounded-[1.25rem] border px-4 py-4 shadow-[0_12px_30px_rgba(53,99,132,0.08)] ring-1 ring-white/50 transition sm:px-5",
+                notice.isPinned
+                  ? "border-[#F4B4C2]/80 bg-[#FFF5F8]/85"
+                  : "border-white/80 bg-white/55 hover:bg-white/70"
+              )}
+            >
+              <div className={cn(
+                "grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center",
+                notice.link && notice.link !== "#" ? "" : "sm:grid-cols-1"
+              )}>
+                <div className="min-w-0">
+                  <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                    {notice.isPinned && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#E95676] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-white shadow-sm">
+                        <Pin className="size-2.5 fill-current" />
+                        Featured
+                      </span>
+                    )}
+                    <span className={cn(
+                      "rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] ring-1",
+                      notice.isPinned
+                        ? "bg-white/75 text-[#D94F6A] ring-[#F7C3CF]"
+                        : "bg-white/65 text-slate-500 ring-white/80"
+                    )}>
+                      {notice.type}
+                    </span>
+                    <time className="text-[11px] font-semibold text-slate-400" dateTime={notice.date}>
+                      {notice.date.replace(/-/g, ".")}
+                    </time>
+                  </div>
+                  <h3 className="truncate text-[13px] font-bold leading-5 text-slate-900 sm:text-sm">
+                    {notice.title_en}
+                  </h3>
+                  <p className="mt-0.5 line-clamp-1 text-xs leading-5 text-slate-500">
+                    {notice.content_en}
+                  </p>
+                </div>
 
-      {/* Stack of Narrow Horizontal Notices */}
-      <div className="flex flex-col gap-4">
-        {displayNotices.map((notice, i) => (
-          <a
-            key={notice.id}
-            href={notice.link || "#"}
-            target={notice.link?.startsWith('http') ? "_blank" : undefined}
-            rel={notice.link?.startsWith('http') ? "noreferrer" : undefined}
-            className={`card-premium group relative z-10 flex items-center gap-6 p-4 md:p-6 !rounded-3xl shadow-pink-200/10 hover:-translate-y-1 cursor-pointer slide-in-left ${i === 1 ? 'slide-delay-1' : i === 2 ? 'slide-delay-2' : ''}`}
-          >
-            {/* Icon Column */}
-            <div className={cn(
-              "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-[#FF708A] shadow-lg border border-white/20"
-            )}>
-              {notice.type === "comeback" ? <ShoppingCart className="size-6" /> :
-                notice.type === "company" ? <Megaphone className="size-6" /> :
-                  <Info className="size-6" />}
-            </div>
-
-            {/* Content Column */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-1">
-                <span className="text-[9px] font-black text-white opacity-70 uppercase tracking-widest">{notice.date.replace(/-/g, '.')}</span>
-                {notice.isPinned && (
-                  <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-[#FF708A] bg-white px-2 py-0.5 rounded-full">
-                    <Sparkles className="size-2 fill-current" />
-                    {t("notice.pin")}
-                  </span>
+                {notice.link && notice.link !== "#" && (
+                  <a
+                    href={notice.link}
+                    target={notice.link.startsWith("http") ? "_blank" : undefined}
+                    rel={notice.link.startsWith("http") ? "noreferrer" : undefined}
+                    aria-label={notice.linkText_en || t("notice.viewDetail")}
+                    title={notice.linkText_en || t("notice.viewDetail")}
+                    className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-white/80 text-[#D94F6A] ring-1 ring-white/90 transition hover:-translate-y-0.5 hover:bg-white hover:text-[#C84664] hover:shadow-[0_10px_24px_rgba(217,79,106,0.16)]"
+                  >
+                    <ArrowUpRight className="size-4" />
+                  </a>
                 )}
               </div>
-              <h3 className="text-[15px] md:text-[17px] font-black text-black uppercase tracking-tight leading-tight truncate group-hover:text-[#D94F6A] transition-colors">
-                {notice.title_en}
-              </h3>
             </div>
-
-            {/* Action Column */}
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 border border-white/20 text-black group-hover:bg-white group-hover:text-[#FF708A] transition-all">
-              <ExternalLink className="size-4" />
-            </div>
-          </a>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+    </section>
   )
 }

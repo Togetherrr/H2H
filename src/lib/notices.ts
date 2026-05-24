@@ -1,3 +1,5 @@
+import type { Tables } from "@/lib/supabase/database.types"
+
 export type NoticeType = "comeback" | "company" | "event" | "general"
 
 export interface Notice {
@@ -9,6 +11,21 @@ export interface Notice {
   linkText_en?: string
   isPinned?: boolean
   date: string
+}
+
+export type NoticeRow = Tables<"notices">
+
+export function mapNoticeRow(row: NoticeRow): Notice {
+  return {
+    id: row.id,
+    type: row.type as NoticeType,
+    title_en: row.title_en,
+    content_en: row.content_en,
+    link: row.link ?? undefined,
+    linkText_en: row.link_text_en ?? undefined,
+    isPinned: row.is_pinned,
+    date: row.published_at,
+  }
 }
 
 export const ALL_NOTICES: Notice[] = [
