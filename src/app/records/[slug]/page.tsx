@@ -446,7 +446,7 @@ function RecordDetailContent({
 
         <div className="section-shell relative z-10">
           <Link
-            href="/home#records"
+            href="/home#album"
             className="group inline-flex items-center gap-2.5 mb-10 px-4 py-2 rounded-full bg-white/40 backdrop-blur-md border border-white/60 shadow-sm text-[10px] font-black uppercase tracking-[0.3em] text-black/50 hover:text-[#FF708A] hover:bg-white/80 transition-all"
             style={{
               opacity: heroVisible ? 1 : 0,
@@ -475,7 +475,7 @@ function RecordDetailContent({
 
             <div className="flex-1 min-w-0">
               <p
-                className="text-[10px] font-black uppercase tracking-[0.5em] mb-2"
+                className="font-sans text-[11px] font-black uppercase tracking-[0.4em] mb-3 drop-shadow-sm"
                 style={{
                   color: meta.accent,
                   opacity: heroVisible ? 1 : 0,
@@ -484,18 +484,35 @@ function RecordDetailContent({
               >
                 {t("records.officialRecords")}
               </p>
-              <h1
-                className="text-4xl md:text-6xl font-black text-black uppercase tracking-tighter mb-3 leading-none"
-                style={{
-                  opacity: heroVisible ? 1 : 0,
-                  transform: heroVisible ? "translateY(0)" : "translateY(16px)",
-                  transition: "opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s",
-                }}
-              >
-                {page.title}
-              </h1>
+              <div className="relative mb-4">
+                {/* Glow effect phía sau */}
+                <div
+                  className="absolute -inset-4 blur-3xl opacity-30 z-0 rounded-full"
+                  style={{
+                    background: `linear-gradient(135deg, ${meta.accentLight}, ${meta.accent})`,
+                    opacity: heroVisible ? 0.4 : 0,
+                    transform: heroVisible ? "scale(1)" : "scale(0.8)",
+                    transition: "opacity 1s ease 0.2s, transform 1s ease 0.2s",
+                  }}
+                />
+                
+                <h1
+                  className="font-sans text-5xl md:text-7xl lg:text-[5rem] font-black uppercase tracking-tighter leading-[0.9] relative z-10"
+                  style={{
+                    background: `linear-gradient(135deg, #0f172a 30%, ${meta.accent} 110%)`,
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    filter: `drop-shadow(0px 10px 20px ${meta.accent}20)`,
+                    opacity: heroVisible ? 1 : 0,
+                    transform: heroVisible ? "translateY(0)" : "translateY(20px)",
+                    transition: "opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s",
+                  }}
+                >
+                  {page.title}
+                </h1>
+              </div>
               <p
-                className="text-sm font-medium text-black/50 leading-relaxed max-w-2xl"
+                className="font-sans text-sm md:text-base font-bold text-slate-600/90 leading-relaxed max-w-2xl"
                 style={{
                   opacity: heroVisible ? 1 : 0,
                   transition: "opacity 0.5s ease 0.35s",
@@ -521,47 +538,72 @@ function RecordDetailContent({
 
           {/* Stats bar */}
           <div
-            className="mt-10 flex flex-wrap gap-4"
+            className="mt-12 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6"
             style={{
               opacity: heroVisible ? 1 : 0,
               transform: heroVisible ? "translateY(0)" : "translateY(12px)",
-              transition: "opacity 0.5s ease 0.45s, transform 0.5s ease 0.45s",
+              transition: "opacity 0.6s ease 0.45s, transform 0.6s ease 0.45s",
             }}
           >
             <div
-              className="flex items-baseline gap-4 px-8 py-6 rounded-[2.5rem] border-2 shadow-2xl relative overflow-hidden group"
+              className="group relative flex items-center justify-between gap-8 px-8 py-5 rounded-[2rem] shadow-xl backdrop-blur-md overflow-hidden border border-white/50"
               style={{
-                background: `rgba(255, 255, 255, 0.85)`,
-                borderColor: `${meta.accent}15`,
+                background: `linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 100%)`,
+                boxShadow: `0 20px 40px ${meta.accent}15`,
               }}
             >
               <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000"
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
                 style={{
-                  background: `radial-gradient(circle at 30% 50%, ${meta.accentLight}30, transparent 70%)`,
+                  background: `radial-gradient(circle at top right, ${meta.accentLight}50, transparent 70%)`,
                 }}
               />
-              <span
-                className="text-6xl font-black tracking-tighter relative z-10 tabular-nums drop-shadow-sm"
-                style={{ color: meta.accent }}
-              >
-                {countUpValue.toLocaleString()}
-              </span>
-              <span className="text-[11px] font-black text-black/30 uppercase tracking-[0.25em] relative z-10 mb-2">
-                {page.totalLabel}
-              </span>
+              <div className="flex flex-col relative z-10">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-1">
+                  Total
+                </span>
+                <div className="flex items-baseline gap-3">
+                  <span
+                    className="text-5xl font-black tracking-tighter drop-shadow-sm leading-none"
+                    style={{ color: meta.accent }}
+                  >
+                    {countUpValue.toLocaleString()}
+                  </span>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                    {page.totalLabel}
+                  </span>
+                </div>
+              </div>
             </div>
 
             <a
               href={page.sourceHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2.5 px-7 py-5 rounded-[2rem] bg-white/80 backdrop-blur border border-white shadow-xl hover:bg-white hover:shadow-2xl transition-all group"
+              className="group relative flex items-center gap-4 px-8 py-5 h-full sm:h-auto rounded-[2rem] backdrop-blur-md border border-white/40 shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden"
+              style={{
+                background: `linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.3) 100%)`,
+              }}
             >
-              <ExternalLink className="size-3.5 text-black/30 group-hover:text-black/60 transition-colors" />
-              <span className="text-[11px] font-bold text-black/40 group-hover:text-black/70 transition-colors">
-                {page.sourceLabel}
-              </span>
+               <div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                style={{
+                  background: `linear-gradient(135deg, ${meta.accentLight}20 0%, transparent 100%)`,
+                }}
+              />
+              <div
+                className="flex items-center justify-center size-10 rounded-full shadow-sm bg-white/80 group-hover:scale-110 transition-transform duration-500"
+              >
+                <ExternalLink className="size-4" style={{ color: meta.accent }} />
+              </div>
+              <div className="flex flex-col items-start relative z-10">
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  {t("records.dataSource")}
+                </span>
+                <span className="text-[13px] font-bold text-slate-700 group-hover:text-slate-900 transition-colors">
+                  {page.sourceLabel}
+                </span>
+              </div>
             </a>
           </div>
         </div>
@@ -797,8 +839,8 @@ export default function RecordDetailPage() {
 
     try {
       if (isWinsSlug) {
-        // ── Wins slugs: fetch live từ /api/wins (Wikipedia → Supabase) ──────
-        const res = await fetch("/api/wins", { cache: "no-store" })
+        // ── Wins slugs: fetch live từ /api/wins/sync (Wikipedia → Supabase) ──────
+        const res = await fetch("/api/wins/sync", { cache: "no-store" })
         if (!res.ok) throw new Error(`API error ${res.status}`)
 
         const data: WinsApiResponse = await res.json()

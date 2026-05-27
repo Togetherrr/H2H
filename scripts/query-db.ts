@@ -23,19 +23,16 @@ if (!url || !serviceKey) {
 const supabase = createClient(url, serviceKey)
 
 async function run() {
-  console.log("Fetching music_show_wins...")
-  const { data: musicWins, error: musicError } = await supabase
-    .from("music_show_wins")
-    .select("*")
-  if (musicError) console.error("Music Error:", musicError)
-  else console.log(`Found ${musicWins?.length} music show wins:`, JSON.stringify(musicWins, null, 2))
+  const { data, error } = await supabase
+    .from("voting_apps")
+    .update({
+      android_url: "https://play.google.com/store/search?q=upick&c=apps",
+      ios_url: "https://apps.apple.com/us/app/upick-global-fandom-platform/id6443780271"
+    })
+    .eq("id", "ab41f2da-4ffd-43a3-bd87-f0e917ae8c84");
 
-  console.log("\nFetching award_ceremony_wins...")
-  const { data: awardWins, error: awardError } = await supabase
-    .from("award_ceremony_wins")
-    .select("*")
-  if (awardError) console.error("Award Error:", awardError)
-  else console.log(`Found ${awardWins?.length} award ceremony wins:`, JSON.stringify(awardWins, null, 2))
+  if (error) console.error("Error updating:", error);
+  else console.log("Successfully updated UPICK URLs!");
 }
 
-run()
+run();

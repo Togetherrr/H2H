@@ -18,8 +18,8 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-body)", ...defaultTheme.fontFamily.sans],
-        display: ["var(--font-display)", ...defaultTheme.fontFamily.sans],
+        sans: ["var(--font-nunito)", ...defaultTheme.fontFamily.sans],
+        display: ["var(--font-nunito)", ...defaultTheme.fontFamily.sans],
       },
       colors: {
         background: "hsl(var(--background))",

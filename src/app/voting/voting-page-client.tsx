@@ -398,17 +398,18 @@ function VotingAppCard({ app }: { app: MappedApp }) {
           </div>
 
           <div className="mt-10 flex flex-wrap items-center justify-between gap-6 border-t border-white/60 pt-8">
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-3 flex-wrap items-center">
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-1">links:</p>
               {app.androidHref && (
                 <a
                   href={app.androidHref}
                   target="_blank"
                   rel="noreferrer"
-                  className="p-3.5 rounded-2xl bg-white border border-white text-[#FF708A] shadow-sm transition-all hover:-translate-y-1"
+                  className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-white border border-white text-[#FF708A] shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"
                   title="Android App"
                 >
-                  <Smartphone className="size-5" />
+                  <Smartphone className="size-4" />
+                  <span className="text-[11px] font-black uppercase tracking-widest">Android</span>
                 </a>
               )}
               {app.iosHref && (
@@ -416,10 +417,11 @@ function VotingAppCard({ app }: { app: MappedApp }) {
                   href={app.iosHref}
                   target="_blank"
                   rel="noreferrer"
-                  className="p-3.5 rounded-2xl bg-white border border-white text-[#FF708A] shadow-sm transition-all hover:-translate-y-1"
+                  className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-white border border-white text-[#FF708A] shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"
                   title="iOS App"
                 >
-                  <Smartphone className="size-5" />
+                  <Smartphone className="size-4" />
+                  <span className="text-[11px] font-black uppercase tracking-widest">iOS</span>
                 </a>
               )}
               {app.websiteHref && (
@@ -427,10 +429,11 @@ function VotingAppCard({ app }: { app: MappedApp }) {
                   href={app.websiteHref}
                   target="_blank"
                   rel="noreferrer"
-                  className="p-3.5 rounded-2xl bg-white border border-white text-[#FF708A] shadow-sm transition-all hover:-translate-y-1"
+                  className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-white border border-white text-[#FF708A] shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"
                   title="Website"
                 >
-                  <Globe className="size-5" />
+                  <Globe className="size-4" />
+                  <span className="text-[11px] font-black uppercase tracking-widest">Web</span>
                 </a>
               )}
             </div>
@@ -449,12 +452,14 @@ function VotingAppCard({ app }: { app: MappedApp }) {
                 <ChevronRight className={cn("size-4 transition-transform", expanded && "rotate-90")} />
               </button>
 
+              {/* Tạm ẩn nút View Guide
               <button
                 onClick={() => setIsGuideOpen(true)}
                 className="flex items-center gap-3 rounded-2xl bg-[#FF3B57] px-8 py-4 text-[11px] font-black uppercase tracking-widest text-white shadow-xl shadow-pink-100 hover:bg-[#FF2B4A] transition-all hover:scale-105 active:scale-95"
               >
                 <BookOpen className="size-4" /> View Guide
               </button>
+              */}
             </div>
           </div>
         </div>

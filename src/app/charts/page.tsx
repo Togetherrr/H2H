@@ -246,24 +246,24 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
         {/* ── Page header ── */}
         <div className="mb-24 flex flex-col gap-12 px-4">
           <Link
-            href={`/${platform ? `?platform=${platform}` : ""}`}
+            href="/home#performance"
             className="group inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/40 backdrop-blur-md px-6 py-3 text-[11px] font-black uppercase tracking-widest text-slate-500 shadow-sm transition hover:bg-[#FFC2D1] hover:text-white hover:border-transparent w-fit"
           >
             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
             {t("charts.return")}
           </Link>
 
-          <div className="flex flex-col gap-6">
-            <div className="flex items-center gap-6">
+          <div className="flex flex-col gap-8">
+            <div className="flex flex-col md:flex-row md:items-center gap-6">
               {platform && (
                 <div className={cn(
-                  "flex h-24 w-24 md:h-32 md:w-32 items-center justify-center rounded-[2.5rem] md:rounded-[3rem] shadow-2xl border shrink-0 overflow-hidden",
+                  "flex h-20 w-20 md:h-28 md:w-28 items-center justify-center rounded-3xl md:rounded-[2.5rem] shadow-xl border shrink-0 overflow-hidden",
                   platform === "spotify" ? "bg-black border-black" : "bg-white border-white/60"
                 )}>
                   {platform === "spotify" ? (
-                    <Image src="/spotify.png" alt="Spotify" width={128} height={128} className="h-full w-full object-cover" />
+                    <Image src="/spotify.png" alt="Spotify" width={112} height={112} className="h-full w-full object-cover" />
                   ) : (
-                    <div className="scale-[1.8] md:scale-[2.5]">
+                    <div className="scale-[2] md:scale-[2.5]">
                       {platform === "youtube" ? (
                         <Image src="/Youtube.png" alt="YouTube" width={36} height={36} className="h-9 w-9 object-contain" />
                       ) : (
@@ -273,18 +273,27 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                   )}
                 </div>
               )}
-              <h1 className={cn(
-                "text-6xl md:text-9xl font-black uppercase tracking-tighter leading-none transition-colors duration-500",
-                platform === "spotify" ? "text-[#1DB954]" : platform === "youtube" ? "text-[#FF0000]" : platform === "korea" ? "text-emerald-500" : "text-black"
-              )}>
-                {platform ? (platform === "korea" ? "SOUTH KOREA" : platformConfigs[platform].title) : "HEARTS2HEARTS"}
-              </h1>
-                  {snapshot.sources.note ? (
-                    <p className="max-w-2xl rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-rose-500">
-                      {snapshot.sources.note}
-                    </p>
-                  ) : null}
+              <div className="flex flex-col gap-2">
+                <h1 className={cn(
+                  "font-sans text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tight leading-[0.9] drop-shadow-md transition-colors duration-500",
+                  platform === "spotify" ? "text-[#1DB954]" : platform === "youtube" ? "text-[#FF0000]" : platform === "korea" ? "text-emerald-500" : "text-slate-900"
+                )}>
+                  {platform ? (platform === "korea" ? "SOUTH KOREA" : platformConfigs[platform].title) : "HEARTS2HEARTS"}
+                </h1>
+                {platform && (
+                  <p className="font-sans text-xs md:text-sm font-black uppercase tracking-[0.3em] text-slate-500/80">
+                    Analytics & Performance
+                  </p>
+                )}
+              </div>
             </div>
+            {snapshot.sources.note ? (
+              <div className="w-fit">
+                <p className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-rose-500">
+                  {snapshot.sources.note}
+                </p>
+              </div>
+            ) : null}
           </div>
         </div>
 

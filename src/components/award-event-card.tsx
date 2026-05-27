@@ -298,7 +298,7 @@ export function AwardEventCard({ event }: { event: MappedAwardEvent }) {
                                     <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 mb-1 flex items-center gap-1.5">
                                         <Clock className="size-2.5" /> Voting Period
                                     </p>
-                                    <p className="text-[12px] font-bold whitespace-nowrap">
+                                    <p className="text-[12px] font-bold whitespace-nowrap text-slate-700">
                                         {formatDateTime(selectedApp.activeRound.start_at, timeZone)}
                                         <span className="mx-1 text-slate-400">—</span>
                                         {formatDateTime(selectedApp.activeRound.end_at, timeZone)}
@@ -434,17 +434,18 @@ export function AwardEventCard({ event }: { event: MappedAwardEvent }) {
                     {/* ── Footer: links + actions ──────────────────────────────── */}
                     <div className="flex flex-wrap items-center justify-between gap-4 border-t border-white/50 pt-6">
                         {/* Download links for selected app */}
-                        <div className="flex gap-3 items-center">
+                        <div className="flex gap-3 flex-wrap items-center">
                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-1">links:</p>
                             {selectedApp.androidHref && (
                                 <a
                                     href={selectedApp.androidHref}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="p-3.5 rounded-2xl bg-white border border-white text-[#FF708A] shadow-sm transition-all hover:-translate-y-1"
+                                    className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-white border border-white text-[#FF708A] shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"
                                     title="Android App"
                                 >
-                                    <Smartphone className="size-5" />
+                                    <Smartphone className="size-4" />
+                                    <span className="text-[11px] font-black uppercase tracking-widest">Android</span>
                                 </a>
                             )}
                             {selectedApp.iosHref && (
@@ -452,10 +453,11 @@ export function AwardEventCard({ event }: { event: MappedAwardEvent }) {
                                     href={selectedApp.iosHref}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="p-3.5 rounded-2xl bg-white border border-white text-[#FF708A] shadow-sm transition-all hover:-translate-y-1"
+                                    className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-white border border-white text-[#FF708A] shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"
                                     title="iOS App"
                                 >
-                                    <Smartphone className="size-5" />
+                                    <Smartphone className="size-4" />
+                                    <span className="text-[11px] font-black uppercase tracking-widest">iOS</span>
                                 </a>
                             )}
                             {selectedApp.websiteHref && (
@@ -463,10 +465,11 @@ export function AwardEventCard({ event }: { event: MappedAwardEvent }) {
                                     href={selectedApp.websiteHref}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="p-3.5 rounded-2xl bg-white border border-white text-[#FF708A] shadow-sm transition-all hover:-translate-y-1"
+                                    className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-white border border-white text-[#FF708A] shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"
                                     title="Website"
                                 >
-                                    <Globe className="size-5" />
+                                    <Globe className="size-4" />
+                                    <span className="text-[11px] font-black uppercase tracking-widest">Web</span>
                                 </a>
                             )}
                         </div>
@@ -487,6 +490,7 @@ export function AwardEventCard({ event }: { event: MappedAwardEvent }) {
                             </button>
 
                             {/* Guide button: URL → external link, no URL → modal */}
+                            {/* Tạm ẩn nút View Guide
                             {selectedApp.guideUrl ? (
                                 <a
                                     href={selectedApp.guideUrl}
@@ -506,6 +510,7 @@ export function AwardEventCard({ event }: { event: MappedAwardEvent }) {
                                     View {selectedApp.name} Guide
                                 </button>
                             )}
+                            */}
                         </div>
                     </div>
                 </div>

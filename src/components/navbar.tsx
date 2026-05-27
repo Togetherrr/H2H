@@ -210,7 +210,7 @@ export function Navbar({
   return (
     <header className="fixed inset-x-0 top-4 z-50 flex justify-center px-4 sm:px-6">
       <div className="flex h-16 w-full max-w-[1400px] items-center justify-between rounded-full border border-slate-200 bg-white/95 px-6 py-2 shadow-lg shadow-black/5 backdrop-blur-xl transition-all hover:bg-white hover:border-sky-200">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-12">
           <AppLink href="/home" className="group flex items-center gap-3">
             <div className="relative h-9 w-9 overflow-hidden rounded-full border-2 border-sky-100 bg-gradient-to-br from-sky-200 to-pink-100 shadow-sm transition-transform group-hover:scale-110">
               <Image src="/logo-official-removebg-.png" alt="Logo" width={36} height={36} className="h-full w-full object-cover" />
@@ -220,7 +220,7 @@ export function Navbar({
             </p>
           </AppLink>
 
-          <nav className="hidden items-center gap-6 xl:flex">
+          <nav className="hidden items-center gap-10 xl:flex">
             {navItems.map((item) => (
               <HeaderNavLink key={item.label} href={item.href} label={item.label} />
             ))}
@@ -236,10 +236,7 @@ export function Navbar({
                 if (onTimeZoneChange) onTimeZoneChange(tz)
               }}
             />
-            <div className="h-4 w-px bg-slate-300/50" />
           </div>
-
-          {mounted && <HeaderAccountButton />}
         </div>
       </div>
     </header>
