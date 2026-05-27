@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { syncWinsFromSources } from "@/lib/wins/sync-wins"
-import { createServiceClient } from "@/lib/supabase/service"
+import { createStaticClient } from "@/lib/supabase/static"
 
 export const runtime = "nodejs"
 
@@ -9,18 +9,20 @@ export const runtime = "nodejs"
 
 export async function GET() {
   try {
-    const supabase = createServiceClient()
+    const supabase = createStaticClient()
 
     const [musicResult, awardResult, settingsResult] = await Promise.all([
       (supabase as any)
         .from("music_show_wins")
         .select("*")
-        .order("date", { ascending: false }),
+        .order("date", { ascending: false })
+        .limit(500),
       (supabase as any)
         .from("award_ceremony_wins")
         .select("*")
         .order("year", { ascending: false })
-        .order("ceremony", { ascending: true }),
+        .order("ceremony", { ascending: true })
+        .limit(500),
       supabase.from("site_settings").select("metadata").eq("id", 1).maybeSingle(),
     ])
 

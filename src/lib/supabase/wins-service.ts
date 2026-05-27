@@ -68,6 +68,7 @@ export async function getMusicShowWins() {
         .from("music_show_wins")
         .select("*")
         .order("date", { ascending: false })
+        .limit(500)
 
       if (error) {
         markSupabaseOfflineTemporarily(error)
@@ -113,6 +114,7 @@ export async function getAwardCeremonyWins() {
         .select("*")
         .order("year", { ascending: false })
         .order("ceremony", { ascending: true })
+        .limit(500)
 
       if (error) {
         markSupabaseOfflineTemporarily(error)
