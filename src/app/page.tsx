@@ -45,6 +45,7 @@ export default function LandingPage() {
           .from("site_settings")
           .select("metadata")
           .eq("id", 1)
+          .limit(1)
           .maybeSingle<{ metadata: SiteSettingsMetadata }>()
 
         if (error) {

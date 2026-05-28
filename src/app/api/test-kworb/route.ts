@@ -1,17 +1,19 @@
 import { fetchKworbSpotify } from "@/lib/realtime/kworb"
 
 function requireTestSecret(req: Request) {
+    if (process.env.NODE_ENV === "production") {
+        return false
+    }
+
     const configured = process.env.H2H_TEST_SECRET
 
     if (!configured) {
         return false
     }
 
-    const url = new URL(req.url)
-    const querySecret = url.searchParams.get("secret")
     const headerSecret = req.headers.get("x-test-secret")
 
-    return querySecret === configured || headerSecret === configured
+    return headerSecret === configured
 }
 
 export async function GET(req: Request) {
