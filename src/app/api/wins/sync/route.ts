@@ -5,9 +5,29 @@ import { createStaticClient } from "@/lib/supabase/static"
 export const runtime = "nodejs"
 
 // ─── GET — đọc từ Supabase ra UI ─────────────────────────────────────────────
-// Dùng bởi page.tsx để hiển thị wins live
+export async function GET(request: Request) {
+  // Nếu có Authorization header → kiểm tra token để chạy sync
+  const syncToken = process.env.H2H_WINS_SYNC_TOKEN?.trim()
+  const cronSecret = process.env.CRON_SECRET?.trim() 
+  const h2hCronSecret = process.env.H2H_CRON_SECRET?.trim()
+  const auth = request.headers.get("authorization")?.replace("Bearer ", "")
 
-export async function GET() {
+  const isAuthorized = auth && (
+    (syncToken && auth === syncToken) ||
+    (cronSecret && auth === cronSecret) ||
+    (h2hCronSecret && auth === h2hCronSecret)
+  )
+
+  if (isAuthorized) {
+    try {
+      const result = await syncWinsFromSources()
+      return NextResponse.json({ ok: true, result })
+    } catch (err: any) {
+      return NextResponse.json({ ok: false, error: err?.message ?? "Sync failed" }, { status: 500 })
+    }
+  }
+
+  // Không có token → là UI đang fetch data bình thường
   try {
     const supabase = createStaticClient()
 
@@ -38,7 +58,6 @@ export async function GET() {
       },
       {
         headers: {
-          // Cache 10 phút ở CDN, cho phép stale-while-revalidate
           "Cache-Control": "public, s-maxage=600, stale-while-revalidate=60",
         },
       }
@@ -51,9 +70,7 @@ export async function GET() {
   }
 }
 
-// ─── POST — trigger sync từ Wikipedia → Supabase ─────────────────────────────
-// Gọi từ cron job hoặc thủ công với header Authorization: Bearer <token>
-
+// ─── POST — trigger sync thủ công ────────────────────────────────────────────
 function unauthorized() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 }

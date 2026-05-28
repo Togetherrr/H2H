@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getTrackPerformanceSnapshot } from "@/lib/track-performance";
+import { getSocialStatsSnapshotFromDb, refreshSocialStatsSnapshot } from "@/lib/realtime/social-stats";
 import { createServiceClient } from "@/lib/supabase/service";
 import { floorToMinutes, parseSpotifyTrackId } from "@/lib/realtime/utils";
 
@@ -15,21 +16,19 @@ const logDebug = (...args: unknown[]) => {
 
 function requireCronSecret(req: Request) {
   const configured = process.env.H2H_CRON_SECRET;
-
-  if (!configured) {
-    throw new Error("Missing H2H_CRON_SECRET.");
-  }
+  if (!configured) throw new Error("Missing H2H_CRON_SECRET.");
 
   const url = new URL(req.url);
-
   const querySecret = url.searchParams.get("secret");
   const headerSecret = req.headers.get("x-cron-secret");
+  // Vercel Cron gửi header này tự động
+  const vercelCronSecret = req.headers.get("authorization")?.replace("Bearer ", "");
 
-  if (querySecret !== configured && headerSecret !== configured) {
-    return false;
-  }
-
-  return true;
+  return (
+    querySecret === configured ||
+    headerSecret === configured ||
+    vercelCronSecret === configured
+  );
 }
 
 export async function GET(req: Request) {
@@ -38,7 +37,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
-  logDebug("POLL ROUTE HIT");
+    logDebug("POLL ROUTE HIT");
 
     const url = new URL(req.url);
 
@@ -48,6 +47,9 @@ export async function GET(req: Request) {
 
     const bucketTs = floorToMinutes(new Date(), 5).toISOString();
 
+    const socialStatsSnapshot = dryRun
+      ? await getSocialStatsSnapshotFromDb({ allowLiveFallback: false })
+      : await refreshSocialStatsSnapshot();
     const snapshot = await getTrackPerformanceSnapshot();
     const spotifySource = snapshot.sources?.spotify ?? null;
 
@@ -57,14 +59,14 @@ export async function GET(req: Request) {
 
     const spotifyRows = snapshot.spotify.items
       .map((item) => {
-  logDebug("RAW SPOTIFY ITEM:", item);
+        logDebug("RAW SPOTIFY ITEM:", item);
 
         const parsedId =
           parseSpotifyTrackId(item.href) ??
           item.id ??
           parseSpotifyTrackId(item.meta);
 
-  logDebug("PARSED SPOTIFY ID:", parsedId);
+        logDebug("PARSED SPOTIFY ID:", parsedId);
 
         const total = typeof item.total === "number" ? item.total : null;
 
@@ -84,24 +86,22 @@ export async function GET(req: Request) {
         };
       })
       .filter(Boolean) as Array<{
-      type: "spotify_track";
-      platform_id: string;
-      title: string;
-      cover_url: string | null;
-      is_active: boolean;
-      total: number;
-      daily: number | null;
-    }>;
+        type: "spotify_track";
+        platform_id: string;
+        title: string;
+        cover_url: string | null;
+        is_active: boolean;
+        total: number;
+        daily: number | null;
+      }>;
 
-    // If Chartex is rate-limited / empty, keep Spotify from going blank by reusing last known totals.
-    // This prevents UI gaps while waiting for quota reset.
+    // Keep Spotify stable by reusing the last stored totals when a fresh snapshot cannot be built.
     const needsSpotifyFallback =
       spotifyRows.length === 0 &&
       typeof spotifySource === "string" &&
       (spotifySource.includes("429") ||
         spotifySource.includes("rate") ||
-        spotifySource.includes("blocked") ||
-        spotifySource.includes("chartex_"));
+        spotifySource.includes("blocked"));
 
     // =========================
     // YOUTUBE
@@ -128,16 +128,16 @@ export async function GET(req: Request) {
         };
       })
       .filter(Boolean) as Array<{
-      type: "youtube_video";
-      platform_id: string;
-      title: string;
-      cover_url: string | null;
-      is_active: boolean;
-      total: number;
-    }>;
+        type: "youtube_video";
+        platform_id: string;
+        title: string;
+        cover_url: string | null;
+        is_active: boolean;
+        total: number;
+      }>;
 
-  logDebug("SPOTIFY ROWS:", spotifyRows);
-  logDebug("YOUTUBE ROWS:", youtubeRows);
+    logDebug("SPOTIFY ROWS:", spotifyRows);
+    logDebug("YOUTUBE ROWS:", youtubeRows);
 
     const supabase = createServiceClient();
 
@@ -152,7 +152,7 @@ export async function GET(req: Request) {
         .limit(100);
 
       if (existingItemsError) {
-  logDebug("SPOTIFY FALLBACK ITEMS ERROR:", existingItemsError);
+        logDebug("SPOTIFY FALLBACK ITEMS ERROR:", existingItemsError);
       } else {
         const itemIds = (existingItems ?? [])
           .map((row) => row.id)
@@ -210,14 +210,14 @@ export async function GET(req: Request) {
       source_updated_at:
         row.type === "spotify_track"
           ? (snapshot.spotify.note
-              ?.match(/(\d{4}\/\d{2}\/\d{2})/)?.[1]
-              ?.replace(/\//g, "-") ?? null)
+            ?.match(/(\d{4}\/\d{2}\/\d{2})/)?.[1]
+            ?.replace(/\//g, "-") ?? null)
           : null,
     }));
 
     const snapshotRows = [...finalSpotifyRows, ...youtubeRows];
 
-  logDebug("ITEMS TO UPSERT:", itemsToUpsert);
+    logDebug("ITEMS TO UPSERT:", itemsToUpsert);
 
     if (itemsToUpsert.length === 0) {
       return NextResponse.json(
@@ -241,6 +241,7 @@ export async function GET(req: Request) {
         },
         updatedAt: snapshot.updatedAt,
         sources: snapshot.sources,
+        socialStatsUpdatedAt: socialStatsSnapshot?.updatedAt ?? null,
         sampleItems: itemsToUpsert.slice(0, 3),
       });
     }
@@ -253,8 +254,8 @@ export async function GET(req: Request) {
       })
       .select("id,type,platform_id");
 
-  logDebug("UPSERTED ITEMS:", upsertedItems);
-  logDebug("UPSERT ERROR:", upsertError);
+    logDebug("UPSERTED ITEMS:", upsertedItems);
+    logDebug("UPSERT ERROR:", upsertError);
 
     if (upsertError) {
       return NextResponse.json(
@@ -324,10 +325,10 @@ export async function GET(req: Request) {
         };
       })
       .filter(Boolean) as Array<{
-      item_id: string;
-      ts: string;
-      total: number;
-    }>;
+        item_id: string;
+        ts: string;
+        total: number;
+      }>;
 
     logDebug("SNAPSHOTS TO UPSERT:", snapshotsToUpsert);
 
@@ -359,6 +360,7 @@ export async function GET(req: Request) {
         snapshots: snapshotsToUpsert.length,
       },
       updatedAt: snapshot.updatedAt,
+      socialStatsUpdatedAt: socialStatsSnapshot?.updatedAt ?? null,
     });
   } catch (error) {
     console.error("POLL ROUTE ERROR:", error);

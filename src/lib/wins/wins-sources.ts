@@ -139,10 +139,15 @@ export async function fetchMusicShowWinsFromSoridata() {
   const artistKey = process.env.H2H_WINS_SORIDATA_ARTIST?.trim() || "Hearts2Hearts"
   const url = `https://soridata.com/en/awards/${encodeURIComponent(artistKey)}.html?layout=1`
 
-  const response = await fetch(url, {
-    headers: { Accept: "text/html" },
-    next: { revalidate: 60 * 10 },
-  })
+  let response: Response
+  try {
+    response = await fetch(url, {
+      headers: { Accept: "text/html" },
+      next: { revalidate: 60 * 10 },
+    })
+  } catch {
+    return []
+  }
 
   if (!response.ok) {
     return []

@@ -75,12 +75,12 @@ export function PerformanceItemRow({
       href={item.href || "#"}
       target="_blank"
       rel="noopener noreferrer"
-      className="group/row grid items-center border-b border-white/10 px-4 transition-colors hover:bg-black/[0.03] last:border-b-0 grid-cols-[48px_1fr_100px] lg:grid-cols-[48px_1fr_160px_180px_150px]"
+      className="group/row grid min-h-[74px] items-center gap-4 border-b border-black/5 px-5 py-4 transition-colors hover:bg-black/[0.03] last:border-b-0 md:px-6 grid-cols-[48px_1fr_100px] lg:grid-cols-[52px_1.4fr_170px_170px_170px]"
       style={{ minHeight: "72px" }}
     >
       {/* Rank */}
       <div className="text-center">
-        <span className="text-[12px] font-black text-black/40">
+        <span className="font-mono text-[12px] font-black tracking-wider text-black/40">
           #{String(index + 1).padStart(2, "0")}
         </span>
       </div>
@@ -97,17 +97,16 @@ export function PerformanceItemRow({
       </div>
 
       {/* Total */}
-      <div className="text-right font-mono text-[13px] font-bold tabular-nums text-black max-lg:hidden" suppressHydrationWarning>
+      <div className="text-center font-mono text-[13px] font-bold tabular-nums text-black max-lg:hidden" suppressHydrationWarning>
         {item.total?.toLocaleString("en-US") ?? "—"}
       </div>
 
       {/* Daily */}
-      <div className="text-right font-mono text-[14px] font-black tabular-nums text-black max-lg:hidden" suppressHydrationWarning>
+      <div className="text-center font-mono text-[14px] font-black tabular-nums text-black max-lg:hidden" suppressHydrationWarning>
         {item.daily !== null ? `+${item.daily.toLocaleString("en-US")}` : "—"}
       </div>
-
       {/* Change badge */}
-      <div className="flex justify-end">
+      <div className="flex justify-center">
         {changeDisplay ? (
           <div
             className={cn(
@@ -272,7 +271,6 @@ function PlatformStatsBar({
 // ─── Main Section ─────────────────────────────────────────────────────────────
 export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionProps) {
   const { t } = useTranslation()
-  const [mounted, setMounted] = useState(false)
   const [liveSnapshot, setLiveSnapshot] = useState(snapshot)
   const [activePlatform, setActivePlatform] = useState<PlatformTab>("spotify")
   const [koreaPage, setKoreaPage] = useState(1)
@@ -281,18 +279,12 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
     setLiveSnapshot(snapshot)
   }, [snapshot])
 
-  // Fetching data on client is redundant since we have snapshot from SSR/ISR
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // ✅ Bỏ check mounted — hiện ngay từ SSR data
   const updatedAtDate = liveSnapshot.updatedAt ? new Date(liveSnapshot.updatedAt) : null
   const formattedUpdatedAt = updatedAtDate && !Number.isNaN(updatedAtDate.getTime())
     ? updatedAtDate.toLocaleDateString("en-US", {
-        day: "2-digit", month: "2-digit", year: "numeric",
-        hour: "2-digit", minute: "2-digit",
-      })
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    })
     : null
 
   const activePlatformData =
@@ -312,25 +304,25 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
   const activePlatformCard =
     activePlatform === "spotify"
       ? {
-          icon: <Image src="/spotify.png" alt="Spotify" width={56} height={56} className="h-full w-full object-cover" />,
-          iconWrap: "bg-black border-black",
-        }
+        icon: <Image src="/spotify.png" alt="Spotify" width={56} height={56} className="h-full w-full object-cover" />,
+        iconWrap: "bg-black border-black",
+      }
       : activePlatform === "youtube"
         ? {
-            icon: <Image src="/Youtube.png" alt="YouTube" width={36} height={36} className="h-9 w-9 object-contain" />,
-            iconWrap: "bg-white border-white/20",
-          }
+          icon: <Image src="/Youtube.png" alt="YouTube" width={36} height={36} className="h-9 w-9 object-contain" />,
+          iconWrap: "bg-white border-white/20",
+        }
         : activePlatform === "global"
           ? {
-              icon: <GlobalMark className="size-14" />,
-              iconWrap: "border-transparent bg-transparent shadow-none",
-            }
+            icon: <GlobalMark className="size-14" />,
+            iconWrap: "border-transparent bg-transparent shadow-none",
+          }
           : activePlatform === "apple"
             ? {
-                icon: <Image src="/AM.png" alt="Apple Music" width={56} height={56} className="h-full w-full object-cover" />,
-                iconWrap: "bg-white border-rose-100",
-              }
-          : {
+              icon: <Image src="/AM.png" alt="Apple Music" width={56} height={56} className="h-full w-full object-cover" />,
+              iconWrap: "bg-white border-rose-100",
+            }
+            : {
               icon: <Activity className="size-8" />,
               iconWrap: "bg-white border-white/20",
             }
@@ -493,11 +485,11 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
                 <div className="flex size-4 items-center justify-center rounded-sm bg-emerald-500 text-[8px] font-bold text-white">KR</div>
                 {t("performance.korea")}
               </PlatformTabButton>
-              <PlatformTabButton variant="global" active={activePlatform === "global"} onClick={() => setActivePlatform("global") }>
+              <PlatformTabButton variant="global" active={activePlatform === "global"} onClick={() => setActivePlatform("global")}>
                 <GlobalMark className="size-4 shrink-0" />
                 {t("performance.global")}
               </PlatformTabButton>
-              <PlatformTabButton variant="apple" active={activePlatform === "apple"} onClick={() => setActivePlatform("apple") }>
+              <PlatformTabButton variant="apple" active={activePlatform === "apple"} onClick={() => setActivePlatform("apple")}>
                 <div className="flex size-4 items-center justify-center overflow-hidden rounded-sm bg-white shrink-0">
                   <Image src="/AM.png" alt="Apple Music" width={16} height={16} className="h-full w-full object-cover" />
                 </div>
@@ -593,60 +585,61 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
                 </div>
               </div>
             ) : (
-              <div className="space-y-10">
-                {/* Platform Header inside Content area */}
-                <div className="flex items-center gap-5 px-2">
-                  <div className={cn("flex h-14 w-14 items-center justify-center rounded-2xl shadow-xl border overflow-hidden shrink-0", activePlatformCard.iconWrap)}>
-                    {activePlatformCard.icon}
-                  </div>
-                  <div>
-                    <p className={cn("text-xl font-black uppercase tracking-[0.3em]", activePlatformAccent)}>
-                      {t(`performance.${activePlatform}` as any)}
-                    </p>
-                    <p className={cn("text-4xl font-black uppercase tracking-tight", activePlatformAccent)}>
-                      {activePlatform === "youtube" ? t("home.performance.officialMv") : t("home.performance.rankings")}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Stats bar */}
-                {activePlatformData && (
-                  <div className="px-2">
-                    <PlatformStatsBar
-                      platform={activePlatform as "spotify" | "youtube"}
-                      totalValue={activePlatformData.totalValue}
-                      dailyValue={activePlatformData.dailyValue}
-                      dailyChange={activePlatformData.dailyChange}
-                      dailyChangeFormat={activePlatformData.dailyChangeFormat}
-                      t={t}
-                    />
-                    {activePlatformData.note && (
-                      <p className="mb-6 -mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-black/30 text-right px-1">
-                        {activePlatformData.note}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Track table */}
-                <div>
-                  <div className="mb-2 grid items-center px-6 py-3 grid-cols-[48px_1fr_100px] lg:grid-cols-[48px_1fr_160px_180px_150px]">
-                    <div className={cn("text-center text-[13px] font-black uppercase tracking-widest", activePlatformAccent)}>#</div>
-                    <div className={cn("text-[13px] font-black uppercase tracking-widest", activePlatformAccent)}>
-                      {t("charts.trackInfo").split(" ")[0]}
+              <div className="space-y-6">
+                <div className="overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/50 backdrop-blur-xl shadow-lg">
+                  <div className="flex flex-col gap-5 border-b border-black/5 bg-white/70 px-5 py-5 md:flex-row md:items-end md:justify-between md:px-6">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-5 px-1">
+                        <div className={cn("flex h-14 w-14 items-center justify-center rounded-2xl shadow-xl border overflow-hidden shrink-0", activePlatformCard.iconWrap)}>
+                          {activePlatformCard.icon}
+                        </div>
+                        <div>
+                          <p className={cn("text-xl font-black uppercase tracking-[0.3em]", activePlatformAccent)}>
+                            {t(`performance.${activePlatform}` as any)}
+                          </p>
+                          <p className={cn("text-4xl font-black uppercase tracking-tight", activePlatformAccent)}>
+                            {activePlatform === "youtube" ? t("home.performance.officialMv") : t("home.performance.rankings")}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div className={cn("text-right text-[13px] font-black uppercase tracking-widest max-lg:hidden", activePlatformAccent)}>
-                      {t("charts.total")}
+                  </div>
+
+                  {activePlatformData && (
+                    <div className="border-b border-black/5 px-2 py-4 md:px-4">
+                      <PlatformStatsBar
+                        platform={activePlatform as "spotify" | "youtube"}
+                        totalValue={activePlatformData.totalValue}
+                        dailyValue={activePlatformData.dailyValue}
+                        dailyChange={activePlatformData.dailyChange}
+                        dailyChangeFormat={activePlatformData.dailyChangeFormat}
+                        t={t}
+                      />
                     </div>
-                    <div className={cn("text-right text-[13px] font-black uppercase tracking-widest max-lg:hidden", activePlatformAccent)}>
+                  )}
+
+    <div className="grid items-center gap-4 border-b border-black/5 bg-white/60 px-5 py-3 grid-cols-[48px_1fr_100px] lg:grid-cols-[52px_1.4fr_170px_170px_170px] md:px-6">
+      <div className={cn("text-center text-[13px] font-black uppercase tracking-widest", activePlatformAccent)}>#</div>
+      <div className={cn("flex items-center gap-3 text-[13px] font-black uppercase tracking-widest", activePlatformAccent)}>
+        <div
+          aria-hidden="true"
+          className="h-[42px] w-[42px] shrink-0 rounded-[10px] border border-transparent opacity-0"
+        />
+        <span>{t("charts.trackInfo").split(" ")[0]}</span>
+      </div>
+      <div className={cn("text-center text-[13px] font-black uppercase tracking-widest max-lg:hidden", activePlatformAccent)}>
+        {t("charts.total")}
+      </div>
+
+                    <div className={cn("text-center text-[13px] font-black uppercase tracking-widest max-lg:hidden", activePlatformAccent)}>
                       {t("charts.daily")}
                     </div>
-                    <div className={cn("text-right text-[13px] font-black uppercase tracking-widest", activePlatformAccent)}>
-                      {t("charts.trend")}
-                    </div>
-                  </div>
 
-                  <div className="overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/50 backdrop-blur-xl shadow-lg">
+      <div className={cn("text-center text-[13px] font-black uppercase tracking-widest", activePlatformAccent)}>
+        {t("charts.trend")}
+      </div>
+                  </div>
+                  <div className="divide-y divide-black/5">
                     {activePlatformData?.items && activePlatformData.items.length > 0 ? (
                       activePlatformData.items.slice(0, 5).map((item, index) => (
                         <PerformanceItemRow
@@ -664,8 +657,7 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
                   </div>
                 </div>
 
-                {/* View all */}
-                <div className="mt-8 text-center">
+                <div className="text-center">
                   <Link
                     href={`/charts?platform=${activePlatform}`}
                     className={cn(

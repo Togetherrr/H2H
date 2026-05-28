@@ -112,7 +112,7 @@ export default async function HomePage() {
     getTimelineEvents(),
     getFilmFrames(4),
     getHomeStatsSnapshot(hearts2heartsOfficialProfile.debutDate),
-    getRealtimeSnapshotFromDb(),
+    getRealtimeSnapshotFromDb({ allowLiveFallback: false }),
     // Fetch members and links in the same parallel batch if Supabase is enabled
     hasSupabaseEnv()
       ? safeSupabaseResult(
