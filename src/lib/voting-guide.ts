@@ -18,6 +18,11 @@ export const votingGuideContent: VotingGuideContent = {
     {
       label: "H2H International Fanbase (X)",
       href: "https://x.com/h2hbase_?s=21&t=pdmuTQs3SQoA48jwhHAoQQ",
+      note: "Global updates, voting guides."
+    },
+       {
+      label: "H2H International Votes Support (X)",
+      href: "https://x.com/h2h_votes?s=21&t=pdmuTQs3SQoA48jwhHAoQQ",
       note: "Global updates, voting guides & mass voting schedules."
     },
     {

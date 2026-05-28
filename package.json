@@ -9,7 +9,7 @@
     "start": "next start",
     "realtime:poll:local": "bun scripts/poll-realtime-local.mjs",
     "lint": "eslint . --max-warnings=0",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit --incremental false",
     "perf-audit": "bun scripts/performance-audit.ts",
     "sync:wins:local": "bun scripts/sync-wins-local.mjs",
     "sync:timeline:local": "bun scripts/sync-timeline-local.mjs",

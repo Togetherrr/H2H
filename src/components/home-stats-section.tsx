@@ -19,6 +19,9 @@ import { useTranslation } from "@/hooks/useTranslation"
 import { cn } from "@/lib/utils"
 import type { HomeStatsSnapshot } from "@/lib/home-stats"
 import type { FilmFrame } from "@/lib/release-catalog"
+import { useTimeZoneStore } from "@/lib/timezone-store"
+import { timeZoneToIana } from "@/lib/timezone"
+import type { TimeZone } from "@/components/navbar"
 
 type HomeStatsSnapshotData = HomeStatsSnapshot
 
@@ -118,7 +121,7 @@ function FlipDigit({ value, size = "sm" }: FlipDigitProps) {
       )}>
         <span className={cn(
           "font-black tabular-nums tracking-tight text-slate-900 drop-shadow-[0_1px_0_rgba(255,255,255,0.5)] transition-all leading-none whitespace-nowrap",
-          size === "lg" ? "text-[2.2rem] md:text-[3.2rem]" : "text-2xl md:text-4xl"
+        size === "lg" ? "text-[2.6rem] md:text-[3.6rem]" : "text-2xl md:text-4xl"
         )}>{current}</span>
       </div>
       <div className="absolute inset-0 pointer-events-none bg-gradient-to-tr from-white/40 to-transparent" />
@@ -152,6 +155,26 @@ function FilmStrip({ frames = [] }: { frames?: FilmFrame[] }) {
 }
 
 const DEBUT_MV_TIMESTAMP = new Date("2025-02-24T18:00:00+09:00").getTime()
+const DEBUT_MV_DATE = new Date("2025-02-24T18:00:00+09:00")
+
+function getDebutDisplayInfo(timeZone: TimeZone) {
+  const iana = timeZoneToIana(timeZone) ?? Intl.DateTimeFormat().resolvedOptions().timeZone
+  const dateParts = new Intl.DateTimeFormat("en-US", {
+    year: "numeric", month: "2-digit", day: "2-digit", timeZone: iana,
+  }).formatToParts(DEBUT_MV_DATE)
+  const y = dateParts.find(p => p.type === "year")?.value ?? "2025"
+  const m = dateParts.find(p => p.type === "month")?.value ?? "02"
+  const d = dateParts.find(p => p.type === "day")?.value ?? "24"
+  const dateFormatted = `${y}.${m}.${d}`
+  const timeFormatted = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric", minute: "2-digit", hour12: true, timeZone: iana,
+  }).format(DEBUT_MV_DATE)
+  const tzLabel = timeZone === "LOCAL"
+    ? new Intl.DateTimeFormat("en-US", { timeZoneName: "short", timeZone: iana })
+        .formatToParts(DEBUT_MV_DATE).find(p => p.type === "timeZoneName")?.value ?? "LOCAL"
+    : timeZone
+  return { date: dateFormatted, time: timeFormatted, tz: tzLabel }
+}
 
 function getElapsed() {
   const diff = Math.max(0, Date.now() - DEBUT_MV_TIMESTAMP)
@@ -164,7 +187,7 @@ function getElapsed() {
 }
 function pad2(n: number) { return n.toString().padStart(2, "0") }
 
-function LiveTicker() {
+function LiveTicker({ tzLabel }: { tzLabel: string }) {
   const [elapsed, setElapsed] = useState({ hours: 0, minutes: 0, seconds: 0 })
   useEffect(() => {
     const update = () => setElapsed(getElapsed())
@@ -174,21 +197,26 @@ function LiveTicker() {
   }, [])
 
   return (
-    <div className="flex items-center justify-center gap-1 mt-1">
-      <div className="flex flex-col items-center">
-        <span className="text-[16px] md:text-[18px] font-black tabular-nums text-slate-700 leading-none">{pad2(elapsed.hours)}</span>
-        <span className="text-[7px] font-bold uppercase tracking-widest text-black/30 mt-0.5">hrs</span>
+    <div className="flex flex-col items-center gap-1 mt-1">
+      <div className="flex items-center justify-center gap-1">
+        <div className="flex flex-col items-center">
+          <span className="text-[18px] md:text-[20px] font-black tabular-nums text-slate-700 leading-none">{pad2(elapsed.hours)}</span>
+          <span className="text-[7px] font-bold uppercase tracking-widest text-black/30 mt-0.5">hrs</span>
+        </div>
+        <span className="text-[18px] font-black text-[#FF708A] mb-3 leading-none">:</span>
+        <div className="flex flex-col items-center">
+          <span className="text-[18px] md:text-[20px] font-black tabular-nums text-slate-700 leading-none">{pad2(elapsed.minutes)}</span>
+          <span className="text-[7px] font-bold uppercase tracking-widest text-black/30 mt-0.5">min</span>
+        </div>
+        <span className="text-[18px] font-black text-[#FF708A] mb-3 leading-none">:</span>
+        <div className="flex flex-col items-center">
+          <span className="text-[18px] md:text-[20px] font-black tabular-nums text-[#FF708A] leading-none">{pad2(elapsed.seconds)}</span>
+          <span className="text-[7px] font-bold uppercase tracking-widest text-[#FF708A]/40 mt-0.5">sec</span>
+        </div>
       </div>
-      <span className="text-[16px] font-black text-[#FF708A] mb-3 leading-none">:</span>
-      <div className="flex flex-col items-center">
-        <span className="text-[16px] md:text-[18px] font-black tabular-nums text-slate-700 leading-none">{pad2(elapsed.minutes)}</span>
-        <span className="text-[7px] font-bold uppercase tracking-widest text-black/30 mt-0.5">min</span>
-      </div>
-      <span className="text-[16px] font-black text-[#FF708A] mb-3 leading-none">:</span>
-      <div className="flex flex-col items-center">
-        <span className="text-[16px] md:text-[18px] font-black tabular-nums text-[#FF708A] leading-none">{pad2(elapsed.seconds)}</span>
-        <span className="text-[7px] font-bold uppercase tracking-widest text-[#FF708A]/40 mt-0.5">sec</span>
-      </div>
+      <span className="inline-flex items-center gap-0.5 text-[7px] font-black uppercase tracking-widest text-black/40 bg-black/6 px-2 py-0.5 rounded-full border border-black/8">
+        {tzLabel}
+      </span>
     </div>
   )
 }
@@ -258,6 +286,7 @@ function DebutVideoModal({ isOpen, onClose, status, video, onRetry, errorMessage
 
 export function HomeStatsSection({ snapshot, filmStripFrames = [] }: HomeStatsSectionProps) {
   const { t } = useTranslation()
+  const { timeZone } = useTimeZoneStore()
   const sectionRef = useRef<HTMLElement>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -265,6 +294,8 @@ export function HomeStatsSection({ snapshot, filmStripFrames = [] }: HomeStatsSe
   const [videoModalOpen, setVideoModalOpen] = useState(false)
   const [videoStatus, setVideoStatus] = useState<VideoStatus>("idle")
   const [randomVideo, setRandomVideo] = useState<RandomVideo | null>(null)
+
+  const debutInfo = getDebutDisplayInfo(timeZone)
 
   useEffect(() => {
     setMounted(true)
@@ -338,11 +369,17 @@ export function HomeStatsSection({ snapshot, filmStripFrames = [] }: HomeStatsSe
 
                           {mounted && isVisible ? <FlipNumber value={card.value} size="lg" /> : <div className="w-14 h-20 md:w-24 md:h-30 rounded-lg bg-[#FFF9F0]/80" />}
 
-                          <p className="mt-2 text-[10px] font-black uppercase tracking-[0.35em] text-slate-700/80 mb-2">days</p>
+                          <p className="mt-2 text-[11px] font-black uppercase tracking-[0.35em] text-slate-700/80 mb-2">days</p>
 
-                          <div className="mt-2 w-full flex flex-col items-center gap-2">
-                            <p className="text-[13px] font-black uppercase tracking-[0.35em] text-[#FF708A]">{card.debutDate}</p>
-                            <LiveTicker />
+                          <div className="mt-2 w-full flex flex-col items-center gap-1.5">
+                            <div className="flex flex-col items-center gap-0.5">
+                              <span className="text-[8px] font-bold uppercase tracking-[0.25em] text-black/35">Official Release</span>
+                              <div className="flex items-baseline gap-1.5">
+                                <p className="text-[13px] font-black uppercase tracking-[0.25em] text-[#FF708A]">{debutInfo.date}</p>
+                                <span className="text-[10px] font-black text-[#FF708A]/70">{debutInfo.time} {debutInfo.tz}</span>
+                              </div>
+                            </div>
+                            <LiveTicker tzLabel={debutInfo.tz} />
                           </div>
                         </div>
                       ) : (
@@ -359,12 +396,19 @@ export function HomeStatsSection({ snapshot, filmStripFrames = [] }: HomeStatsSe
                         <span className="inline-flex px-2 py-0.5 rounded text-[8px] font-black bg-black/5 text-black uppercase mt-1">{card.badge}</span>
                       </div>
                       {isDebut ? (
-                        <div className="flex flex-col items-end gap-1">
-                          <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-slate-500 text-right">
-                            Random official video
-                          </p>
-                          <button onClick={() => { setVideoModalOpen(true); fetchRandomVideo() }} className="h-10 w-10 flex items-center justify-center rounded-full bg-black/5 hover:bg-[#FF708A] hover:text-white transition-all"><Play className="size-5 ml-0.5" /></button>
-                        </div>
+                        <button
+                          onClick={() => { setVideoModalOpen(true); fetchRandomVideo() }}
+                          className="group/vid flex items-center gap-2 px-3 py-2 rounded-2xl bg-[#FF708A]/10 hover:bg-[#FF708A] border border-[#FF708A]/20 hover:border-[#FF708A] transition-all duration-300 hover:shadow-[0_4px_20px_rgba(255,112,138,0.35)]"
+                        >
+                          <span className="relative flex h-7 w-7 items-center justify-center rounded-full bg-[#FF708A] group-hover/vid:bg-white transition-colors flex-shrink-0">
+                            <span className="absolute inset-0 rounded-full bg-[#FF708A] animate-ping opacity-40" />
+                            <Play className="size-3.5 ml-0.5 text-white group-hover/vid:text-[#FF708A] transition-colors" />
+                          </span>
+                          <div className="flex flex-col items-start">
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#FF708A] group-hover/vid:text-white transition-colors leading-none">Random</span>
+                            <span className="text-[8px] font-bold uppercase tracking-[0.15em] text-black/40 group-hover/vid:text-white/70 transition-colors leading-none mt-0.5">Official Video</span>
+                          </div>
+                        </button>
                       ) : (
                         <div className="h-10 w-10 flex items-center justify-center rounded-full bg-black/5 group-hover:scale-110 transition-all"><ArrowUpRight className="size-5" /></div>
                       )}

@@ -6,7 +6,11 @@ import { SiteFooter } from "@/components/site-footer"
 export function ConditionalSiteFooter() {
   const pathname = usePathname() ?? ""
 
-  if (pathname === "/admin" || pathname.startsWith("/admin/")) return null
+  if (
+    pathname === "/" ||
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/")
+  ) return null
 
   return <SiteFooter />
 }

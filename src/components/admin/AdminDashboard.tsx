@@ -1,26 +1,13 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import dynamic from "next/dynamic"
 import { getAdminTabData } from "@/app/admin/actions"
 import { Sidebar } from "@/components/admin/Sidebar"
-import { UsersManager } from "@/components/admin/UsersManager"
-import { MembersManager } from "@/components/admin/MembersManager"
-import { SocialsManager } from "@/components/admin/SocialsManager"
-import { SiteSettingsManager } from "@/components/admin/SiteSettingsManager"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Sparkles, Users, Disc3, Link as LinkIcon, Database, Palette, BadgeCheck } from "lucide-react"
-import { ThemesManager } from "@/components/admin/ThemesManager"
-import { MediaLibrary } from "@/components/admin/MediaManager"
+import { Sparkles, Users, Link as LinkIcon, Database, Palette, BadgeCheck } from "lucide-react"
 import { Image as ImageIcon } from "lucide-react"
-import { VotingAppsManager } from "@/components/admin/VotingAppsManager"
-import { AwardEventsManager } from "@/components/admin/AwardEventsManager"
-import { LineupRevealManager } from "@/components/admin/LineupRevealManager"
-import { CareerRecordsManager } from "@/components/admin/CareerRecordsManager"
-import { ComebackWatchManager } from "@/components/admin/ComebackWatchManager"
-import { FeedbackManager } from "@/components/admin/FeedbackManager"
 import { MessageSquare } from "lucide-react"
-import { SyncManager } from "@/components/admin/SyncManager"
-import { NoticesManager } from "@/components/admin/NoticesManager"
 import type { NoticeRow } from "@/lib/notices"
 
 type AdminStats = {
@@ -84,6 +71,76 @@ function TabLoadingState({ title }: { title: string }) {
     </div>
   )
 }
+
+const UsersManager = dynamic(
+  () => import("@/components/admin/UsersManager").then((mod) => mod.UsersManager),
+  { loading: () => <TabLoadingState title="Loading users..." /> },
+)
+
+const MembersManager = dynamic(
+  () => import("@/components/admin/MembersManager").then((mod) => mod.MembersManager),
+  { loading: () => <TabLoadingState title="Loading members..." /> },
+)
+
+const SocialsManager = dynamic(
+  () => import("@/components/admin/SocialsManager").then((mod) => mod.SocialsManager),
+  { loading: () => <TabLoadingState title="Loading social links..." /> },
+)
+
+const SiteSettingsManager = dynamic(
+  () => import("@/components/admin/SiteSettingsManager").then((mod) => mod.SiteSettingsManager),
+  { loading: () => <TabLoadingState title="Loading site settings..." /> },
+)
+
+const ThemesManager = dynamic(
+  () => import("@/components/admin/ThemesManager").then((mod) => mod.ThemesManager),
+  { loading: () => <TabLoadingState title="Loading themes..." /> },
+)
+
+const MediaLibrary = dynamic(
+  () => import("@/components/admin/MediaManager").then((mod) => mod.MediaLibrary),
+  { loading: () => <TabLoadingState title="Loading media library..." /> },
+)
+
+const VotingAppsManager = dynamic(
+  () => import("@/components/admin/VotingAppsManager").then((mod) => mod.VotingAppsManager),
+  { loading: () => <TabLoadingState title="Loading voting apps..." /> },
+)
+
+const AwardEventsManager = dynamic(
+  () => import("@/components/admin/AwardEventsManager").then((mod) => mod.AwardEventsManager),
+  { loading: () => <TabLoadingState title="Loading award events..." /> },
+)
+
+const LineupRevealManager = dynamic(
+  () => import("@/components/admin/LineupRevealManager").then((mod) => mod.LineupRevealManager),
+  { loading: () => <TabLoadingState title="Loading lineup reveal..." /> },
+)
+
+const CareerRecordsManager = dynamic(
+  () => import("@/components/admin/CareerRecordsManager").then((mod) => mod.CareerRecordsManager),
+  { loading: () => <TabLoadingState title="Loading career records..." /> },
+)
+
+const ComebackWatchManager = dynamic(
+  () => import("@/components/admin/ComebackWatchManager").then((mod) => mod.ComebackWatchManager),
+  { loading: () => <TabLoadingState title="Loading comeback settings..." /> },
+)
+
+const FeedbackManager = dynamic(
+  () => import("@/components/admin/FeedbackManager").then((mod) => mod.FeedbackManager),
+  { loading: () => <TabLoadingState title="Loading feedback..." /> },
+)
+
+const SyncManager = dynamic(
+  () => import("@/components/admin/SyncManager").then((mod) => mod.SyncManager),
+  { loading: () => <TabLoadingState title="Loading sync tools..." /> },
+)
+
+const NoticesManager = dynamic(
+  () => import("@/components/admin/NoticesManager").then((mod) => mod.NoticesManager),
+  { loading: () => <TabLoadingState title="Loading notices..." /> },
+)
 
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (

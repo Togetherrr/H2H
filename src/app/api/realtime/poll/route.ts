@@ -329,7 +329,7 @@ export async function GET(req: Request) {
       total: number;
     }>;
 
-    console.log("SNAPSHOTS TO UPSERT:", snapshotsToUpsert);
+    logDebug("SNAPSHOTS TO UPSERT:", snapshotsToUpsert);
 
     const { error: snapshotError } = await supabase
       .from("h2h_item_snapshots")
@@ -337,7 +337,7 @@ export async function GET(req: Request) {
         onConflict: "item_id,ts",
       });
 
-    console.log("SNAPSHOT ERROR:", snapshotError);
+    logDebug("SNAPSHOT ERROR:", snapshotError);
 
     if (snapshotError) {
       return NextResponse.json(
