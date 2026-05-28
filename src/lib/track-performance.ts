@@ -1,10 +1,11 @@
 /**
  * track-performance.ts
- * ✅ Đã thay Chartex → Kworb cho Spotify
- * ✅ YouTube giữ nguyên (YouTube Data API v3)
+ * Spotify now loads from Kworb
+ * YouTube stays on YouTube Data API v3
  */
 
 import { fetchKworbSpotify } from "@/lib/realtime/kworb"
+import { getSocialStatsSnapshotFromDb, mergeSocialStats } from "@/lib/realtime/social-stats"
 
 export type PerformanceItem = {
   id: string
@@ -58,6 +59,8 @@ const DEFAULT_SPOTIFY: PlatformPerformance = {
   dailyChange: null,
   highlights: [],
   items: [],
+  followers: null,
+  monthlyListeners: null,
   note: "No realtime data available",
   viewAllHref: "/charts",
 }
@@ -97,13 +100,13 @@ export function getTrackPerformancePlaceholderSnapshot(): TrackPerformanceSnapsh
     updatedAt: "",
     spotify: DEFAULT_SPOTIFY,
     youtube: DEFAULT_YOUTUBE,
-    sources: { note: "Loading realtime stats…" },
+    sources: { note: "Loading realtime stats..." },
     isSample: true,
   }
 }
 
 /* =========================================================
-   YOUTUBE — giữ nguyên, chỉ cần set env vars:
+   YOUTUBE — kept as-is, only env vars needed:
    H2H_YOUTUBE_API_KEY=...
    H2H_YOUTUBE_VIDEO_IDS=id1,id2,id3,...
 ========================================================= */
@@ -191,7 +194,7 @@ export async function fetchYouTubeVideos(): Promise<PlatformPerformance | null> 
         title,
         subtitle: "Official MV",
         imageUrl,
-        daily: null, // YouTube API không trả daily — sẽ tính từ DB snapshots
+        daily: null, // YouTube API does not return daily — computed from DB snapshots
         total,
         dailyChange: null,
         href: `https://www.youtube.com/watch?v=${id}`,
@@ -223,22 +226,30 @@ export async function fetchYouTubeVideos(): Promise<PlatformPerformance | null> 
 }
 
 /* =========================================================
-   MAIN SNAPSHOT — gọi song song Kworb + YouTube
+   MAIN SNAPSHOT — calls Kworb + YouTube in parallel
 ========================================================= */
 
 export async function getTrackPerformanceSnapshot(): Promise<TrackPerformanceSnapshot> {
-  const [spotify, youtube] = await Promise.all([
-    fetchKworbSpotify(),   // ← Kworb thay cho Chartex
+  if (process.env.NEXT_PHASE === "phase-production-build") {
+    return getTrackPerformancePlaceholderSnapshot()
+  }
+
+  const [spotify, youtube, socialStats] = await Promise.all([
+    fetchKworbSpotify(),   // ← Spotify snapshot from Kworb
     fetchYouTubeVideos(),  // ← YouTube Data API v3
+    getSocialStatsSnapshotFromDb(),
   ])
+
+  const spotifyWithSocialStats = mergeSocialStats(spotify ?? DEFAULT_SPOTIFY, socialStats?.spotify)
+  const youtubeWithSocialStats = mergeSocialStats(youtube ?? DEFAULT_YOUTUBE, socialStats?.youtube)
 
   return {
     updatedAt: new Date().toISOString(),
-    spotify: spotify ?? DEFAULT_SPOTIFY,
-    youtube: youtube ?? DEFAULT_YOUTUBE,
+    spotify: spotifyWithSocialStats,
+    youtube: youtubeWithSocialStats,
     sources: {
       spotify: spotify ? "Kworb" : "No data",
-      youtube: youtube ? "YouTube API" : "No data",
+      youtube: youtube ? "Hearts2Hearts official channel · YouTube API" : "No data",
     },
     isSample: false,
   }

@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { getRealtimeSnapshotFromDb } from "@/lib/realtime/db-snapshot"
 import { Navbar } from "@/components/navbar"
+import { ChartsPlatformTabs } from "@/components/charts-platform-tabs"
 import { cn } from "@/lib/utils"
 import type { PerformanceItem } from "@/lib/track-performance"
 import { t } from "@/i18n/translations"
@@ -56,12 +57,11 @@ function FullChartsItemRow({ item, index, platform = "spotify" }: { item: Perfor
       href={item.href || "#"}
       target="_blank"
       rel="noopener noreferrer"
-      className="group/row grid items-center border-b border-black/5 px-4 transition-colors hover:bg-black/[0.03] last:border-b-0 grid-cols-[48px_1fr_100px] lg:grid-cols-[48px_1fr_160px_180px_150px]"
-      style={{ minHeight: "72px" }}
+      className="group/row grid min-h-[74px] items-center gap-4 border-b border-black/5 px-5 py-4 transition-colors hover:bg-black/[0.03] even:bg-white/20 last:border-b-0 md:px-6 grid-cols-[48px_1fr_100px] lg:grid-cols-[52px_1.4fr_170px_170px_170px]"
     >
       {/* Rank */}
-      <div className="text-center">
-        <span className="text-[12px] font-black text-black/40">
+      <div className="justify-self-center text-center">
+        <span className="font-mono text-[12px] font-black tracking-wider text-black/35">
           #{String(index + 1).padStart(2, "0")}
         </span>
       </div>
@@ -78,19 +78,19 @@ function FullChartsItemRow({ item, index, platform = "spotify" }: { item: Perfor
       </div>
 
       {/* Total */}
-      <div className="text-right font-mono text-[13px] font-bold tabular-nums text-black max-lg:hidden">
+      <div className="pl-1 text-left font-mono text-[13px] font-bold tabular-nums text-black max-lg:hidden" suppressHydrationWarning>
         {item.total?.toLocaleString("en-US") ?? "—"}
       </div>
 
       {/* Daily */}
-      <div className="text-right font-mono text-[14px] font-black tabular-nums text-black max-lg:hidden">
+      <div className="pl-1 text-left font-mono text-[14px] font-black tabular-nums text-black max-lg:hidden" suppressHydrationWarning>
         {item.daily !== null && item.daily !== undefined
           ? `+${item.daily.toLocaleString("en-US")}`
           : "—"}
       </div>
 
       {/* Change badge */}
-      <div className="flex justify-end">
+      <div className="justify-self-center">
         {changeDisplay ? (
           <div
             className={cn(
@@ -111,20 +111,19 @@ function FullChartsItemRow({ item, index, platform = "spotify" }: { item: Perfor
 
 function TableHeader({ col2Label, platform, t }: { col2Label: string; platform: "spotify" | "youtube"; t: any }) {
   return (
-    <div
-      className="mb-2 grid items-center px-4 py-3 grid-cols-[48px_1fr_100px] lg:grid-cols-[48px_1fr_160px_180px_150px]"
-    >
-      <div className={cn("text-center text-[10px] font-black uppercase tracking-widest", platform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>#</div>
-      <div className={cn("text-[10px] font-black uppercase tracking-widest", platform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
-        {col2Label.split(" ")[0]}
+    <div className="mb-2 grid items-center rounded-[1.6rem] border border-white/60 bg-white/45 px-5 py-3 shadow-sm md:px-6 grid-cols-[48px_1fr_100px] lg:grid-cols-[52px_1.4fr_170px_170px_170px]">
+      <div className={cn("text-center text-[10px] font-black uppercase tracking-[0.28em]", platform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>#</div>
+      <div className={cn("flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.28em]", platform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
+        <div aria-hidden="true" className="h-[42px] w-[42px] shrink-0 rounded-[10px] border border-transparent opacity-0" />
+        <span>{col2Label.split(" ")[0]}</span>
       </div>
-      <div className={cn("text-right text-[10px] font-black uppercase tracking-widest max-lg:hidden", platform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
+      <div className={cn("pl-1 text-left text-[10px] font-black uppercase tracking-[0.28em] max-lg:hidden", platform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
         {t("charts.total")}
       </div>
-      <div className={cn("text-right text-[10px] font-black uppercase tracking-widest max-lg:hidden", platform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
+      <div className={cn("pl-1 text-left text-[10px] font-black uppercase tracking-[0.28em] max-lg:hidden", platform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
         {t("charts.daily")}
       </div>
-      <div className={cn("text-right text-[10px] font-black uppercase tracking-widest", platform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
+      <div className={cn("pl-1 text-left text-[10px] font-black uppercase tracking-[0.28em]", platform === "spotify" ? "text-[#1DB954]" : "text-[#FF4444]")}>
         {t("charts.trend")}
       </div>
     </div>
@@ -143,11 +142,11 @@ function MetricCard({
   platform: "spotify" | "youtube"
 }) {
   return (
-    <div className="bg-white/50 backdrop-blur-xl rounded-[2.5rem] p-10 border border-white shadow-xl flex flex-col justify-between min-w-[320px] flex-1 lg:max-w-[420px] h-[200px] group transition-all hover:scale-[1.02] hover:bg-white/60">
-      <div className="flex items-start justify-between">
+    <div className="group flex min-h-[160px] w-full min-w-[240px] flex-1 flex-col justify-between overflow-hidden rounded-[2rem] border border-white/70 bg-white/60 p-5 shadow-lg backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:bg-white/75 sm:p-6">
+      <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className={cn(
-            "flex h-12 w-12 items-center justify-center rounded-2xl shadow-md border group-hover:scale-110 transition-transform overflow-hidden",
+            "flex h-11 w-11 items-center justify-center rounded-2xl shadow-md border group-hover:scale-110 transition-transform overflow-hidden",
             platform === "spotify" ? "bg-black border-black" : "bg-white border-white/60"
           )}>
             {platform === "spotify" ? (
@@ -156,7 +155,7 @@ function MetricCard({
               <Image src="/Youtube.png" alt="YouTube" width={24} height={24} className="h-6 w-6 object-contain" />
             )}
           </div>
-          <span className="text-[12px] font-black uppercase tracking-[0.2em] text-black/50">{label}</span>
+          <span className="text-[12px] font-black uppercase tracking-[0.22em] text-black/50">{label}</span>
         </div>
         {change !== undefined && (
           <div className={cn(
@@ -169,7 +168,7 @@ function MetricCard({
           </div>
         )}
       </div>
-      <div className="text-5xl font-black text-black tracking-tighter tabular-nums mt-6 drop-shadow-sm">
+      <div className="mt-5 min-w-0 text-[clamp(2.1rem,3.8vw,3.6rem)] font-black leading-none tracking-tight tabular-nums text-black drop-shadow-sm">
         {value?.toLocaleString("en-US") ?? "—"}
       </div>
     </div>
@@ -178,11 +177,11 @@ function MetricCard({
 
 export default async function ChartsPage({ searchParams }: ChartsPageProps) {
   const { platform } = await searchParams
+  const activePlatform = platform === "spotify" || platform === "youtube" ? platform : null
 
-  const snapshot = await getRealtimeSnapshotFromDb()
-
-  const activePlatforms = platform
-    ? [platform]
+  const snapshot = await getRealtimeSnapshotFromDb({ allowLiveFallback: false })
+  const activePlatforms: Array<"spotify" | "youtube" | "korea"> = platform
+    ? [platform as "spotify" | "youtube" | "korea"]
     : ["spotify", "youtube", "korea"]
 
   const platformConfigs: Record<string, {
@@ -199,6 +198,8 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
     subscribers?: number | null;
     videoCount?: number | null;
     dailyChange?: number | null;
+    sourceNote?: string;
+    sourceNoteSecondary?: string;
   }> = {
     spotify: {
       title: t("charts.spotify.title") as string,
@@ -212,6 +213,7 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
       followers: snapshot.spotify.followers,
       monthlyListeners: snapshot.spotify.monthlyListeners,
       dailyChange: snapshot.spotify.dailyChange,
+      sourceNote: snapshot.sources.spotify,
     },
     youtube: {
       title: t("charts.youtube.title") as string,
@@ -225,6 +227,8 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
       subscribers: snapshot.youtube.subscribers,
       videoCount: snapshot.youtube.videoCount,
       dailyChange: snapshot.youtube.dailyChange,
+      sourceNote: "Channel stats: Hearts2Hearts official channel",
+      sourceNoteSecondary: "MV uploads/views: SM Entertainment channel",
     },
     korea: {
       title: t("performance.korea") as string,
@@ -287,13 +291,7 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                 )}
               </div>
             </div>
-            {snapshot.sources.note ? (
-              <div className="w-fit">
-                <p className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-rose-500">
-                  {snapshot.sources.note}
-                </p>
-              </div>
-            ) : null}
+            {activePlatform ? <ChartsPlatformTabs activePlatform={activePlatform} /> : null}
           </div>
         </div>
 
@@ -315,7 +313,7 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                     { label: "Melon Hot100", url: "https://www.melon.com/chart/hot100/index.htm" },
                     { label: "Melon Daily", url: "https://www.melon.com/chart/day/index.htm" },
                     { label: "Melon Weekly", url: "https://www.melon.com/chart/week/index.htm" },
-                  ]
+                  ],
                 },
                 {
                   platform: "Genie",
@@ -327,7 +325,7 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                     { label: "Genie Daily", url: "https://www.genie.co.kr/chart/top200?ditc=D&rtm=N" },
                     { label: "Genie weekly", url: "https://www.genie.co.kr/chart/top200?ditc=W&rtm=N" },
                     { label: "Genie Hearts2Hearts", url: "https://www.genie.co.kr/search/searchMain?query=hearts2hearts" },
-                  ]
+                  ],
                 },
                 {
                   platform: "Bugs",
@@ -339,7 +337,7 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                     { label: "Bugs Daily", url: "https://music.bugs.co.kr/chart/track/day/total" },
                     { label: "Bugs Weekly", url: "https://music.bugs.co.kr/chart/track/week/total" },
                     { label: "Bugs hearts2Hearts", url: "https://music.bugs.co.kr/search/integrated?q=hearts2hearts" },
-                  ]
+                  ],
                 },
                 {
                   platform: "Vibe",
@@ -348,7 +346,7 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                   links: [
                     { label: "Vibe", url: "https://vibe.naver.com/today" },
                     { label: "Vibe Hearts2Hearts", url: "https://vibe.naver.com/search?query=Hearts2Hearts" },
-                  ]
+                  ],
                 },
                 {
                   platform: "Flo",
@@ -357,7 +355,7 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                   links: [
                     { label: "Flo", url: "https://www.music-flo.com/" },
                     { label: "Flo hearts2Hearts", url: "https://www.music-flo.com/search/all?keyword=Hearts2hearts" },
-                  ]
+                  ],
                 },
                 {
                   platform: "Circle",
@@ -368,7 +366,7 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                     { label: "Circle Global K-POP Chart", url: "https://circlechart.kr/page_chart/global.circle?termGbn=day" },
                     { label: "Circle Digital Chart", url: "https://circlechart.kr/page_chart/onoff.circle?serviceGbn=ALL" },
                     { label: "Circle Album Chart", url: "https://circlechart.kr/page_chart/album.circle" },
-                  ]
+                  ],
                 },
                 {
                   platform: "Hanteo",
@@ -378,8 +376,8 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                     { label: "Hanteo Chart", url: "https://www.hanteochart.com/" },
                     { label: "Hanteo Album Chart", url: "https://www.hanteochart.com/chart/album/real" },
                     { label: "Hanteo Hearts2Hearts", url: "https://www.hanteochart.com/artistdetail/73802/real" },
-                  ]
-                }
+                  ],
+                },
               ]
 
               return (
@@ -414,9 +412,7 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                               rel="noopener noreferrer"
                               className="group flex items-center justify-between rounded-2xl border border-white/50 bg-white/20 p-5 transition-all hover:translate-x-1 hover:bg-white hover:shadow-xl"
                             >
-                              <span className="text-[14px] font-bold text-slate-700 group-hover:text-slate-950">
-                                {link.label}
-                              </span>
+                              <span className="text-[14px] font-bold text-slate-700 group-hover:text-slate-950">{link.label}</span>
                               <ExternalLink className="size-4 text-slate-300 group-hover:text-slate-500" />
                             </a>
                           ))}
@@ -431,7 +427,6 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
             return (
               <section key={pKey} className="space-y-12">
                 <div className="flex flex-col gap-10 px-4">
-                  {/* PLATFORM HEADER - Hidden because it's now in the main Hero */}
                   {!platform && (
                     <div className="flex items-center gap-6">
                       <div className={cn(
@@ -458,7 +453,6 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                     </div>
                   )}
 
-                  {/* METRIC CARDS ROW */}
                   <div className="flex flex-wrap gap-5">
                     <MetricCard
                       label={config.totalLabel}
@@ -469,31 +463,15 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
 
                     {pKey === "spotify" && (
                       <>
-                        <MetricCard
-                          label="Spotify Follower"
-                          value={config.followers ?? null}
-                          platform="spotify"
-                        />
-                        <MetricCard
-                          label="Spotify Monthly Listener"
-                          value={config.monthlyListeners ?? null}
-                          platform="spotify"
-                        />
+                        <MetricCard label="Spotify Follower" value={config.followers ?? null} platform="spotify" />
+                        <MetricCard label="Spotify Monthly Listener" value={config.monthlyListeners ?? null} platform="spotify" />
                       </>
                     )}
 
                     {pKey === "youtube" && (
                       <>
-                        <MetricCard
-                          label="YouTube Subscriber"
-                          value={config.subscribers ?? null}
-                          platform="youtube"
-                        />
-                        <MetricCard
-                          label="YouTube Videos"
-                          value={config.videoCount ?? null}
-                          platform="youtube"
-                        />
+                        <MetricCard label="YouTube Subscriber" value={config.subscribers ?? null} platform="youtube" />
+                        <MetricCard label="YouTube Videos" value={config.videoCount ?? null} platform="youtube" />
                       </>
                     )}
                   </div>
@@ -514,7 +492,6 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                   </div>
                 </div>
               </section>
-
             )
           })}
         </div>
