@@ -113,6 +113,9 @@ Neu ban dung GitHub Actions, chi can:
 2. Tao repository secret `H2H_CRON_SECRET`
 3. Bat workflow `Realtime Poll`
 
+Chi tiet day du hon o:
+- [docs/GITHUB_ACTIONS_SETUP.md](/D:/H2H/H2H/docs/GITHUB_ACTIONS_SETUP.md)
+
 ### Kiem tra local khong can deploy
 
 Neu ban chua deploy, van co the check ngay tren may local:

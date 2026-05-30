@@ -31,6 +31,7 @@ type AdminTabData = {
   stats?: AdminStats
   feedbackMessages?: any[]
   notices?: NoticeRow[]
+  youtubeItems?: any[]
 }
 
 type AdminDashboardProps = {
@@ -38,7 +39,7 @@ type AdminDashboardProps = {
   profile: any
 }
 
-const VALID_TABS = new Set(["overview", "sync", "users", "members", "themes", "socials", "settings", "media", "voting", "award-events", "lineup-reveal", "career-records", "comeback", "notices", "feedback"])
+const VALID_TABS = new Set(["overview", "sync", "users", "members", "themes", "socials", "settings", "media", "voting", "award-events", "lineup-reveal", "career-records", "youtube-items", "comeback", "notices", "feedback"])
 
 function normalizeTab(tab: string) {
   return VALID_TABS.has(tab) ? tab : "overview"
@@ -122,6 +123,10 @@ const CareerRecordsManager = dynamic(
   { loading: () => <TabLoadingState title="Loading career records..." /> },
 )
 
+const YoutubeItemsTab = dynamic(
+  () => import("@/components/admin/YoutubeItemsTab").then((mod) => mod.YoutubeItemsTab),
+  { loading: () => <TabLoadingState title="Loading YouTube items..." /> },
+)
 const ComebackWatchManager = dynamic(
   () => import("@/components/admin/ComebackWatchManager").then((mod) => mod.ComebackWatchManager),
   { loading: () => <TabLoadingState title="Loading comeback settings..." /> },
@@ -537,6 +542,14 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
       case "notices": {
         const notices = dataByTab.notices?.notices
         return notices ? <NoticesManager initialNotices={notices} /> : <TabLoadingState title="Loading notices..." />
+      }
+      case "youtube-items": {
+        const youtubeItems = dataByTab["youtube-items"]?.youtubeItems
+        return youtubeItems ? (
+          <YoutubeItemsTab items={youtubeItems as any} />
+        ) : (
+          <TabLoadingState title="Loading YouTube items..." />
+        )
       }
       case "overview":
       default:

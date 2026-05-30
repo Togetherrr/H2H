@@ -461,11 +461,6 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
                 <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-slate-900">
                   {t("home.performance.liveTracking").trim()}
                 </h2>
-                {formattedUpdatedAt ? (
-                  <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400" suppressHydrationWarning>
-                    {t("performance.updatedAt")} {formattedUpdatedAt}
-                  </p>
-                ) : null}
               </div>
             </div>
 
@@ -618,26 +613,26 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
                     </div>
                   )}
 
-    <div className="grid items-center gap-4 border-b border-black/5 bg-white/60 px-5 py-3 grid-cols-[48px_1fr_100px] lg:grid-cols-[52px_1.4fr_170px_170px_170px] md:px-6">
-      <div className={cn("text-center text-[13px] font-black uppercase tracking-widest", activePlatformAccent)}>#</div>
-      <div className={cn("flex items-center gap-3 text-[13px] font-black uppercase tracking-widest", activePlatformAccent)}>
-        <div
-          aria-hidden="true"
-          className="h-[42px] w-[42px] shrink-0 rounded-[10px] border border-transparent opacity-0"
-        />
-        <span>{t("charts.trackInfo").split(" ")[0]}</span>
-      </div>
-      <div className={cn("text-center text-[13px] font-black uppercase tracking-widest max-lg:hidden", activePlatformAccent)}>
-        {t("charts.total")}
-      </div>
+                  <div className="grid items-center gap-4 border-b border-black/5 bg-white/60 px-5 py-3 grid-cols-[48px_1fr_100px] lg:grid-cols-[52px_1.4fr_170px_170px_170px] md:px-6">
+                    <div className={cn("text-center text-[13px] font-black uppercase tracking-widest", activePlatformAccent)}>#</div>
+                    <div className={cn("flex items-center gap-3 text-[13px] font-black uppercase tracking-widest", activePlatformAccent)}>
+                      <div
+                        aria-hidden="true"
+                        className="h-[42px] w-[42px] shrink-0 rounded-[10px] border border-transparent opacity-0"
+                      />
+                      <span>{t("charts.trackInfo").split(" ")[0]}</span>
+                    </div>
+                    <div className={cn("text-center text-[13px] font-black uppercase tracking-widest max-lg:hidden", activePlatformAccent)}>
+                      {t("charts.total")}
+                    </div>
 
                     <div className={cn("text-center text-[13px] font-black uppercase tracking-widest max-lg:hidden", activePlatformAccent)}>
                       {t("charts.daily")}
                     </div>
 
-      <div className={cn("text-center text-[13px] font-black uppercase tracking-widest", activePlatformAccent)}>
-        {t("charts.trend")}
-      </div>
+                    <div className={cn("text-center text-[13px] font-black uppercase tracking-widest", activePlatformAccent)}>
+                      {t("charts.trend")}
+                    </div>
                   </div>
                   <div className="divide-y divide-black/5">
                     {activePlatformData?.items && activePlatformData.items.length > 0 ? (

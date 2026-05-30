@@ -1,12 +1,1 @@
-{
-    "crons": [
-        {
-            "path": "/api/realtime/poll",
-            "schedule": "0 0 * * *"
-        },
-        {
-            "path": "/api/wins/sync",
-            "schedule": "0 1 * * *"
-        }
-    ]
-}
+{}
