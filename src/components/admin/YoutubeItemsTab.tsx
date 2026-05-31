@@ -145,6 +145,8 @@ export function YoutubeItemsTab({
                                 className="flex items-center gap-4 rounded-lg border border-slate-800 p-3"
                             >
                                 {item.cover_url && (
+                                    // Small admin thumbnail; remote sources are not consistently configured for next/image.
+                                    // eslint-disable-next-line @next/next/no-img-element
                                     <img
                                         src={item.cover_url}
                                         alt={item.title ?? ""}
