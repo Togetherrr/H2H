@@ -2,11 +2,14 @@
 
 This repo uses GitHub Actions as the scheduler for realtime polling and wins sync.
 That is the right fit for Vercel Hobby, because the app itself can stay on Vercel while the background jobs run from GitHub.
+Do not keep a Vercel Cron job for the same endpoints on Hobby, because it can block deployments.
 
 ## What should run
 
 - `Realtime Poll` every 5 minutes
 - `Wins Sync` once daily
+
+These workflows should be the only scheduled runners for these sync jobs unless you are intentionally moving off Vercel Hobby.
 
 ## Required repository settings
 
@@ -46,6 +49,8 @@ After pushing the repo changes:
 3. Click `Run workflow`
 4. Confirm it finishes with `200` or a successful JSON response
 5. Do the same for `Wins Sync`
+
+If your Vercel project still has an old Cron job configured for `/api/realtime/poll`, remove it in the Vercel dashboard before relying on these workflows.
 
 ## Common failure points
 
