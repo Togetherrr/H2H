@@ -136,6 +136,18 @@ Script nay se goi:
 - `GET /api/realtime/poll?dryRun=1` voi header `x-cron-secret`
 - in ra JSON response de ban biet snapshot co duoc upsert hay khong
 
+### Wins sync (GitHub Actions)
+
+- Set env/secret:
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `H2H_WINS_SYNC_TOKEN`
+- Set repository variable:
+  - `H2H_APP_URL` = URL deploy chinh, vi du `https://your-app.vercel.app`
+- Workflow dung:
+  - `.github/workflows/wins-sync.yml`
+- Workflow se goi:
+  - `POST /api/wins/sync` voi header `Authorization: Bearer <H2H_WINS_SYNC_TOKEN>` moi ngay luc 01:00 UTC
+
 Landing page van public. User chi can dang nhap khi dung tinh nang can tai khoan, va `/admin` chi mo cho role `admin`.
 
 Repo nay da duoc chuan hoa theo Bun:

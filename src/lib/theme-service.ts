@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createStaticClient } from "@/lib/supabase/static"
 
 export interface ThemeConfig {
   colors: {
@@ -31,7 +31,7 @@ export async function getActiveTheme(): Promise<Theme | null> {
     return null
   }
 
-  const supabase = await createClient()
+  const supabase = createStaticClient()
   
   try {
     const { data, error } = await (supabase as any)
@@ -57,16 +57,22 @@ export function generateThemeStyle(theme: Theme | null): string {
   if (!theme || !theme.config || !theme.config.colors) return ""
 
   const { colors, assets } = theme.config
-  
-  const bgImageVar = assets?.background_image ? `--background-image: url('${assets.background_image}');` : '';
+  const primary = colors.primary?.trim() || "200 80% 62%"
+  const accent = colors.accent?.trim() || "345 100% 85%"
+  const foreground = colors.foreground?.trim() || "210 40% 96%"
+  const surface = colors.surface?.trim() || "220 30% 15%"
+  const backgroundFallback = colors.background_fallback?.trim() || "222 47% 11%"
+  const bgImageVar = assets?.background_image?.trim()
+    ? `--background-image: url('${assets.background_image.trim()}');`
+    : ""
   
   return `
     :root {
-      --primary: ${colors.primary};
-      --accent: ${colors.accent};
-      --foreground: ${colors.foreground};
-      --surface: ${colors.surface || '0 0% 100%'};
-      --background-fallback: ${colors.background_fallback || '222 47% 11%'};
+      --primary: ${primary};
+      --accent: ${accent};
+      --foreground: ${foreground};
+      --surface: ${surface};
+      --background-fallback: ${backgroundFallback};
       
       /* Asset Variables */
       ${bgImageVar}

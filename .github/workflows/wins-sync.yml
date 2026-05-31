@@ -4,18 +4,24 @@ on:
     - cron: "0 1 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: wins-sync-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
 
     steps:
       - name: Call wins sync endpoint
         env:
-          APP_URL: ${{ vars.H2H_APP_URL }}
+          CRON_TARGET_URL: ${{ vars.H2H_APP_URL }}
           WINS_SYNC_TOKEN: ${{ secrets.H2H_WINS_SYNC_TOKEN }}
         run: |
-          if [ -z "$APP_URL" ]; then
+          if [ -z "$CRON_TARGET_URL" ]; then
             echo "Missing repository variable H2H_APP_URL"
             exit 1
           fi
@@ -28,4 +34,4 @@ jobs:
           curl --fail --silent --show-error --max-time 120 \
             -X POST \
             -H "Authorization: Bearer $WINS_SYNC_TOKEN" \
-            "$APP_URL/api/wins/sync"
+            "$CRON_TARGET_URL/api/wins/sync"

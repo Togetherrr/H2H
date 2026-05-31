@@ -28,7 +28,6 @@ function requireCronSecret(req: Request) {
     vercelCronSecret === configured
   );
 }
-console.log("POLL API HIT")
 export async function GET(req: Request) {
   try {
     if (!requireCronSecret(req)) {
