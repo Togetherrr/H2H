@@ -28,6 +28,19 @@
     --surface: 220 30% 15%;
     /* dark card base */
 
+    /* ── Theme tokens used by Tailwind utilities ── */
+    --background: 222 47% 11%;
+    --background-foreground: 0 0% 100%;
+    --card: 220 30% 15%;
+    --card-foreground: 0 0% 100%;
+    --popover: 220 30% 15%;
+    --popover-foreground: 0 0% 100%;
+    --secondary: 220 30% 20%;
+    --secondary-foreground: 215 20% 90%;
+    --accent: 200 80% 62%;
+    --accent-foreground: 0 0% 100%;
+    --background-image: url('/background.jpg');
+
     /* ── Semantic tokens ── */
     --primary: 200 80% 62%;
     --primary-foreground: 0 0% 100%;
@@ -61,7 +74,7 @@
     min-height: 100vh;
     /* Album art full-page background */
     background-color: #1a2238;
-    background-image: var(--bg-album-art, url('/background.jpg'));
+    background-image: var(--background-image, var(--bg-album-art, url('/background.jpg')));
     background-size: cover;
     background-position: center center;
     background-attachment: fixed;

@@ -98,10 +98,13 @@ Trong Supabase dashboard:
   - `H2H_SPOTIFY_FOLLOWERS` (optional manual fallback)
 - Set repository variable:
   - `H2H_APP_URL` = URL deploy chinh, vi du `https://your-app.vercel.app`
-- Cron co san trong repo:
+- GitHub Actions workflows:
   - `.github/workflows/realtime-poll.yml`
-- Workflow se goi:
+  - `.github/workflows/wins-sync.yml`
+- Workflow realtime se goi:
   - `GET /api/realtime/poll` voi header `x-cron-secret: <H2H_CRON_SECRET>` moi 5 phut
+- Workflow wins se goi:
+  - `GET /api/wins/sync` voi header `authorization: Bearer <H2H_CRON_SECRET>` moi ngay luc 01:00 UTC
 - UI/API doc du lieu rolling 24h:
   - `GET /api/realtime/summary?type=spotify_track`
   - `GET /api/realtime/summary?type=youtube_video`
@@ -112,6 +115,7 @@ Neu ban dung GitHub Actions, chi can:
 1. Tao repository variable `H2H_APP_URL`
 2. Tao repository secret `H2H_CRON_SECRET`
 3. Bat workflow `Realtime Poll`
+4. Bat workflow `Wins Sync`
 
 ### Kiem tra local khong can deploy
 
