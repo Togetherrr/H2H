@@ -26,9 +26,34 @@ export interface Theme {
   is_active: boolean
 }
 
-export async function getActiveTheme(): Promise<Theme | null> {
+/** Default theme values matching globals.css :root */
+const DEFAULT_THEME: Theme = {
+  id: "default",
+  name: "Default",
+  config: {
+    colors: {
+      primary: "200 80% 62%",
+      accent: "345 100% 85%",
+      foreground: "210 40% 96%",
+      surface: "220 30% 15%",
+      background_fallback: "222 47% 11%",
+    },
+    assets: {
+      logo: "/logo-official-removebg-.png",
+      background_image: null,
+    },
+    effects: {
+      film_grain: true,
+      glow_orbs: true,
+      floating_hearts: false,
+    },
+  },
+  is_active: true,
+}
+
+export async function getActiveTheme(): Promise<Theme> {
   if (process.env.NEXT_PHASE === "phase-production-build") {
-    return null
+    return DEFAULT_THEME
   }
 
   const supabase = createStaticClient()
@@ -44,19 +69,18 @@ export async function getActiveTheme(): Promise<Theme | null> {
       if (error && process.env.H2H_LOG_THEME_ERRORS === "1" && process.env.NODE_ENV !== "production") {
         console.error("Error fetching active theme:", error)
       }
-      return null
+      return DEFAULT_THEME
     }
 
     return data as unknown as Theme
   } catch {
-    return null
+    return DEFAULT_THEME
   }
 }
 
 export function generateThemeStyle(theme: Theme | null): string {
-  if (!theme || !theme.config || !theme.config.colors) return ""
-
-  const { colors, assets } = theme.config
+  const resolvedTheme = theme ?? DEFAULT_THEME
+  const { colors, assets } = resolvedTheme.config
   const primary = colors.primary?.trim() || "200 80% 62%"
   const accent = colors.accent?.trim() || "345 100% 85%"
   const foreground = colors.foreground?.trim() || "210 40% 96%"
