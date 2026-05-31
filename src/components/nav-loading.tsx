@@ -1,6 +1,7 @@
 "use client"
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 
@@ -103,31 +104,27 @@ function NavLoadingOverlay({ isActive, progress }: { isActive: boolean; progress
         isActive ? "opacity-100" : "pointer-events-none opacity-0"
       )}
     >
+      <div className="absolute inset-0 bg-[#A2D2FF]" />
       <div className="absolute inset-0 bg-white/40 backdrop-blur-md" />
+      <div className="absolute size-96 rounded-full bg-white/40 blur-[120px] animate-pulse" />
 
-      <div className="relative w-[min(520px,calc(100vw-2.5rem))] overflow-hidden rounded-[2.25rem] border border-white/60 bg-white/75 p-8 shadow-2xl shadow-black/10">
-        <div className="mb-6 flex items-end justify-between gap-6">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-500">Loading</p>
-            <p className="mt-2 text-[22px] font-black tracking-tight text-slate-900">Preparing your page</p>
-          </div>
-          <div className="text-right">
-            <p className="text-[34px] font-black tabular-nums tracking-tight text-slate-900">{progress}%</p>
-            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-500">Please wait</p>
-          </div>
+      <div className="relative flex flex-col items-center gap-5 text-center">
+        <div className="flex flex-col items-center gap-4">
+          <Image
+            src="/logo-official-removebg-.png"
+            alt="Loading Logo"
+            width={112}
+            height={112}
+            className="size-24 md:size-28 object-contain drop-shadow-sm animate-pulse"
+            priority
+          />
+          <p className="text-[10px] font-black uppercase tracking-[0.6em] text-slate-800/80">HEARTS2HEARTS</p>
         </div>
-
-        <div className="h-3 w-full overflow-hidden rounded-full bg-slate-200/70">
+        <div className="h-2 w-40 overflow-hidden rounded-full bg-white/60">
           <div
             className="h-full rounded-full bg-gradient-to-r from-sky-400 via-pink-400 to-rose-400 transition-[width] duration-150 ease-out"
             style={{ width: `${progress}%` }}
           />
-        </div>
-
-        <div className="mt-6 grid grid-cols-3 gap-3">
-          <div className={cn("h-12 rounded-2xl bg-gradient-to-br from-sky-200/60 to-white transition-transform duration-500", isActive && "translate-y-0")} />
-          <div className={cn("h-12 rounded-2xl bg-gradient-to-br from-pink-200/60 to-white transition-transform duration-500", isActive && "-translate-y-1")} />
-          <div className={cn("h-12 rounded-2xl bg-gradient-to-br from-rose-200/60 to-white transition-transform duration-500", isActive && "translate-y-0")} />
         </div>
       </div>
     </div>

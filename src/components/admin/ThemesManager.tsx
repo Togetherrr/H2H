@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useState, useRef, useEffect } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -252,8 +253,7 @@ export function ThemesManager({ initialThemes }: ThemesManagerProps) {
               <CardHeader className="relative flex flex-row items-center justify-between border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md px-6 py-6">
                 <div className="flex items-center gap-5">
                   <div className="size-14 rounded-full shadow-inner border-2 border-slate-800 flex items-center justify-center overflow-hidden shrink-0 bg-slate-900">
-                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                     <img src={theme.config?.assets?.background_image || '/background.jpg'} alt="bg" className="w-full h-full object-cover" />
+                     <Image src={theme.config?.assets?.background_image || '/background.jpg'} alt="bg" width={56} height={56} className="w-full h-full object-cover" />
                   </div>
                   <div>
                     <CardTitle className="text-xl font-bold text-slate-100">{theme.name}</CardTitle>

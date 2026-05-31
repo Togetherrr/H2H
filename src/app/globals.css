@@ -50,12 +50,12 @@
     color-scheme: dark;
     background-color: #0a0f1e;
     /* Slightly larger, responsive base font for better readability */
-    font-size: clamp(16px, 0.6vw + 13.5px, 18px);
+    font-size: clamp(17px, 1.1vw + 15px, 22px);
   }
 
   body {
     @apply text-foreground;
-    font-family: var(--font-body), sans-serif;
+    font-family: var(--font-nunito), sans-serif;
     font-size: 1rem;
     line-height: 1.65;
     min-height: 100vh;
@@ -66,6 +66,9 @@
     background-position: center center;
     background-attachment: fixed;
     background-repeat: no-repeat;
+    @media (pointer: coarse) {
+      background-attachment: scroll;
+    }
     position: relative;
   }
 
@@ -79,6 +82,9 @@
         rgba(15, 23, 42, 0.12) 50%,
         rgba(20, 40, 100, 0.22) 100%);
     backdrop-filter: blur(10px);
+    @media (pointer: coarse) {
+      backdrop-filter: none;
+    }
     pointer-events: none;
     z-index: 0;
   }
@@ -95,7 +101,7 @@
   h4,
   h5,
   h6 {
-    font-family: var(--font-display), sans-serif;
+    font-family: var(--font-nunito), sans-serif;
     font-weight: 700;
     letter-spacing: -0.02em;
     color: hsl(var(--text-title));
@@ -202,25 +208,25 @@
 
   .text-title {
     color: hsl(var(--text-title));
-    font-family: var(--font-display), sans-serif;
+    font-family: var(--font-nunito), sans-serif;
     @apply font-black tracking-tighter;
   }
 
   .section-title {
     @apply text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-[0.2em] text-black drop-shadow-sm leading-none;
-    font-family: var(--font-display), sans-serif;
+    font-family: var(--font-nunito), sans-serif;
   }
 
   .text-body {
     color: hsl(var(--text-body));
-    font-family: var(--font-body), sans-serif;
+    font-family: var(--font-nunito), sans-serif;
     @apply font-medium leading-relaxed;
   }
 
   .text-description {
     color: hsl(var(--text-muted));
-    font-family: var(--font-body), sans-serif;
-    @apply text-sm font-medium leading-relaxed;
+    font-family: var(--font-nunito), sans-serif;
+    @apply text-base font-medium leading-relaxed;
   }
 
   /* ── Layout ── */
@@ -233,27 +239,39 @@
 
   /* ── Badges ── */
   .pill-base {
-    @apply inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.3em];
-    font-family: var(--font-display), sans-serif;
+    @apply inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[14px] font-black uppercase tracking-[0.3em];
+    font-family: var(--font-nunito), sans-serif;
   }
 
-  /* â”€â”€ Minimum Readable Label Sizes â”€â”€ */
+  /* ── Minimum Readable Label Sizes ── */
   /* Tailwind arbitrary font-size utilities (e.g. text-[10px]) are used in many places.
      These overrides lift ultra-small labels site-wide to keep typography readable and consistent. */
-  .text-\[8px\] {
-    font-size: 11px !important;
+  .text-\[7px\] {
+    font-size: 10px !important;
   }
 
-  .text-\[9px\] {
+  .text-\[8px\] {
     font-size: 12px !important;
   }
 
-  .text-\[10px\] {
+  .text-\[9px\] {
     font-size: 13px !important;
   }
 
-  .text-\[11px\] {
+  .text-\[10px\] {
     font-size: 14px !important;
+  }
+
+  .text-\[11px\] {
+    font-size: 15px !important;
+  }
+
+  .text-\[12px\] {
+    font-size: 14px !important;
+  }
+
+  .text-\[13px\] {
+    font-size: 15px !important;
   }
 
   .pill-sky {

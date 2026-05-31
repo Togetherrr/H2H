@@ -1,5 +1,6 @@
 import { hearts2heartsOfficialProfile } from "@/lib/group-official-profile"
 import { getReleaseCatalog } from "@/lib/release-catalog"
+import { getAwardCeremonyWins, getMusicShowWins } from "@/lib/supabase/wins-service"
 
 export type HomeStatSlug =
   | "debut-days"
@@ -228,6 +229,10 @@ function formatIsoDate(date: string) {
   })
 }
 
+function getYearFromIso(date: string) {
+  return date.split("-")[0] ?? date
+}
+
 function countBy<T>(items: T[], getKey: (item: T) => string) {
   const counts = new Map<string, number>()
 
@@ -323,9 +328,10 @@ async function getAlbumProjectsDetail(): Promise<HomeStatDetailPage> {
   }
 }
 
-function getMusicShowWinsDetail(): HomeStatDetailPage {
-  const songCounts = countBy(musicShowWins, (item) => item.song)
-  const programCounts = countBy(musicShowWins, (item) => item.program)
+async function getMusicShowWinsDetail(): Promise<HomeStatDetailPage> {
+  const wins = await getMusicShowWins()
+  const songCounts = countBy(wins, (item) => item.song)
+  const programCounts = countBy(wins, (item) => item.program)
 
   return {
     slug: "music-show-wins",
@@ -333,35 +339,34 @@ function getMusicShowWinsDetail(): HomeStatDetailPage {
     title: "Music show wins",
     summary:
       "A two-layer detail page that can scale as new songs win across more programs: first by song, then by show, followed by a complete win log.",
-    total: musicShowWins.length,
+    total: wins.length,
     totalLabel: "weekly music show trophies verified",
-    sourceLabel: "Soompi win reports",
-    sourceHref: "https://www.soompi.com",
-    sourceNote: "Counted from individual public win articles for The Show, M Countdown, Music Core, and Inkigayo.",
+    sourceLabel: "Wikipedia - Music show winners lists",
+    sourceHref: "https://en.wikipedia.org/wiki/List_of_M_Countdown_Chart_winners_(2026)",
+    sourceNote: "Auto-synced from Wikipedia winner lists for major music programs (The Show, Show Champion, M Countdown, Music Bank, Music Core, Inkigayo).",
     sections: [
       {
         title: "Wins by song",
-        items: songCounts.map(([song, wins]) => ({
+        items: songCounts.map(([song, winCount]) => ({
           title: song,
-          value: `${wins} win${wins === 1 ? "" : "s"}`,
-          chips: musicShowWins.filter((item) => item.song === song).map((item) => item.program),
+          value: `${winCount} win${winCount === 1 ? "" : "s"}`,
+          chips: wins.filter((item) => item.song === song).map((item) => item.program),
         })),
       },
       {
-        title: "Wins by program",
-        items: programCounts.map(([program, wins]) => ({
-          title: program,
-          value: `${wins} win${wins === 1 ? "" : "s"}`,
-          chips: musicShowWins.filter((item) => item.program === program).map((item) => item.song),
+        title: "Songs with wins",
+        items: songCounts.map(([song, winCount]) => ({
+          title: song,
+          value: `${winCount} win${winCount === 1 ? "" : "s"}`,
         })),
       },
       {
         title: "Full win log",
-        description: "Each entry points to the public report for that trophy.",
-        items: musicShowWins.map((item) => ({
+        description: "Each entry links back to the external source when available.",
+        items: wins.map((item) => ({
           title: item.headline,
-          subtitle: `${item.song} • ${item.program}`,
-          meta: formatIsoDate(item.date),
+          subtitle: item.song,
+          meta: getYearFromIso(item.date),
           href: item.href,
           hrefLabel: "Open source article",
         })),
@@ -370,8 +375,9 @@ function getMusicShowWinsDetail(): HomeStatDetailPage {
   }
 }
 
-function getAwardCeremonyWinsDetail(): HomeStatDetailPage {
-  const ceremonyCounts = countBy(awardCeremonyWins, (item) => item.ceremony)
+async function getAwardCeremonyWinsDetail(): Promise<HomeStatDetailPage> {
+  const wins = await getAwardCeremonyWins()
+  const ceremonyCounts = countBy(wins, (item) => item.ceremony)
 
   return {
     slug: "award-ceremony-wins",
@@ -379,18 +385,18 @@ function getAwardCeremonyWinsDetail(): HomeStatDetailPage {
     title: "Award ceremony wins",
     summary:
       "A clean trophy archive focused on group wins only. The structure supports future growth by grouping first by ceremony and then listing each winning category in full.",
-    total: awardCeremonyWins.length,
+    total: wins.length,
     totalLabel: "group award-ceremony wins tracked",
-    sourceLabel: "Wikipedia accolades snapshot",
+    sourceLabel: "Wikipedia - Accolades",
     sourceHref: "https://en.wikipedia.org/wiki/Hearts2Hearts#Accolades",
-    sourceNote: "Counted from public accolade entries for group wins only, excluding individual member awards.",
+    sourceNote: "Counted from Accolades rows where the result is Won (excluding nominations and longlists).",
     sections: [
       {
         title: "Wins by ceremony",
-        items: ceremonyCounts.map(([ceremony, wins]) => ({
+        items: ceremonyCounts.map(([ceremony, winCount]) => ({
           title: ceremony,
-          value: `${wins} win${wins === 1 ? "" : "s"}`,
-          chips: awardCeremonyWins
+          value: `${winCount} win${winCount === 1 ? "" : "s"}`,
+          chips: wins
             .filter((item) => item.ceremony === ceremony)
             .map((item) => `${item.year} • ${item.category}`),
         })),
@@ -398,7 +404,7 @@ function getAwardCeremonyWinsDetail(): HomeStatDetailPage {
       {
         title: "Full trophy list",
         description: "Each category below is a separate group win that contributes to the homepage total.",
-        items: awardCeremonyWins.map((item) => ({
+        items: wins.map((item) => ({
           title: item.category,
           subtitle: item.ceremony,
           meta: item.year,

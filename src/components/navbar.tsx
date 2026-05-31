@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/useTranslation"
 import { createClient } from "@/lib/supabase/client"
 import { AppLink } from "@/components/app-link"
+import { useTimeZoneStore } from "@/lib/timezone-store"
 
 export type TimeZone = "KST" | "EDT" | "UTC" | "LOCAL"
 
@@ -18,12 +19,12 @@ type HeaderAccount = {
   isAdmin: boolean
 }
 
-function TimeZoneSwitcher({ 
-  currentTimeZone, 
-  onTimeZoneChange 
-}: { 
-  currentTimeZone: TimeZone, 
-  onTimeZoneChange?: (tz: TimeZone) => void 
+function TimeZoneSwitcher({
+  currentTimeZone,
+  onTimeZoneChange
+}: {
+  currentTimeZone: TimeZone,
+  onTimeZoneChange?: (tz: TimeZone) => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const options: TimeZone[] = ["KST", "EDT", "UTC", "LOCAL"]
@@ -51,8 +52,8 @@ function TimeZoneSwitcher({
               }}
               className={cn(
                 "w-full px-4 py-2 text-left text-[11px] font-black uppercase tracking-widest transition-colors rounded-xl",
-                currentTimeZone === tz 
-                  ? "bg-sky-50 text-sky-600" 
+                currentTimeZone === tz
+                  ? "bg-sky-50 text-sky-600"
                   : "text-slate-500 hover:bg-slate-50"
               )}
             >
@@ -179,14 +180,16 @@ function HeaderNavLink({ href, label }: { href: string; label: string }) {
   )
 }
 
-export function Navbar({ 
-  timeZone = "KST", 
-  onTimeZoneChange 
-}: { 
-  timeZone?: TimeZone, 
-  onTimeZoneChange?: (tz: TimeZone) => void 
+export function Navbar({
+  timeZone,
+  onTimeZoneChange
+}: {
+  timeZone?: TimeZone,
+  onTimeZoneChange?: (tz: TimeZone) => void
 }) {
   const { t } = useTranslation()
+  const storedTimeZone = useTimeZoneStore((s) => s.timeZone)
+  const setStoredTimeZone = useTimeZoneStore((s) => s.setTimeZone)
   const pathname = usePathname()
   const isHome = pathname === "/home"
   const [mounted, setMounted] = useState(false)
@@ -207,7 +210,7 @@ export function Navbar({
   return (
     <header className="fixed inset-x-0 top-4 z-50 flex justify-center px-4 sm:px-6">
       <div className="flex h-16 w-full max-w-[1400px] items-center justify-between rounded-full border border-slate-200 bg-white/95 px-6 py-2 shadow-lg shadow-black/5 backdrop-blur-xl transition-all hover:bg-white hover:border-sky-200">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-12">
           <AppLink href="/home" className="group flex items-center gap-3">
             <div className="relative h-9 w-9 overflow-hidden rounded-full border-2 border-sky-100 bg-gradient-to-br from-sky-200 to-pink-100 shadow-sm transition-transform group-hover:scale-110">
               <Image src="/logo-official-removebg-.png" alt="Logo" width={36} height={36} className="h-full w-full object-cover" />
@@ -217,20 +220,23 @@ export function Navbar({
             </p>
           </AppLink>
 
-          <nav className="hidden items-center gap-6 xl:flex">
+          <nav className="hidden items-center gap-10 xl:flex">
             {navItems.map((item) => (
-              <HeaderNavLink key={item.href} href={item.href} label={item.label} />
+              <HeaderNavLink key={item.label} href={item.href} label={item.label} />
             ))}
           </nav>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="hidden items-center gap-3 sm:flex">
-            <TimeZoneSwitcher currentTimeZone={timeZone} onTimeZoneChange={onTimeZoneChange} />
-            <div className="h-4 w-px bg-slate-300/50" />
+            <TimeZoneSwitcher
+              currentTimeZone={timeZone ?? storedTimeZone}
+              onTimeZoneChange={(tz) => {
+                setStoredTimeZone(tz)
+                if (onTimeZoneChange) onTimeZoneChange(tz)
+              }}
+            />
           </div>
-          
-          {mounted && <HeaderAccountButton />}
         </div>
       </div>
     </header>

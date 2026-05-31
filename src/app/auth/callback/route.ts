@@ -8,28 +8,22 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient()
-    await supabase.auth.exchangeCodeForSession(code)
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { data: authData } = await supabase.auth.exchangeCodeForSession(code)
+    const user = authData?.user
 
     let next = requestedNext ?? "/"
 
     if (user) {
-      let { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle()
+      // We can't parallelize this easily because we need the user first, 
+      // but we can make it more efficient.
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle()
 
-      if (!profile && user.email) {
-        const { data: profileByEmail } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("email", user.email)
-          .maybeSingle()
-
-        profile = profileByEmail
-      }
-
-      next = profile?.role === "admin" ? "/admin" : "/"
+      const role = profile?.role
+      next = role === "admin" ? "/admin" : (requestedNext ?? "/")
     }
 
     return NextResponse.redirect(new URL(next, origin))

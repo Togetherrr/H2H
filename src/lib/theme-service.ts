@@ -27,20 +27,30 @@ export interface Theme {
 }
 
 export async function getActiveTheme(): Promise<Theme | null> {
-  const supabase = await createClient()
-  
-  const { data, error } = await (supabase as any)
-    .from("themes")
-    .select("*")
-    .eq("is_active", true)
-    .maybeSingle()
-
-  if (error || !data) {
-    if (error) console.error("Error fetching active theme:", error)
+  if (process.env.NEXT_PHASE === "phase-production-build") {
     return null
   }
 
-  return data as unknown as Theme
+  const supabase = await createClient()
+  
+  try {
+    const { data, error } = await (supabase as any)
+      .from("themes")
+      .select("*")
+      .eq("is_active", true)
+      .maybeSingle()
+
+    if (error || !data) {
+      if (error && process.env.H2H_LOG_THEME_ERRORS === "1" && process.env.NODE_ENV !== "production") {
+        console.error("Error fetching active theme:", error)
+      }
+      return null
+    }
+
+    return data as unknown as Theme
+  } catch {
+    return null
+  }
 }
 
 export function generateThemeStyle(theme: Theme | null): string {

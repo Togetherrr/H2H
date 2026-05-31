@@ -1,4 +1,5 @@
 "use client"
+/* eslint-disable @next/next/no-img-element */
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence, Transition } from 'framer-motion'
@@ -10,7 +11,12 @@ const PAIRS = [
   { type: 'horizontal', left: { tag: 'IAN', name: 'Ian' }, right: { tag: 'YEON', name: 'Yeon' } },
 ]
 
-export function LineupReveal({ onComplete }: { onComplete: () => void }) {
+type LineupRevealProps = {
+  onComplete: () => void
+  memberImages?: Record<string, string>
+}
+
+export function LineupReveal({ onComplete, memberImages }: LineupRevealProps) {
   const [index, setIndex] = useState(0)
 
   useEffect(() => {
@@ -21,16 +27,16 @@ export function LineupReveal({ onComplete }: { onComplete: () => void }) {
       } else {
         setIndex(prev => prev + 1)
       }
-    }, 1300) 
+    }, 1300)
     return () => clearTimeout(timer)
   }, [index, onComplete])
 
   const current = PAIRS[index]
 
   // Hiệu ứng trượt cực nhanh (0.4s) và dứt khoát
-  const transitionConfig: Transition = { 
-    duration: 0.4, 
-    ease: [0.25, 1, 0.5, 1] 
+  const transitionConfig: Transition = {
+    duration: 0.4,
+    ease: [0.25, 1, 0.5, 1]
   }
 
   const getVariants = (side: 'L' | 'R', type: string) => {
@@ -38,18 +44,21 @@ export function LineupReveal({ onComplete }: { onComplete: () => void }) {
     return { initial: { x: side === 'L' ? "-100%" : "100%" }, animate: { x: 0 } }
   }
 
+  const leftImage = memberImages?.[current.left.tag]
+  const rightImage = memberImages?.[current.right.tag]
+
   return (
-    <div className="fixed inset-0 z-[999] overflow-hidden font-body bg-white">
-      {/* Nền Gradient tươi sáng */}
-      <div className="absolute inset-0 bg-gradient-to-br from-sky-100 via-white to-pink-100 opacity-60" />
-      
+    <div className="fixed inset-0 z-[999] overflow-hidden font-body bg-[#A2D2FF]">
+      {/* Nền Gradient tươi sáng chuẩn phong cách Baby Blue */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-sky-100/20 to-white/30 opacity-90" />
+
       <AnimatePresence mode="wait">
-        <motion.div 
-          key={index} 
-          initial={{ opacity: 0 }} 
-          animate={{ opacity: 1 }} 
-          exit={{ opacity: 0 }} 
-          transition={{ duration: 0.2 }} 
+        <motion.div
+          key={index}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
           className="relative w-full h-full grid grid-cols-2"
         >
           {/* Cạnh trái */}
@@ -61,13 +70,23 @@ export function LineupReveal({ onComplete }: { onComplete: () => void }) {
               transition={transitionConfig}
               className="absolute inset-0 bg-sky-50/40 flex items-center justify-center"
             >
-              <span className="text-sky-200/50 text-9xl font-display font-black italic select-none">
-                {current.left.tag}
-              </span>
+              {leftImage ? (
+                <img
+                  src={leftImage}
+                  alt={current.left.name}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : null}
+              <div className="absolute inset-0 bg-white/30" />
+              {!leftImage ? (
+                <span className="text-sky-200/50 text-9xl font-display font-black italic select-none">
+                  {current.left.tag}
+                </span>
+              ) : null}
             </motion.div>
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }} 
-              animate={{ opacity: 1, scale: 1 }} 
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
               className="absolute bottom-12 left-12 z-10"
             >
@@ -87,13 +106,23 @@ export function LineupReveal({ onComplete }: { onComplete: () => void }) {
               transition={transitionConfig}
               className="absolute inset-0 bg-pink-50/40 flex items-center justify-center"
             >
-              <span className="text-pink-200/50 text-9xl font-display font-black italic select-none">
-                {current.right.tag}
-              </span>
+              {rightImage ? (
+                <img
+                  src={rightImage}
+                  alt={current.right.name}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : null}
+              <div className="absolute inset-0 bg-white/30" />
+              {!rightImage ? (
+                <span className="text-pink-200/50 text-9xl font-display font-black italic select-none">
+                  {current.right.tag}
+                </span>
+              ) : null}
             </motion.div>
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }} 
-              animate={{ opacity: 1, scale: 1 }} 
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 }}
               className="absolute bottom-12 right-12 text-right flex flex-col items-end z-10"
             >
@@ -107,8 +136,8 @@ export function LineupReveal({ onComplete }: { onComplete: () => void }) {
       </AnimatePresence>
 
       {/* Skip Button */}
-      <button 
-        onClick={onComplete} 
+      <button
+        onClick={onComplete}
         className="absolute top-10 right-10 z-50 text-slate-400 text-[11px] tracking-widest uppercase hover:text-sky-500 font-bold font-display"
       >
         Skip ›
@@ -116,7 +145,7 @@ export function LineupReveal({ onComplete }: { onComplete: () => void }) {
 
       {/* Thanh tiến trình đồng bộ thời gian mới (1.3s) */}
       <div className="absolute bottom-0 left-0 h-1 bg-slate-100 w-full z-50">
-        <motion.div 
+        <motion.div
           key={index}
           initial={{ width: 0 }}
           animate={{ width: "100%" }}

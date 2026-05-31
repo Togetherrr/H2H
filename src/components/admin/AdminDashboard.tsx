@@ -1,17 +1,14 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import dynamic from "next/dynamic"
 import { getAdminTabData } from "@/app/admin/actions"
 import { Sidebar } from "@/components/admin/Sidebar"
-import { UsersManager } from "@/components/admin/UsersManager"
-import { MembersManager } from "@/components/admin/MembersManager"
-import { SocialsManager } from "@/components/admin/SocialsManager"
-import { SiteSettingsManager } from "@/components/admin/SiteSettingsManager"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Sparkles, Users, Disc3, Link as LinkIcon, Database, Palette } from "lucide-react"
-import { ThemesManager } from "@/components/admin/ThemesManager"
-import { MediaLibrary } from "@/components/admin/MediaManager"
+import { Sparkles, Users, Link as LinkIcon, Database, Palette, BadgeCheck } from "lucide-react"
 import { Image as ImageIcon } from "lucide-react"
+import { MessageSquare } from "lucide-react"
+import type { NoticeRow } from "@/lib/notices"
 
 type AdminStats = {
   users: number
@@ -19,6 +16,7 @@ type AdminStats = {
   socials: number
   timeline: number
   themes: number
+  feedbacks: number
 }
 
 type AdminTabData = {
@@ -27,7 +25,13 @@ type AdminTabData = {
   socials?: any[]
   themes?: any[]
   siteSettings?: any
+  votingApps?: any[]
+  awardEvents?: any[]
+  availableApps?: any[]
   stats?: AdminStats
+  feedbackMessages?: any[]
+  notices?: NoticeRow[]
+  youtubeItems?: any[]
 }
 
 type AdminDashboardProps = {
@@ -35,7 +39,7 @@ type AdminDashboardProps = {
   profile: any
 }
 
-const VALID_TABS = new Set(["overview", "users", "members", "themes", "socials", "settings", "media"])
+const VALID_TABS = new Set(["overview", "sync", "users", "members", "themes", "socials", "settings", "media", "voting", "award-events", "lineup-reveal", "career-records", "youtube-items", "comeback", "notices", "feedback"])
 
 function normalizeTab(tab: string) {
   return VALID_TABS.has(tab) ? tab : "overview"
@@ -68,6 +72,80 @@ function TabLoadingState({ title }: { title: string }) {
     </div>
   )
 }
+
+const UsersManager = dynamic(
+  () => import("@/components/admin/UsersManager").then((mod) => mod.UsersManager),
+  { loading: () => <TabLoadingState title="Loading users..." /> },
+)
+
+const MembersManager = dynamic(
+  () => import("@/components/admin/MembersManager").then((mod) => mod.MembersManager),
+  { loading: () => <TabLoadingState title="Loading members..." /> },
+)
+
+const SocialsManager = dynamic(
+  () => import("@/components/admin/SocialsManager").then((mod) => mod.SocialsManager),
+  { loading: () => <TabLoadingState title="Loading social links..." /> },
+)
+
+const SiteSettingsManager = dynamic(
+  () => import("@/components/admin/SiteSettingsManager").then((mod) => mod.SiteSettingsManager),
+  { loading: () => <TabLoadingState title="Loading site settings..." /> },
+)
+
+const ThemesManager = dynamic(
+  () => import("@/components/admin/ThemesManager").then((mod) => mod.ThemesManager),
+  { loading: () => <TabLoadingState title="Loading themes..." /> },
+)
+
+const MediaLibrary = dynamic(
+  () => import("@/components/admin/MediaManager").then((mod) => mod.MediaLibrary),
+  { loading: () => <TabLoadingState title="Loading media library..." /> },
+)
+
+const VotingAppsManager = dynamic(
+  () => import("@/components/admin/VotingAppsManager").then((mod) => mod.VotingAppsManager),
+  { loading: () => <TabLoadingState title="Loading voting apps..." /> },
+)
+
+const AwardEventsManager = dynamic(
+  () => import("@/components/admin/AwardEventsManager").then((mod) => mod.AwardEventsManager),
+  { loading: () => <TabLoadingState title="Loading award events..." /> },
+)
+
+const LineupRevealManager = dynamic(
+  () => import("@/components/admin/LineupRevealManager").then((mod) => mod.LineupRevealManager),
+  { loading: () => <TabLoadingState title="Loading lineup reveal..." /> },
+)
+
+const CareerRecordsManager = dynamic(
+  () => import("@/components/admin/CareerRecordsManager").then((mod) => mod.CareerRecordsManager),
+  { loading: () => <TabLoadingState title="Loading career records..." /> },
+)
+
+const YoutubeItemsTab = dynamic(
+  () => import("@/components/admin/YoutubeItemsTab").then((mod) => mod.YoutubeItemsTab),
+  { loading: () => <TabLoadingState title="Loading YouTube items..." /> },
+)
+const ComebackWatchManager = dynamic(
+  () => import("@/components/admin/ComebackWatchManager").then((mod) => mod.ComebackWatchManager),
+  { loading: () => <TabLoadingState title="Loading comeback settings..." /> },
+)
+
+const FeedbackManager = dynamic(
+  () => import("@/components/admin/FeedbackManager").then((mod) => mod.FeedbackManager),
+  { loading: () => <TabLoadingState title="Loading feedback..." /> },
+)
+
+const SyncManager = dynamic(
+  () => import("@/components/admin/SyncManager").then((mod) => mod.SyncManager),
+  { loading: () => <TabLoadingState title="Loading sync tools..." /> },
+)
+
+const NoticesManager = dynamic(
+  () => import("@/components/admin/NoticesManager").then((mod) => mod.NoticesManager),
+  { loading: () => <TabLoadingState title="Loading notices..." /> },
+)
 
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
@@ -159,7 +237,7 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
           Monitor key metrics and manage your group&apos;s online presence.
         </p>
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
           <Card className="border-slate-800 bg-slate-900/60 shadow-sm backdrop-blur-sm transition-all hover:shadow-md">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-slate-400">Total Users</CardTitle>
@@ -236,6 +314,25 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
               )}
             </CardContent>
           </Card>
+          <Card className="border-slate-800 bg-slate-900/60 shadow-sm backdrop-blur-sm transition-all hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-slate-400">Feedback</CardTitle>
+              <MessageSquare className="size-4 text-amber-400" />
+            </CardHeader>
+            <CardContent>
+              {stats ? (
+                <>
+                  <div className="text-3xl font-bold text-white">{stats.feedbacks}</div>
+                  <p className="text-xs text-slate-400 mt-1">Messages from fans</p>
+                </>
+              ) : (
+                <>
+                  <LoadingBlock className="h-9 w-16" />
+                  <LoadingBlock className="mt-3 h-3 w-28" />
+                </>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
@@ -291,6 +388,28 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
                 </div>
                 <ImageIcon className="size-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
               </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange("comeback")}
+                className="group flex items-center justify-between rounded-xl border border-slate-800 bg-slate-800/50 p-4 text-left transition-colors hover:bg-slate-800 hover:border-slate-700"
+              >
+                <div>
+                  <h4 className="font-medium text-slate-200">Comeback Watch</h4>
+                  <p className="text-sm text-slate-400">Set the album title, countdown, and release links</p>
+                </div>
+                <BadgeCheck className="size-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange("feedback")}
+                className="group flex items-center justify-between rounded-xl border border-slate-800 bg-slate-800/50 p-4 text-left transition-colors hover:bg-slate-800 hover:border-slate-700"
+              >
+                <div>
+                  <h4 className="font-medium text-slate-200">View Feedback</h4>
+                  <p className="text-sm text-slate-400">Review user messages and mark their status</p>
+                </div>
+                <MessageSquare className="size-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
+              </button>
             </CardContent>
           </Card>
 
@@ -341,6 +460,14 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
     }
 
     switch (tab) {
+      case "sync": {
+        const syncData = dataByTab.sync
+        return syncData ? (
+          <SyncManager siteSettings={syncData.siteSettings} timelineCount={syncData.stats?.timeline} />
+        ) : (
+          <TabLoadingState title="Loading sync tools..." />
+        )
+      }
       case "users": {
         const profiles = dataByTab.users?.profiles
         return profiles ? <UsersManager profiles={profiles} /> : <TabLoadingState title="Loading users..." />
@@ -367,6 +494,62 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
       }
       case "media": {
         return <MediaLibrary />
+      }
+      case "voting": {
+        const apps = dataByTab.voting?.votingApps
+        return apps ? <VotingAppsManager initialApps={apps} /> : <TabLoadingState title="Loading voting apps..." />
+      }
+      case "award-events": {
+        const awardEventsData = dataByTab["award-events"]
+        return awardEventsData?.awardEvents && awardEventsData?.availableApps ? (
+          <AwardEventsManager initialEvents={awardEventsData.awardEvents} availableApps={awardEventsData.availableApps} />
+        ) : (
+          <TabLoadingState title="Loading award events..." />
+        )
+      }
+      case "lineup-reveal": {
+        const settingsData = dataByTab["lineup-reveal"]
+        return settingsData?.siteSettings ? (
+          <LineupRevealManager initialSettings={settingsData.siteSettings} />
+        ) : (
+          <TabLoadingState title="Loading lineup reveal..." />
+        )
+      }
+      case "career-records": {
+        const settingsData = dataByTab["career-records"]
+        return settingsData?.siteSettings ? (
+          <CareerRecordsManager initialSettings={settingsData.siteSettings} />
+        ) : (
+          <TabLoadingState title="Loading career records..." />
+        )
+      }
+      case "comeback": {
+        const settingsData = dataByTab["comeback"]
+        return settingsData?.siteSettings ? (
+          <ComebackWatchManager initialSettings={settingsData.siteSettings} />
+        ) : (
+          <TabLoadingState title="Loading comeback settings..." />
+        )
+      }
+      case "feedback": {
+        const feedbackMessages = dataByTab.feedback?.feedbackMessages
+        return feedbackMessages ? (
+          <FeedbackManager initialFeedbackMessages={feedbackMessages} />
+        ) : (
+          <TabLoadingState title="Loading feedback..." />
+        )
+      }
+      case "notices": {
+        const notices = dataByTab.notices?.notices
+        return notices ? <NoticesManager initialNotices={notices} /> : <TabLoadingState title="Loading notices..." />
+      }
+      case "youtube-items": {
+        const youtubeItems = dataByTab["youtube-items"]?.youtubeItems
+        return youtubeItems ? (
+          <YoutubeItemsTab items={youtubeItems as any} />
+        ) : (
+          <TabLoadingState title="Loading YouTube items..." />
+        )
       }
       case "overview":
       default:

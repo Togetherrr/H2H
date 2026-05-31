@@ -1,7 +1,6 @@
 "use client"
 
-/* eslint-disable @next/next/no-img-element */
-
+import Image from "next/image"
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
@@ -125,9 +124,11 @@ function TimelineCard({
         )}
       >
         {event.cover ? (
-          <img
+          <Image
             src={event.cover}
             alt={event.title}
+            width={160}
+            height={160}
             className="h-full w-full object-cover object-center"
           />
         ) : (

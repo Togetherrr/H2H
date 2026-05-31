@@ -1,8 +1,1 @@
-{
-    "crons": [
-        {
-            "path": "/api/realtime/poll?secret=phuongtramgiabaohearts2hearts",
-            "schedule": "0 * * * *"
-        }
-    ]
-}
+{}

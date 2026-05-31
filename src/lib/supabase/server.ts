@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import type { Database } from "@/lib/supabase/database.types"
 import { requireSupabaseEnv } from "@/lib/supabase/env"
+import { safeFetch } from "@/lib/supabase/safe-fetch"
 
 export async function createClient() {
   const cookieStore = await cookies()
@@ -21,6 +22,9 @@ export async function createClient() {
           // Server Components cannot always write cookies.
         }
       },
+    },
+    global: {
+      fetch: safeFetch,
     },
   })
 }

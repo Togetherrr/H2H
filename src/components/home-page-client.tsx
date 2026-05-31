@@ -1,9 +1,9 @@
 "use client"
-
 /* eslint-disable @next/next/no-img-element */
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ArrowRight, Facebook, Heart, Instagram, Music2, Star, Twitter, Youtube, Users2, X, Cake, Zap, Ruler, Droplets, Globe, Quote, Sparkles, BookOpen, Trophy, Fingerprint, Music, Smile, MapPin, Users } from "lucide-react"
+import Image from "next/image"
+import { ArrowRight, Facebook, Heart, Instagram, Music2, Star, Twitter, Youtube, Users2, X, Cake, Zap, Ruler, Droplets, Globe, Quote, Sparkles, BookOpen, Trophy, Fingerprint, Music, Smile, MapPin, Users, Smartphone, ChevronRight } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Dialog, DialogContent, DialogOverlay, DialogPortal, DialogTitle } from "@radix-ui/react-dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs"
@@ -13,8 +13,8 @@ import { TrackPerformanceSection } from "@/components/track-performance-section"
 import { TimelineSection } from "@/components/timeline-section"
 import { ComebackWatchHeader } from "@/components/comeback-watch-header"
 import { SpotlightNotice } from "@/components/spotlight-notice"
+import { FeedbackWidget } from "@/components/feedback-section"
 import { Navbar, type TimeZone } from "@/components/navbar"
-import { NoticeBoard } from "@/components/notice-board"
 import { useTranslation } from "@/hooks/useTranslation"
 import { Building2, Disc, Calendar, HeartPulse, Palette, Hash } from "lucide-react"
 
@@ -24,6 +24,12 @@ import type { MemberProfile } from "@/lib/member-profiles"
 import type { GroupOfficialProfile } from "@/lib/group-official-profile"
 import type { HomeStatsSnapshot } from "@/lib/home-stats"
 import type { TrackPerformanceSnapshot } from "@/lib/track-performance"
+import type { ActiveVoteApp } from "@/lib/supabase/voting-service-server"
+import type { Notice } from "@/lib/notices"
+import { AwardEventCard } from "@/components/award-event-card"
+import { useTimeZoneStore } from "@/lib/timezone-store"
+import { formatDateTime, formatDateOnly } from "@/lib/timezone"
+import type { MappedAwardEvent } from "@/hooks/useAwardEvents"
 
 type OfficialLink = { id?: string; name: string; href: string; note: string; platform?: string }
 
@@ -100,12 +106,16 @@ const officialLinkMeta: Record<string, OfficialLinkMeta> = {
 
 interface HomePageClientProps {
   filmFrames: FilmFrame[]
+  careerRecordsFilmFrames?: FilmFrame[]
   timelineEvents: TimelineEvent[]
   memberProfiles: MemberProfile[]
   officialProfile: GroupOfficialProfile
   officialLinks: OfficialLink[]
   homeStatsSnapshot: HomeStatsSnapshot
   trackPerformanceSnapshot: TrackPerformanceSnapshot
+  awardEvents: MappedAwardEvent[]
+  activeVoteApps: ActiveVoteApp[]
+  notices: Notice[]
 }
 
 // --- Sub-components cho giao diện mới ---
@@ -122,17 +132,22 @@ function FactRow({ title, value, icon: Icon }: { title: string; value: React.Rea
   )
 }
 
-function MemberCardNew({ member, onClick }: { member: MemberProfile; onClick: () => void }) {
+function MemberCardNew({ member, onClick, priority }: { member: MemberProfile; onClick: () => void; priority?: boolean }) {
   return (
     <button
       onClick={onClick}
       className="group relative flex flex-col items-center bg-white/40 hover:bg-white/70 backdrop-blur-md rounded-[2rem] p-3 shadow-sm border border-white/60 transition-all duration-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-sky-200/30 w-full"
     >
       <div className="relative w-full aspect-[4/5] max-w-[120px] md:max-w-[140px] overflow-hidden rounded-[1.5rem] mb-3 transition-transform duration-500 group-hover:scale-105 group-hover:-rotate-1 border-[4px] border-white shadow-sm">
-        <img
+        <Image
           src={member.image}
           alt={member.name}
-          className="h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-108"
+          fill
+          sizes="(min-width: 1024px) 140px, (min-width: 768px) 120px, 45vw"
+          quality={75}
+          priority={priority}
+          unoptimized
+          className="object-cover object-top transition-transform duration-700 group-hover:scale-108"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-sky-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       </div>
@@ -151,6 +166,477 @@ function MemberCardNew({ member, onClick }: { member: MemberProfile; onClick: ()
   )
 }
 
+function GuideModal({
+  isOpen,
+  onClose,
+  app,
+  timeZone
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  app: ActiveVoteApp | null;
+  timeZone: TimeZone;
+}) {
+  if (!app) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto !rounded-[3rem] bg-white/95 backdrop-blur-xl border-white shadow-2xl p-0 custom-scrollbar overflow-x-hidden">
+        <div className="p-8 pb-4 flex flex-row items-center justify-between gap-4 sticky top-0 bg-white/60 backdrop-blur-md z-20 border-b border-slate-100">
+          <div className="flex items-center gap-4">
+            {app.logo_url ? (
+              <Image
+                src={app.logo_url}
+                alt={app.name}
+                width={48}
+                height={48}
+                className="size-12 rounded-2xl object-cover ring-2 ring-white shadow-sm"
+              />
+            ) : (
+              <div className="size-12 rounded-2xl bg-gradient-to-br from-amber-200 to-pink-200 flex items-center justify-center text-[11px] font-black text-slate-800 ring-2 ring-white shadow-sm">
+                {app.name.slice(0, 2).toUpperCase()}
+              </div>
+            )}
+            <div className="text-left">
+              <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-slate-900 italic">
+                {app.name} Guide
+              </DialogTitle>
+              <p className="text-[10px] font-black text-[#FF708A] uppercase tracking-widest mt-1 opacity-60">
+                {app.program_name || "Awards"} • Follow steps below
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors shrink-0"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
+
+        <div className="p-8 space-y-16">
+          {app.guide_steps && app.guide_steps.length > 0 ? (
+            <div className="space-y-20">
+              {app.guide_steps.map((step, index) => (
+                <div key={index} className="flex flex-col items-center text-center gap-8 group/step">
+                  <div className="space-y-4 w-full max-w-2xl">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-black text-white text-base font-black italic shadow-lg shadow-black/10 group-hover/step:scale-110 transition-transform">
+                        {String(index + 1).padStart(2, "0")}
+                      </div>
+                      <h5 className="text-xl font-black uppercase tracking-tight text-slate-900 leading-tight italic">
+                        {step.title || "Next Step"}
+                      </h5>
+                    </div>
+                    {step.description && (
+                      <p className="text-[15px] font-semibold text-slate-500 leading-relaxed italic opacity-80 px-4">
+                        {step.description}
+                      </p>
+                    )}
+                  </div>
+
+                  {step.image_url && (
+                    <div className="w-full max-w-lg mx-auto">
+                      <div className="relative group/img overflow-hidden rounded-[2.5rem] border-4 border-white shadow-2xl shadow-slate-200/50 transition-transform duration-500 hover:scale-[1.02]">
+                        <Image
+                          src={step.image_url}
+                          alt={step.title || "Guide image"}
+                          width={800}
+                          height={1200}
+                          className="w-full h-auto object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-20 text-center">
+              <BookOpen className="size-12 text-slate-200 mx-auto mb-4" />
+              <p className="text-slate-400 font-bold italic">No guide steps available for this app.</p>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function ActiveVoteSection({ apps }: { apps: ActiveVoteApp[] }) {
+  const timeZone = useTimeZoneStore((s) => s.timeZone) as TimeZone
+  const [selectedAppForGuide, setSelectedAppForGuide] = useState<ActiveVoteApp | null>(null)
+
+  // Group ALL apps by program_name to get all platforms (My1Pick, UPICK, etc.)
+  const groupedApps = apps.reduce((acc, app) => {
+    const name = app.program_name || "Official Event"
+    if (!acc[name]) acc[name] = []
+    acc[name].push(app)
+    return acc
+  }, {} as Record<string, ActiveVoteApp[]>)
+
+  // Only show groups that have at least one live voting round.
+  const groupKeys = Object.keys(groupedApps).filter(programName =>
+    groupedApps[programName].some(app => !!app.active_round)
+  )
+
+  if (groupKeys.length === 0) return null
+
+  return (
+    <motion.section
+      id="active-vote"
+      className="py-14 select-none relative overflow-hidden"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
+      <div className="max-w-5xl mx-auto px-4 relative z-10">
+        <div className="card-premium shimmer-border p-6 md:p-10 relative overflow-hidden">
+          <div className="absolute top-0 right-0 size-96 bg-amber-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" ></div>
+          <div className="absolute bottom-0 left-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" ></div>
+
+          <div className="relative z-10">
+            <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="space-y-3">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-200 bg-white/70 backdrop-blur-sm shadow-sm w-fit">
+                  <Trophy className="size-3.5 text-amber-500" />
+                  <span className="text-amber-600 font-black uppercase tracking-widest text-[9px]">live voting</span>
+                </div>
+                <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-slate-900 leading-none">Active campaigns</h2>
+                <p className="text-[13px] text-slate-500 font-medium max-w-xl leading-relaxed italic opacity-80">
+                  Multiple platforms supporting the same event. Switch between apps to see specific guides and strategies.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-16">
+              {groupKeys.map((programName) => (
+                <AwardGroup
+                  key={programName}
+                  programName={programName}
+                  apps={groupedApps[programName]}
+                  timeZone={timeZone}
+                  onViewGuide={setSelectedAppForGuide}
+                  defaultExpanded={groupKeys.length === 1}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {selectedAppForGuide && (
+        <GuideModal
+          isOpen={!!selectedAppForGuide}
+          onClose={() => setSelectedAppForGuide(null)}
+          app={selectedAppForGuide}
+          timeZone={timeZone}
+        />
+      )}
+    </motion.section>
+  )
+}
+
+function ActiveAwardEventsSection({ events }: { events: MappedAwardEvent[] }) {
+  const activeEvents = (events ?? []).filter((e) => e.apps.length > 0)
+  if (activeEvents.length === 0) return null
+
+  return (
+    <section id="active-awards" className="py-14 select-none relative overflow-hidden">
+      <div className="max-w-5xl mx-auto px-4 relative z-10">
+        <div className="card-premium shimmer-border p-6 md:p-10 relative overflow-hidden">
+          <div className="absolute top-0 right-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 size-96 bg-amber-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" />
+
+          <div className="relative z-10">
+            <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="space-y-3">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-pink-200 bg-white/70 backdrop-blur-sm shadow-sm w-fit">
+                  <Trophy className="size-3.5 text-pink-500" />
+                  <span className="text-pink-600 font-black uppercase tracking-widest text-[9px]">award voting</span>
+                </div>
+                <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-slate-900 leading-none">Active award events</h2>
+                <p className="text-[13px] text-slate-500 font-medium max-w-xl leading-relaxed italic opacity-80">
+                  Switch between apps to see currencies, strategies, and the correct guide for each platform.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-10">
+              {activeEvents.map((event) => (
+                <AwardEventCard key={event.id} event={event} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function AwardGroup({
+  programName,
+  apps,
+  timeZone,
+  onViewGuide,
+  defaultExpanded = false
+}: {
+  programName: string;
+  apps: ActiveVoteApp[];
+  timeZone: TimeZone;
+  onViewGuide: (app: ActiveVoteApp) => void;
+  defaultExpanded?: boolean;
+}) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
+
+  // Prefer a live round, then featured app, then the first app as a fallback.
+  const mainApp = apps.find(a => a.active_round) || apps.find(a => a.is_featured) || apps[0]
+
+  if (!mainApp) return null
+
+  const ceremonyAt = apps.find(a => a.ceremony_at)?.ceremony_at
+
+  return (
+    <div className="rounded-[3rem] border border-white/60 bg-white/40 backdrop-blur-md overflow-hidden shadow-sm transition-all duration-500 hover:shadow-2xl hover:shadow-slate-200/50 group">
+      {/* Group Header */}
+      <div
+        className="p-8 pb-6 border-b border-white/60 bg-white/20 cursor-pointer hover:bg-white/30 transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#FF708A] animate-pulse" />
+              <p className="text-[11px] font-black uppercase tracking-[0.4em] text-[#FF708A]">Official Event</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <h3 className="text-4xl md:text-5xl font-black tracking-tighter text-slate-900 uppercase leading-[0.85] italic py-1">
+                {programName}
+              </h3>
+              <div className={cn(
+                "size-10 rounded-full bg-white/40 border border-white flex items-center justify-center transition-transform duration-500",
+                isExpanded ? "rotate-180" : ""
+              )}>
+                <ChevronRight className="size-5 text-slate-600 rotate-90" />
+              </div>
+            </div>
+          </div>
+
+          {ceremonyAt && (
+            <div className="rounded-[2rem] bg-gradient-to-br from-[#FF708A] to-[#FF3B57] px-8 py-5 text-white shadow-xl shadow-pink-100/50 flex items-center gap-5 transition-transform group-hover:scale-105">
+              <div className="size-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
+                <Trophy className="size-6" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-100 opacity-80 mb-0.5">Ceremony Time</p>
+                <p className="text-base font-black uppercase tracking-tight italic leading-none">
+                  {formatDateTime(ceremonyAt, timeZone)}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.5, ease: [0.04, 0.62, 0.23, 0.98] }}
+            className="overflow-hidden"
+          >
+            {/* Highlight Recommendation Notice */}
+            <div className="mt-8 mx-8 p-5 rounded-2xl bg-amber-50/60 border border-amber-100/50 backdrop-blur-sm">
+              <div className="flex items-start gap-4">
+                <div className="size-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+                  <Sparkles className="size-5 text-amber-600" />
+                </div>
+                <p className="text-[13px] font-semibold text-slate-700 leading-relaxed italic">
+                  {apps.length > 1 ? (
+                    <>
+                      Official voting for <strong className="text-slate-950 uppercase">{programName}</strong> is active across multiple platforms, including <strong className="text-slate-950">My1Pick</strong>, <strong className="text-slate-950">Idol Champ</strong>, and <strong className="text-slate-950">UPICK</strong>. We recommend <strong className="text-slate-900">distributing votes across all apps</strong> for maximum results. Among these, <strong className="text-[#FF708A] underline decoration-pink-200 underline-offset-4">UPICK</strong> is the most recommended platform as it offers the fastest voting process and the easiest methods to gather free materials.
+                    </>
+                  ) : (
+                    <>
+                      Official voting for <strong className="text-slate-950 uppercase">{programName}</strong> is live on <strong className="text-[#FF708A] underline decoration-pink-200 underline-offset-4">{mainApp.name}</strong>. Please follow our guide below to maximize your contribution.
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {/* App Details Content */}
+            <div className="p-8 md:p-10 space-y-10">
+              <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+                <div className="flex items-center gap-5">
+                  <div className="size-16 rounded-[1.5rem] bg-white shadow-md flex items-center justify-center overflow-hidden border border-white ring-4 ring-white/20">
+                    {mainApp.logo_url ? (
+                      <Image src={mainApp.logo_url} alt={mainApp.name} width={64} height={64} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="font-black text-slate-800 text-lg">{mainApp.name.slice(0, 2)}</span>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="text-2xl font-black text-slate-900 uppercase italic leading-none">{mainApp.name}</h4>
+                    <div className="mt-3 flex items-center gap-3">
+                      <div className="flex items-center gap-1.5 bg-slate-900 text-white px-2.5 py-1 rounded-lg">
+                        <span className="size-1.5 rounded-full bg-green-400 animate-pulse" />
+                        <p className="text-[10px] font-black uppercase tracking-widest">Active</p>
+                      </div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        {mainApp.active_round?.round_name || "Official Voting App"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {mainApp.active_round && (
+                  <div className="rounded-2xl border border-white bg-white/60 px-6 py-5 text-slate-700 shadow-sm backdrop-blur-sm">
+                    <p className="text-[9px] font-black uppercase tracking-[0.25em] text-[#FF708A] mb-1.5">voting period</p>
+                    <p className="text-[13px] font-bold whitespace-nowrap">
+                      {formatDateTime(mainApp.active_round.start_at, timeZone)} — {formatDateTime(mainApp.active_round.end_at, timeZone)}
+                      <span className="ml-2 text-sky-500 font-black uppercase tracking-widest text-[10px]">
+                        {timeZone}
+                      </span>
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {(mainApp.awards?.length > 0 || mainApp.description || (mainApp.reflection_rate && mainApp.reflection_rate.length > 0)) && (
+                <div className="grid gap-5 sm:grid-cols-2">
+                  {mainApp.awards && mainApp.awards.length > 0 ? (
+                    <div className="rounded-3xl bg-white/50 border border-white p-6 shadow-sm">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5">Nominations</p>
+                      <ul className="space-y-3 text-[14px] font-bold text-slate-700 leading-relaxed italic">
+                        {mainApp.awards.map((award, idx) => (
+                          <li key={`${award}-${idx}`} className="flex items-start gap-3">
+                            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#FF708A] shrink-0" />
+                            <span>{award}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : mainApp.description ? (
+                    <div className="rounded-3xl bg-white/50 border border-white p-6 shadow-sm">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5">Description</p>
+                      <p className="text-[14px] font-bold text-slate-700 leading-relaxed italic">{mainApp.description}</p>
+                    </div>
+                  ) : null}
+                  {mainApp.reflection_rate && mainApp.reflection_rate.length > 0 && (
+                    <div className="rounded-3xl bg-white/50 border border-white p-7 shadow-sm">
+                      <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] mb-5 flex items-center gap-2">
+                        <Sparkles className="size-3.5 text-[#FF708A]" /> Reflection Rate
+                      </p>
+                      <ul className="space-y-3 text-[13px] font-semibold text-slate-700 italic opacity-80">
+                        {(() => {
+                          const rawRate = mainApp.reflection_rate as any;
+                          let rates: string[] = [];
+
+                          if (Array.isArray(rawRate)) {
+                            rates = rawRate;
+                          } else if (typeof rawRate === 'string') {
+                            const trimmed = rawRate.trim();
+                            if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                              try {
+                                const parsed = JSON.parse(trimmed);
+                                rates = Array.isArray(parsed) ? parsed : [trimmed];
+                              } catch (e) {
+                                rates = [trimmed];
+                              }
+                            } else {
+                              rates = [trimmed];
+                            }
+                          }
+
+                          return rates
+                            .filter(rate => rate && String(rate).trim().length > 0)
+                            .map((rate, idx) => (
+                              <li key={idx} className="flex items-start gap-3">
+                                <span className="mt-2 h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                                <span>{rate}</span>
+                              </li>
+                            ));
+                        })()}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="grid gap-6 lg:grid-cols-3">
+                <div className="rounded-[2rem] border border-white/60 bg-white/60 p-7 shadow-sm">
+                  <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#FF708A] mb-5">Currencies</p>
+                  <div className="flex flex-wrap gap-2.5">
+                    {(mainApp.currencies ?? []).map((item) => (
+                      <span key={item} className="rounded-xl bg-white border border-white px-4 py-2 text-[12px] font-bold text-slate-700 shadow-sm">{item}</span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-[2rem] border border-white/60 bg-white/60 p-7 shadow-sm">
+                  <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500 mb-5">Collection</p>
+                  <ul className="space-y-3.5 text-[13px] font-semibold text-slate-700 italic opacity-80">
+                    {(mainApp.collection_methods ?? []).map((item) => (
+                      <li key={item} className="flex items-start gap-3">
+                        <span className="mt-2 h-1.5 w-1.5 rounded-full bg-pink-400 shrink-0" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="rounded-[2rem] border border-white/60 bg-white/60 p-7 shadow-sm">
+                  <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500 mb-5">Strategy</p>
+                  <ul className="space-y-3.5 text-[13px] font-semibold text-slate-700 italic opacity-80">
+                    {mainApp.strategies.length === 0 ? (
+                      <li className="text-slate-400 font-medium">No strategies yet.</li>
+                    ) : (
+                      mainApp.strategies.map((s) => (
+                        <li key={s.id} className="flex items-start gap-3">
+                          <span className="mt-2 h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span>{s.content}</span>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-6 border-t border-white/60 pt-10">
+                <div className="flex gap-4 items-center">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mr-2">links:</p>
+                  {mainApp.android_url && (
+                    <a href={mainApp.android_url} target="_blank" rel="noreferrer" className="p-4 rounded-2xl bg-white border border-white text-[#FF708A] shadow-md hover:-translate-y-1 transition-all" title="Android App"><Smartphone className="size-5" /></a>
+                  )}
+                  {mainApp.ios_url && (
+                    <a href={mainApp.ios_url} target="_blank" rel="noreferrer" className="p-4 rounded-2xl bg-white border border-white text-[#FF708A] shadow-md hover:-translate-y-1 transition-all" title="iOS App"><Smartphone className="size-5" /></a>
+                  )}
+                  {(mainApp as any).website_url && (
+                    <a href={(mainApp as any).website_url} target="_blank" rel="noreferrer" className="p-4 rounded-2xl bg-white border border-white text-[#FF708A] shadow-md hover:-translate-y-1 transition-all" title="Website"><Globe className="size-5" /></a>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => onViewGuide(mainApp)}
+                  className="flex items-center gap-4 rounded-[1.5rem] bg-[#FF3B57] px-10 py-5 text-[12px] font-black uppercase tracking-widest text-white shadow-2xl shadow-pink-200 hover:bg-[#FF2B4A] transition-all hover:scale-105 active:scale-95 group"
+                >
+                  <BookOpen className="size-5 group-hover:rotate-12 transition-transform" />
+                  View {mainApp.name} Guide
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 function MemberDetailModal({
   member,
   isOpen,
@@ -160,6 +646,18 @@ function MemberDetailModal({
   isOpen: boolean;
   onClose: () => void
 }) {
+  const [activeTab, setActiveTab] = useState("profile")
+  const [mountedTabs, setMountedTabs] = useState<string[]>(["profile"])
+  const [heroLoaded, setHeroLoaded] = useState(false)
+
+  useEffect(() => {
+    if (isOpen && member) {
+      setActiveTab("profile")
+      setMountedTabs(["profile"])
+      setHeroLoaded(false)
+    }
+  }, [isOpen, member])
+
   if (!member) return null
 
   const profileItems = [
@@ -187,12 +685,39 @@ function MemberDetailModal({
 
             {/* Left side: Cinematic Image */}
             <div className="relative w-full md:w-[35%] aspect-[4/5] md:aspect-auto overflow-hidden bg-slate-900">
-              <img
-                src={member.image}
-                alt={member.name}
-                className="h-full w-full object-cover object-top"
+              <div
+                className={`absolute inset-0 bg-gradient-to-br from-pink-200/30 via-sky-200/20 to-slate-900 transition-opacity duration-500 ${heroLoaded ? "opacity-0" : "opacity-100"}`}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+              <div
+                className={`absolute -top-16 -right-16 size-40 rounded-full bg-pink-200/40 blur-3xl transition-opacity duration-700 ${heroLoaded ? "opacity-0" : "opacity-100"}`}
+              />
+              <div
+                className={`absolute bottom-12 left-10 size-28 rounded-full bg-sky-200/40 blur-3xl transition-opacity duration-700 ${heroLoaded ? "opacity-0" : "opacity-100"}`}
+              />
+              <div
+                className={`absolute inset-0 bg-gradient-to-br from-sky-200/80 via-sky-300/70 to-sky-200/60 transition-opacity duration-[1400ms] ${heroLoaded ? "opacity-30" : "opacity-100"}`}
+              />
+              <motion.div
+                key={member.slug}
+                className="absolute inset-0"
+                initial={{ opacity: 0.5, scale: 1.03 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              >
+                <Image
+                  src={member.image}
+                  alt={member.name}
+                  fill
+                  sizes="(min-width: 1024px) 140px, (min-width: 768px) 120px, 45vw"
+                  quality={75}
+                  priority={true}
+                  unoptimized
+                  className={`object-cover object-top transition-opacity duration-[1400ms] ${heroLoaded ? "opacity-100" : "opacity-0"}`}
+                  onLoad={() => setHeroLoaded(true)}
+                  onError={() => setHeroLoaded(true)}
+                />
+              </motion.div>
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/20 to-transparent" />
 
               <div className="absolute bottom-10 left-10 right-10">
                 <motion.div
@@ -232,7 +757,14 @@ function MemberDetailModal({
 
             {/* Right side: Multi-tab Content */}
             <div className="flex-1 flex flex-col bg-white overflow-hidden">
-              <Tabs defaultValue="profile" className="flex flex-col h-full">
+              <Tabs
+                value={activeTab}
+                onValueChange={(value) => {
+                  setActiveTab(value)
+                  setMountedTabs((prev) => (prev.includes(value) ? prev : [...prev, value]))
+                }}
+                className="flex flex-col h-full"
+              >
                 <div className="px-8 md:px-12 pt-8 flex items-center justify-between border-b border-slate-100">
                   <TabsList className="flex gap-8 flex-1">
                     <TabsTrigger value="profile" className={tabClass}>Profile</TabsTrigger>
@@ -252,144 +784,152 @@ function MemberDetailModal({
                   <AnimatePresence mode="wait">
                     {/* PROFILE TAB */}
                     <TabsContent key="profile" value="profile" className="outline-none focus:ring-0">
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="space-y-8"
-                      >
-                        <div className="grid grid-cols-2 gap-y-8 gap-x-8">
-                          {profileItems.map((item, idx) => (
-                            <div key={`profile-${idx}`} className="flex items-start gap-4">
-                              <div className="size-10 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center text-sky-500 shrink-0">
-                                <item.icon className="size-5" />
+                      {mountedTabs.includes("profile") && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="space-y-8"
+                        >
+                          <div className="grid grid-cols-2 gap-y-8 gap-x-8">
+                            {profileItems.map((item, idx) => (
+                              <div key={`profile-${idx}`} className="flex items-start gap-4">
+                                <div className="size-10 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center text-sky-500 shrink-0">
+                                  <item.icon className="size-5" />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{item.label}</span>
+                                  <p className="text-[15px] font-bold text-slate-900 leading-tight">{item.value}</p>
+                                </div>
                               </div>
-                              <div className="flex flex-col gap-1">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{item.label}</span>
-                                <p className="text-[15px] font-bold text-slate-900 leading-tight">{item.value}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </motion.div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
                     </TabsContent>
 
                     {/* STORY TAB */}
                     <TabsContent key="story" value="story" className="outline-none focus:ring-0">
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-10"
-                      >
-                        <section>
-                          <div className="flex items-center gap-3 mb-6">
-                            <Quote className="size-5 text-pink-500" />
-                            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Personal Biography</h3>
-                          </div>
-                          <div className="rounded-3xl bg-white p-8 border border-slate-100 shadow-sm">
-                            <p className="text-lg font-medium leading-relaxed text-slate-700 italic">
-                              &quot;{member.detail?.bio || member.intro}&quot;
-                            </p>
-                          </div>
-                        </section>
-
-                        {member.roleModel && (
+                      {mountedTabs.includes("story") && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="space-y-10"
+                        >
                           <section>
                             <div className="flex items-center gap-3 mb-6">
-                              <Trophy className="size-5 text-amber-500" />
-                              <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Inspiration & Role Model</h3>
+                              <Quote className="size-5 text-pink-500" />
+                              <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Personal Biography</h3>
                             </div>
-                            <div className="flex items-center gap-5 p-6 rounded-3xl bg-amber-50/50 border border-amber-100/50">
-                              <div className="size-12 rounded-2xl bg-white flex items-center justify-center text-amber-600 shadow-sm border border-amber-100">
-                                <Star className="size-6 fill-current" />
-                              </div>
-                              <p className="text-[16px] font-black text-amber-900 uppercase tracking-tight">{member.roleModel}</p>
+                            <div className="rounded-3xl bg-white p-8 border border-slate-100 shadow-sm">
+                              <p className="text-lg font-medium leading-relaxed text-slate-700 italic">
+                                &quot;{member.detail?.bio || member.intro}&quot;
+                              </p>
                             </div>
                           </section>
-                        )}
-                      </motion.div>
+
+                          {member.roleModel && (
+                            <section>
+                              <div className="flex items-center gap-3 mb-6">
+                                <Trophy className="size-5 text-amber-500" />
+                                <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Inspiration & Role Model</h3>
+                              </div>
+                              <div className="flex items-center gap-5 p-6 rounded-3xl bg-amber-50/50 border border-amber-100/50">
+                                <div className="size-12 rounded-2xl bg-white flex items-center justify-center text-amber-600 shadow-sm border border-amber-100">
+                                  <Star className="size-6 fill-current" />
+                                </div>
+                                <p className="text-[16px] font-black text-amber-900 uppercase tracking-tight">{member.roleModel}</p>
+                              </div>
+                            </section>
+                          )}
+                        </motion.div>
+                      )}
                     </TabsContent>
 
                     {/* TRIVIA TAB */}
                     <TabsContent key="trivia" value="trivia" className="outline-none focus:ring-0">
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-10"
-                      >
-                        <section>
-                          <div className="flex items-center gap-3 mb-6">
-                            <Zap className="size-5 text-sky-500" />
-                            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Highlights & Fun Facts</h3>
-                          </div>
-                          <div className="grid gap-3">
-                            {(member.funFacts || member.detail?.highlights || []).map((fact: string, idx: number) => (
-                              <div key={`fact-${idx}`} className="flex items-start gap-4 p-5 rounded-2xl bg-white border border-slate-100 shadow-sm hover:border-sky-200 transition-all">
-                                <span className="flex size-6 items-center justify-center rounded-lg bg-sky-50 text-[10px] font-black text-sky-600 shrink-0 border border-sky-100">
-                                  {idx + 1}
-                                </span>
-                                <p className="text-[14px] font-bold text-slate-700 leading-relaxed">{fact}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </section>
+                      {mountedTabs.includes("trivia") && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="space-y-10"
+                        >
+                          <section>
+                            <div className="flex items-center gap-3 mb-6">
+                              <Zap className="size-5 text-sky-500" />
+                              <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Highlights & Fun Facts</h3>
+                            </div>
+                            <div className="grid gap-3">
+                              {(member.funFacts || member.detail?.highlights || []).map((fact: string, idx: number) => (
+                                <div key={`fact-${idx}`} className="flex items-start gap-4 p-5 rounded-2xl bg-white border border-slate-100 shadow-sm hover:border-sky-200 transition-all">
+                                  <span className="flex size-6 items-center justify-center rounded-lg bg-sky-50 text-[10px] font-black text-sky-600 shrink-0 border border-sky-100">
+                                    {idx + 1}
+                                  </span>
+                                  <p className="text-[14px] font-bold text-slate-700 leading-relaxed">{fact}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </section>
 
-                        <div className="grid grid-cols-2 gap-6">
-                          {member.character && (
-                            <section>
-                              <div className="flex items-center gap-3 mb-4">
-                                <Smile className="size-4 text-pink-500" />
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Character</h3>
-                              </div>
-                              <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm text-center">
-                                <p className="text-[14px] font-black uppercase text-slate-900">{member.character}</p>
-                              </div>
-                            </section>
-                          )}
-                          {member.nicknames && member.nicknames.length > 0 && (
-                            <section>
-                              <div className="flex items-center gap-3 mb-4">
-                                <Hash className="size-4 text-sky-500" />
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Nicknames</h3>
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                {(member.nicknames || []).map((n, idx) => (
-                                  <span key={`nick-${idx}`} className="px-3 py-1 rounded-lg bg-white border border-slate-100 text-[11px] font-bold text-slate-600 shadow-sm">{n}</span>
-                                ))}
-                              </div>
-                            </section>
-                          )}
-                        </div>
-                      </motion.div>
+                          <div className="grid grid-cols-2 gap-6">
+                            {member.character && (
+                              <section>
+                                <div className="flex items-center gap-3 mb-4">
+                                  <Smile className="size-4 text-pink-500" />
+                                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Character</h3>
+                                </div>
+                                <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm text-center">
+                                  <p className="text-[14px] font-black uppercase text-slate-900">{member.character}</p>
+                                </div>
+                              </section>
+                            )}
+                            {member.nicknames && member.nicknames.length > 0 && (
+                              <section>
+                                <div className="flex items-center gap-3 mb-4">
+                                  <Hash className="size-4 text-sky-500" />
+                                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Nicknames</h3>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {(member.nicknames || []).map((n, idx) => (
+                                    <span key={`nick-${idx}`} className="px-3 py-1 rounded-lg bg-white border border-slate-100 text-[11px] font-bold text-slate-600 shadow-sm">{n}</span>
+                                  ))}
+                                </div>
+                              </section>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
                     </TabsContent>
 
                     {/* FAVORITES TAB */}
                     <TabsContent key="favorites" value="favorites" className="outline-none focus:ring-0">
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-8"
-                      >
-                        <div className="flex items-center gap-3 mb-2">
-                          <Heart className="size-5 text-red-500 fill-red-500" />
-                          <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Favorite Things</h3>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {member.favorites && Object.entries(member.favorites).map(([key, value], idx) => (
-                            <div key={`fav-${idx}`} className="p-6 rounded-3xl bg-white border border-slate-100 shadow-sm flex flex-col gap-2 hover:border-pink-200 transition-all">
-                              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{key}</span>
-                              <p className="text-[15px] font-bold text-slate-900">
-                                {Array.isArray(value) ? value.join(", ") : value}
-                              </p>
-                            </div>
-                          ))}
-                          {(!member.favorites || Object.keys(member.favorites).length === 0) && (
-                            <div className="col-span-2 py-12 text-center text-slate-400 italic text-sm">
-                              No favorites recorded yet.
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
+                      {mountedTabs.includes("favorites") && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="space-y-8"
+                        >
+                          <div className="flex items-center gap-3 mb-2">
+                            <Heart className="size-5 text-red-500 fill-red-500" />
+                            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Favorite Things</h3>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {member.favorites && Object.entries(member.favorites).map(([key, value], idx) => (
+                              <div key={`fav-${idx}`} className="p-6 rounded-3xl bg-white border border-slate-100 shadow-sm flex flex-col gap-2 hover:border-pink-200 transition-all">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{key}</span>
+                                <p className="text-[15px] font-bold text-slate-900">
+                                  {Array.isArray(value) ? value.join(", ") : value}
+                                </p>
+                              </div>
+                            ))}
+                            {(!member.favorites || Object.keys(member.favorites).length === 0) && (
+                              <div className="col-span-2 py-12 text-center text-slate-400 italic text-sm">
+                                No favorites recorded yet.
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
                     </TabsContent>
                   </AnimatePresence>
                 </div>
@@ -461,7 +1001,7 @@ function renderBrandIcon(iconId: string | null | undefined, className: string = 
     <img
       key={src}
       src={src}
-      alt={iconId}
+      alt={iconId || "brand icon"}
       className={className}
       loading="lazy"
     />
@@ -482,7 +1022,7 @@ function OfficialLinkCard({ label, url, note, metaKey }: { label: string; url: s
       className={`group relative flex flex-col gap-4 overflow-hidden rounded-[1.75rem] border border-white/80 bg-white p-5 shadow-md transition-all duration-400 hover:-translate-y-1.5 hover:shadow-xl`}
     >
       {/* Hover gradient wash */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${meta.gradientFrom} ${meta.gradientTo} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+      <div className={`absolute inset-0 bg-gradient-to-br ${meta.gradientFrom} ${meta.gradientTo} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} ></div>
 
       <div className="relative flex items-start justify-between gap-3">
         {/* Icon */}
@@ -510,201 +1050,235 @@ function OfficialLinkCard({ label, url, note, metaKey }: { label: string; url: s
 
 export function HomePageClient({
   filmFrames,
+  careerRecordsFilmFrames,
   timelineEvents,
   memberProfiles,
   officialProfile,
   officialLinks,
   homeStatsSnapshot,
   trackPerformanceSnapshot,
+  awardEvents,
+  activeVoteApps,
+  notices,
 }: HomePageClientProps) {
   const { t } = useTranslation()
   const [timeZone, setTimeZone] = useState<TimeZone>("KST")
   const [selectedMember, setSelectedMember] = useState<MemberProfile | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
+  useEffect(() => {
+    if (!selectedMember?.image) return
+    const img = new window.Image()
+    img.src = selectedMember.image
+  }, [selectedMember?.image])
+
   const handleMemberClick = (member: MemberProfile) => {
     setSelectedMember(member)
     setIsModalOpen(true)
   }
-
-  const currentYear = new Date().getFullYear()
 
   return (
     <main id="top" className="relative min-h-screen selection:bg-sky-400/20">
       <Navbar timeZone={timeZone} onTimeZoneChange={setTimeZone} />
 
       <div id="comeback">
-        <ComebackWatchHeader snapshot={homeStatsSnapshot} timeZone={timeZone} />
+        <ComebackWatchHeader snapshot={homeStatsSnapshot} />
       </div>
 
       <div className="section-shell">
         <div className="relative z-30">
-          <SpotlightNotice />
+          <SpotlightNotice notices={notices} />
         </div>
       </div>
 
+      {activeVoteApps.length > 0 && <ActiveVoteSection apps={activeVoteApps} />}
+
+      {awardEvents.length > 0 && <ActiveAwardEventsSection events={awardEvents} />}
+
       {/* ── SECTION PROFILE (GIAO DIỆN MỚI) ── */}
       {/* ── SECTION PROFILE (GIAO DIỆN MỚI) ── */}
-      <section id="profile" className="section-shell select-none relative overflow-hidden">
-        {/* Profile Content Card */}
-        <div className="card-premium shimmer-border p-6 md:p-10 relative overflow-hidden">
-          {/* Background blobs - Standardized */}
-          <div className="absolute top-0 right-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 size-96 bg-sky-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" />
+      <motion.section
+        id="profile"
+        className="py-16 select-none relative overflow-hidden"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        {/* Profile Content Card wrapped in a standard 5xl container */}
+        <div className="max-w-5xl mx-auto px-4 relative z-10">
+          <div className="card-premium shimmer-border p-6 md:p-10 relative overflow-hidden">
+            {/* Background blobs - Standardized */}
+            <div className="absolute top-0 right-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" ></div>
+            <div className="absolute bottom-0 left-0 size-96 bg-sky-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" ></div>
 
-          <div className="relative z-10">
-            {/* Header - Moved Inside */}
-            <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-              <div className="space-y-3">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-pink-200 bg-white/70 backdrop-blur-sm shadow-sm w-fit">
-                  <Star className="size-3.5 text-pink-500 fill-pink-500" />
-                  <p className="text-pink-600 font-black uppercase tracking-widest text-[9px]">
-                    {t("concept.official")}
-                  </p>
-                </div>
-                <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-slate-900">
-                  Profile
-                </h2>
-              </div>
-            </div>
-
-            <div className="mb-12">
-              <div className="rounded-[3.5rem] bg-white/40 backdrop-blur-md p-6 lg:p-8 border border-white/60 shadow-inner">
-                <div className="flex flex-col lg:flex-row gap-10 items-start">
-                  <div className="flex flex-col items-center justify-center shrink-0 w-full lg:w-auto pt-4">
-                    <div className="aspect-square size-36 lg:size-48 rounded-[3rem] bg-white/60 backdrop-blur-md p-6 shadow-sm flex items-center justify-center border border-white/80 transition-transform hover:rotate-3 duration-500 relative mb-4">
-                      <img src={officialProfile.logoAsset} alt="Logo" className="w-full h-full object-contain relative z-10 drop-shadow-md" />
-                    </div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-600 text-center bg-white/60 px-4 py-1.5 rounded-full border border-white/80 shadow-sm">
-                      Source: SM Entertainment
+            <div className="relative z-10">
+              {/* Header - Moved Inside */}
+              <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+                <div className="space-y-3">
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-pink-200 bg-white/70 backdrop-blur-sm shadow-sm w-fit">
+                    <Star className="size-3.5 text-pink-500 fill-pink-500" />
+                    <p className="text-pink-600 font-black uppercase tracking-widest text-[9px]">
+                      {t("concept.official")}
                     </p>
                   </div>
+                  <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-slate-900">
+                    Profile
+                  </h2>
+                </div>
+              </div>
 
-                  <div className="flex-1 w-full flex flex-col gap-6 bg-white/30 backdrop-blur-md rounded-[2.5rem] p-6 lg:p-8 border border-white/60 shadow-inner">
-                    <div className="border-b-2 border-pink-200/50 pb-5">
-                      <h3 className="text-4xl md:text-5xl font-black text-slate-950 tracking-tighter uppercase leading-tight flex items-end gap-3 flex-wrap">
-                        {officialProfile.groupName}
-                        <span className="text-2xl md:text-3xl text-slate-500/80 font-bold tracking-normal">(하츠투하츠)</span>
-                      </h3>
-                      <p className="text-[12px] font-black text-pink-500 uppercase tracking-widest mt-2 ml-1">Official Profile</p>
+              <div className="mb-12">
+                <div className="rounded-[3.5rem] bg-white/40 backdrop-blur-md p-6 lg:p-8 border border-white/60 shadow-inner">
+                  <div className="flex flex-col lg:flex-row gap-10 items-start">
+                    <div className="flex flex-col items-center justify-center shrink-0 w-full lg:w-auto pt-4">
+                      <div className="aspect-square size-36 lg:size-48 rounded-[3rem] bg-white/60 backdrop-blur-md p-6 shadow-sm flex items-center justify-center border border-white/80 transition-transform hover:rotate-3 duration-500 relative mb-4">
+                        <Image
+                          src={officialProfile.logoAsset}
+                          alt="Logo"
+                          fill
+                          sizes="(min-width: 1024px) 192px, 144px"
+                          className="object-contain relative z-10 drop-shadow-md"
+                        />
+                      </div>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-600 text-center bg-white/60 px-4 py-1.5 rounded-full border border-white/80 shadow-sm">
+                        Source: SM Entertainment
+                      </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-                      <FactRow title={t("moments.fact.company")} value={officialProfile.company} icon={Building2} />
-                      <FactRow title={t("moments.fact.labels")} value={officialProfile.labels} icon={Disc} />
-                      <FactRow title={t("moments.fact.origin")} value={officialProfile.origin} icon={MapPin} />
-                      <FactRow title={t("moments.fact.debut")} value={officialProfile.debutDate} icon={Calendar} />
-                      <FactRow title={t("moments.fact.members")} value={officialProfile.membersCount} icon={Users2} />
-                      <FactRow title={t("moments.fact.fandom")} value={officialProfile.fandomName} icon={HeartPulse} />
+                    <div className="flex-1 w-full flex flex-col gap-6 bg-white/30 backdrop-blur-md rounded-[2.5rem] p-6 lg:p-8 border border-white/60 shadow-inner">
+                      <div className="border-b-2 border-pink-200/50 pb-5">
+                        <h3 className="text-4xl md:text-5xl font-black text-slate-950 tracking-tighter uppercase leading-tight flex items-end gap-3 flex-wrap">
+                          {officialProfile.groupName}
+                          <span className="text-2xl md:text-3xl text-slate-500/80 font-bold tracking-normal">(하츠투하츠)</span>
+                        </h3>
+                        <p className="text-[12px] font-black text-pink-500 uppercase tracking-widest mt-2 ml-1">Official Profile</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+                        <FactRow title={t("moments.fact.company")} value={officialProfile.company} icon={Building2} />
+                        <FactRow title={t("moments.fact.labels")} value={officialProfile.labels} icon={Disc} />
+                        <FactRow title={t("moments.fact.origin")} value={officialProfile.origin} icon={MapPin} />
+                        <FactRow title={t("moments.fact.debut")} value={officialProfile.debutDate} icon={Calendar} />
+                        <FactRow title={t("moments.fact.members")} value={officialProfile.membersCount} icon={Users2} />
+                        <FactRow title={t("moments.fact.fandom")} value={officialProfile.fandomName} icon={HeartPulse} />
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="pt-10 border-t border-white/30">
-              <div className="text-center mb-8">
-                <h3 className="text-3xl font-black uppercase text-slate-950 tracking-tighter">{t("concept.members.title")}</h3>
-                <p className="text-[12px] font-black uppercase tracking-[0.4em] text-pink-600/80 mt-2">HEARTS2HEARTS ROSTER</p>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-6 max-w-4xl mx-auto">
-                {memberProfiles.map((member, i) => (
-                  <div key={member.slug} className={`card-enter card-enter-${Math.min(i + 1, 7)}`}>
-                    <MemberCardNew
-                      member={member}
-                      onClick={() => handleMemberClick(member)}
-                    />
-                  </div>
-                ))}
+              <div className="pt-10 border-t border-white/30">
+                <div className="text-center mb-8">
+                  <h3 className="text-3xl font-black uppercase text-slate-950 tracking-tighter">{t("concept.members.title")}</h3>
+                  <p className="text-[12px] font-black uppercase tracking-[0.4em] text-pink-600/80 mt-2">HEARTS2HEARTS ROSTER</p>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-6 max-w-4xl mx-auto">
+                  {memberProfiles.map((member, i) => (
+                    <div key={member.slug} className={`card-enter card-enter-${Math.min(i + 1, 7)}`}>
+                      <MemberCardNew
+                        member={member}
+                        onClick={() => handleMemberClick(member)}
+                        priority={i < 2}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      <div id="career">
+      <motion.div
+        id="career"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+      >
         <TimelineSection events={timelineEvents} />
-      </div>
+      </motion.div>
 
-      <div id="album">
-        <HomeStatsSection snapshot={homeStatsSnapshot} />
-      </div>
+      <motion.div
+        id="album"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+      >
+        <HomeStatsSection snapshot={homeStatsSnapshot} filmStripFrames={careerRecordsFilmFrames} />
+      </motion.div>
 
-      <div id="performance">
+      <motion.div
+        id="performance"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+      >
         <TrackPerformanceSection snapshot={trackPerformanceSnapshot} />
-      </div>
+      </motion.div>
 
       {/* ── OFFICIAL LINKS ── */}
-      <section id="social" className="section-shell">
-        <div className="card-premium shimmer-border p-6 md:p-10 relative overflow-hidden">
-          {/* Background blobs */}
-          <div className="absolute top-0 right-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 size-96 bg-sky-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" />
+      <motion.section
+        id="social"
+        className="py-16 select-none relative overflow-hidden"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        <div className="max-w-5xl mx-auto px-4 relative z-10">
+          <div className="card-premium shimmer-border p-6 md:p-10 relative overflow-hidden">
+            {/* Background blobs */}
+            <div className="absolute top-0 right-0 size-96 bg-pink-200/20 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" ></div>
+            <div className="absolute bottom-0 left-0 size-96 bg-sky-200/20 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" ></div>
 
-          <div className="relative z-10">
-            {/* Section header */}
-            <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div className="space-y-3">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-pink-200 bg-white/70 backdrop-blur-sm shadow-sm w-fit">
-                  <Heart className="size-3.5 text-pink-500 fill-pink-500" />
-                  <span className="text-pink-600 font-black uppercase tracking-widest text-[9px]">{t("concept.official")}</span>
+            <div className="relative z-10">
+              {/* Section header */}
+              <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div className="space-y-3">
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-pink-200 bg-white/70 backdrop-blur-sm shadow-sm w-fit">
+                    <Heart className="size-3.5 text-pink-500 fill-pink-500" />
+                    <span className="text-pink-600 font-black uppercase tracking-widest text-[9px]">{t("concept.official")}</span>
+                  </div>
+                  <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-slate-900">
+                    Stay Connected
+                  </h2>
+                  <p className="text-[13px] text-slate-500 font-medium max-w-sm leading-relaxed">
+                    Follow H2H across all platforms and never miss a moment.
+                  </p>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-slate-900">
-                  Stay Connected
-                </h2>
-                <p className="text-[13px] text-slate-500 font-medium max-w-sm leading-relaxed">
-                  Follow H2H across all platforms and never miss a moment.
-                </p>
+                <div className="hidden sm:flex items-center gap-2 shrink-0 self-end">
+                  <Star className="size-4 text-pink-400 fill-current" />
+                  <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
+                    {officialLinks.length} Platforms
+                  </span>
+                </div>
               </div>
-              <div className="hidden sm:flex items-center gap-2 shrink-0 self-end">
-                <Star className="size-4 text-pink-400 fill-current" />
-                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
-                  {officialLinks.length} Platforms
-                </span>
-              </div>
-            </div>
 
-            {/* 2-column card grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {officialLinks.map((item, index) => {
-                const metaKey = (item as any).platform || item.note || item.name
-                return (
-                  <OfficialLinkCard
-                    key={item.id && item.id !== "" ? item.id : `link-${index}`}
-                    label={item.name}
-                    url={item.href}
-                    note={item.note}
-                    metaKey={metaKey}
-                  />
-                )
-              })}
+              {/* 2-column card grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {officialLinks.map((item, index) => {
+                  const metaKey = (item as any).platform || item.note || item.name
+                  return (
+                    <OfficialLinkCard
+                      key={item.id && item.id !== "" ? item.id : `link-${index}`}
+                      label={item.name}
+                      url={item.href}
+                      note={item.note}
+                      metaKey={metaKey}
+                    />
+                  )
+                })}
+              </div>
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      <footer className="section-shell pb-12">
-        <div className="card-premium shimmer-border !rounded-[2.5rem] p-10 text-center relative overflow-hidden">
-          {/* Background blobs */}
-          <div className="absolute top-0 right-0 size-96 bg-pink-200/10 blur-[100px] rounded-full -mr-20 -mt-20 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 size-96 bg-sky-200/10 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" />
-
-          <div className="relative z-10 flex flex-col items-center gap-6">
-            <div className="flex items-center gap-6 text-sky-400">
-              <Heart className="size-5 fill-current" />
-              <div className="h-px w-24 bg-gradient-to-r from-transparent via-sky-400/60 to-transparent" />
-              <Star className="size-5 fill-current" />
-            </div>
-            <p className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-500">
-              {t("footer.copyright")}
-            </p>
-            <p className="text-[11px] text-slate-400 max-w-2xl mx-auto leading-relaxed">
-              {t("footer.disclaimer")}
-            </p>
-          </div>
-        </div>
-      </footer>
-      <NoticeBoard />
+      <FeedbackWidget />
 
       <MemberDetailModal
         member={selectedMember}

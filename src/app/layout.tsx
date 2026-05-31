@@ -1,26 +1,14 @@
 import type { Metadata } from "next"
-import { Baloo_2 } from "next/font/google"
 import { Toaster } from "@/components/ui/sonner"
 import { ClientProvider } from "@/components/client-provider"
 import { AmbientLayer } from "@/components/ambient-layer"
+import { ConditionalSiteFooter } from "@/components/conditional-site-footer"
 import { getActiveTheme, generateThemeStyle } from "@/lib/theme-service"
 import "./globals.css"
 
-const bodyFont = Baloo_2({
-  subsets: ["latin", "vietnamese"],
-  variable: "--font-body",
-  weight: ["400", "500", "600", "700"],
-})
-
-const displayFont = Baloo_2({
-  subsets: ["latin", "vietnamese"],
-  variable: "--font-display",
-  weight: ["700", "800"],
-})
-
 export const metadata: Metadata = {
-  title: "Hearts2Hearts | Official Fan Home",
-  description: "An official fan home for S2U with a Baby Blue and Baby Pink visual theme.",
+  title: "S2U HUB",
+  description: "For S2U.",
 }
 
 export default async function RootLayout({
@@ -30,15 +18,19 @@ export default async function RootLayout({
   const themeCss = generateThemeStyle(activeTheme)
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      style={{ "--font-nunito": "ui-sans-serif, system-ui, sans-serif" } as React.CSSProperties}
+    >
       <head>
-        {themeCss && <style dangerouslySetInnerHTML={{ __html: themeCss }} />}
+        {themeCss && <style suppressHydrationWarning dangerouslySetInnerHTML={{ __html: themeCss }} />}
       </head>
-      <body className={`${bodyFont.variable} ${displayFont.variable} antialiased`} suppressHydrationWarning>
+      <body className="antialiased font-sans" suppressHydrationWarning>
         <AmbientLayer effects={activeTheme?.config?.effects} />
         <ClientProvider>
           {children}
-
+          <ConditionalSiteFooter />
         </ClientProvider>
         <Toaster position="top-right" richColors closeButton />
       </body>

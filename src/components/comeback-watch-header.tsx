@@ -1,11 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Music, ShoppingCart } from "lucide-react"
+import { Link2, Music, Play, ShoppingCart, Youtube } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/useTranslation"
 import type { HomeStatsSnapshot } from "@/lib/home-stats"
-import type { TimeZone } from "@/components/navbar"
+import { useTimeZoneStore } from "@/lib/timezone-store"
+import { timeZoneToIana } from "@/lib/timezone"
 
 type CountdownParts = {
   days: number
@@ -44,14 +45,34 @@ function pad2(value: number) {
   return Math.max(0, value).toString().padStart(2, "0")
 }
 
+function safeUrl(value: string | null | undefined) {
+  const trimmed = value?.trim()
+  if (!trimmed) return null
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed
+  return null
+}
+
+function formatReleaseWindow(date: Date, timeZone: string | undefined, suffix: string) {
+  const formatter = new Intl.DateTimeFormat("en-GB", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone,
+  })
+
+  return `${formatter.format(date).replace(/\b(am|pm)\b/i, (m) => m.toUpperCase())} ${suffix}`
+}
+
 export function ComebackWatchHeader({
-  snapshot,
-  timeZone = "KST"
+  snapshot
 }: {
-  snapshot: HomeStatsSnapshot,
-  timeZone?: TimeZone
+  snapshot: HomeStatsSnapshot
 }) {
   const { t } = useTranslation()
+  const timeZone = useTimeZoneStore((s) => s.timeZone)
   const [countdown, setCountdown] = useState<CountdownParts | null>(null)
 
   useEffect(() => {
@@ -63,18 +84,19 @@ export function ComebackWatchHeader({
   }, [snapshot.upcomingComeback])
 
   const hasComeback = !!snapshot.upcomingComeback
-  const albumTitle = snapshot.upcomingComeback?.title || t("stats.comeback.templateTitle")
+  const configuredTitle = (snapshot.upcomingComeback?.title ?? "").trim()
   const releaseAt = snapshot.upcomingComeback?.releaseAt ?? ""
+  const hasConfiguredComeback = hasComeback && configuredTitle.length > 0 && releaseAt.trim().length > 0
+  const albumTitle = configuredTitle || t("stats.comeback.templateTitle")
+  const shoppingUrl = safeUrl(snapshot.upcomingComeback?.shoppingUrl ?? null)
+  const streamUrl = safeUrl(snapshot.upcomingComeback?.streamUrl ?? null) ?? safeUrl(snapshot.latestRelease?.mvUrl ?? null)
+  const sourceUrl = safeUrl(snapshot.upcomingComeback?.source?.href ?? null)
 
   const formattedDate = snapshot.upcomingComeback
     ? (() => {
         const parsed = parseIsoDate(releaseAt)
         if (!parsed) return releaseAt
-        const options: Intl.DateTimeFormatOptions = {
-          month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false,
-          timeZone: timeZone === "LOCAL" ? undefined : timeZone === "EDT" ? "America/New_York" : timeZone === "KST" ? "Asia/Seoul" : "UTC"
-        }
-        return new Intl.DateTimeFormat("en-GB", options).format(parsed).toUpperCase() + ` ${timeZone}`
+        return formatReleaseWindow(parsed, timeZoneToIana(timeZone), timeZone)
       })()
     : null
 
@@ -95,22 +117,31 @@ export function ComebackWatchHeader({
           <span className="relative flex h-2 w-2">
             <span className={cn(
               "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
-              hasComeback ? "bg-[#FF708A]" : "bg-slate-400"
+              hasConfiguredComeback ? "bg-[#FF708A]" : "bg-slate-400"
             )} />
             <span className={cn(
               "relative inline-flex h-2 w-2 rounded-full",
-              hasComeback ? "bg-[#FF708A]" : "bg-slate-400"
+              hasConfiguredComeback ? "bg-[#FF708A]" : "bg-slate-400"
             )} />
           </span>
           <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-700">
-            {hasComeback ? t("home.comeback.active") : t("home.comeback.standby")}
+            {hasConfiguredComeback ? "ACTIVE COMEBACK" : "STANDBY MODE"}
           </span>
         </div>
 
-        {/* Album Subtitle */}
-        <p className="text-[14px] font-black tracking-[0.4em] uppercase mb-6 drop-shadow-[0_1px_4px_rgba(0,0,0,0.2)]" style={{ color: hasComeback ? '#FF708A' : '#1e3a5f' }}>
-          {hasComeback ? `#${(albumTitle as string).replace(/\s+/g, '')}` : t("home.comeback.preparing")}
-        </p>
+        {/* Album Title */}
+        <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
+          <p
+            className={cn(
+              "max-w-[46rem] px-5 py-2.5 rounded-2xl bg-white/25 backdrop-blur-md border border-white/35 shadow-lg",
+              "text-base sm:text-lg md:text-xl font-black tracking-[0.12em] sm:tracking-[0.16em]",
+              "break-words",
+            )}
+            style={{ color: hasConfiguredComeback ? "#FF708A" : "#475569" }}
+          >
+            {hasConfiguredComeback ? albumTitle : t("home.comeback.preparing")}
+          </p>
+        </div>
 
         {/* Main Date Display */}
         <h2 className={cn(
@@ -150,14 +181,60 @@ export function ComebackWatchHeader({
         {/* Action Buttons */}
         {hasComeback && (
           <div className="mt-16 flex flex-wrap items-center justify-center gap-6">
-            <button className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#FF99AC] to-[#FF708A] px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white shadow-xl shadow-pink-500/25 transition-all hover:scale-105 hover:shadow-2xl">
-              <ShoppingCart className="size-4" />
-              <span>{t("home.comeback.preOrder")}</span>
-            </button>
-            <button className="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white transition-all hover:bg-white/25 hover:scale-105">
-              <Music className="size-4" />
-              {t("home.comeback.preSave")}
-            </button>
+            {shoppingUrl ? (
+              <a
+                href={shoppingUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#FF99AC] to-[#FF708A] px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white shadow-xl shadow-pink-500/25 transition-all hover:scale-105 hover:shadow-2xl"
+              >
+                <ShoppingCart className="size-4" />
+                <span>{t("home.comeback.preOrder")}</span>
+              </a>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#FF99AC] to-[#FF708A] px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white shadow-xl shadow-pink-500/25 opacity-60 cursor-not-allowed"
+              >
+                <ShoppingCart className="size-4" />
+                <span>{t("home.comeback.preOrder")}</span>
+              </button>
+            )}
+
+            {sourceUrl ? (
+              <a
+                href={sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white transition-all hover:bg-white/25 hover:scale-105"
+              >
+                <Link2 className="size-4" />
+                {t("home.comeback.preSave")}
+              </a>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white opacity-60 cursor-not-allowed"
+              >
+                <Music className="size-4" />
+                {t("home.comeback.preSave")}
+              </button>
+            )}
+
+            {countdown?.isLive && streamUrl && (
+              <a
+                href={streamUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-rose-500 to-red-500 px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white shadow-xl shadow-rose-500/25 transition-all hover:scale-105 hover:shadow-2xl"
+              >
+                <Youtube className="size-4" />
+                <span>Stream</span>
+                <Play className="size-4" />
+              </a>
+            )}
           </div>
         )}
       </div>

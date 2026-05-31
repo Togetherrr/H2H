@@ -3,8 +3,20 @@ import type { PlatformPerformance, PerformanceItem } from "@/lib/track-performan
 const KWORB_URL =
     "https://kworb.net/spotify/artist/1ZLU77nRzQIaP23mVSYpCQ_songs.html"
 
+const KWORB_CACHE_TTL_MS = 5 * 60 * 1000
+const isDebug = process.env.NODE_ENV !== "production"
+const logDebug = (...args: unknown[]) => {
+    if (isDebug) console.log(...args)
+}
+
+let kworbCache: { fetchedAt: number; data: PlatformPerformance } | null = null
+
 export async function fetchKworbSpotify(): Promise<PlatformPerformance | null> {
     try {
+        if (kworbCache && Date.now() - kworbCache.fetchedAt < KWORB_CACHE_TTL_MS) {
+            return kworbCache.data
+        }
+
         const res = await fetch(KWORB_URL, {
             headers: {
                 "User-Agent":
@@ -13,21 +25,16 @@ export async function fetchKworbSpotify(): Promise<PlatformPerformance | null> {
                 "Accept-Language": "en-US,en;q=0.9",
             },
             signal: AbortSignal.timeout(10000),
-            // Không cache — luôn lấy data mới nhất
             cache: "no-store",
         })
 
         if (!res.ok) {
             console.warn("KWORB: fetch failed", res.status)
-            return null
+            return kworbCache?.data ?? null
         }
 
         const html = await res.text()
 
-        // Kworb HTML structure:
-        // <td><a href="https://open.spotify.com/track/TRACK_ID">Song Title</a></td>
-        // <td>108,618,925</td>   ← total streams
-        // <td>196,565</td>       ← daily streams
         const rowRegex =
             /href="(https:\/\/open\.spotify\.com\/track\/([A-Za-z0-9]+))"[^>]*>([\s\S]*?)<\/a>[\s\S]*?<td[^>]*>([\d,]+)<\/td>[\s\S]*?<td[^>]*>([\d,]+)<\/td>/g
 
@@ -50,36 +57,39 @@ export async function fetchKworbSpotify(): Promise<PlatformPerformance | null> {
                 imageUrl: "/group.png",
                 daily,
                 total,
-                dailyChange: null,
+                dailyChange: null, // poll route tính từ DB snapshot
                 href,
                 meta: trackId,
             })
         }
-        // Parse "Last updated: 2026/05/04"
+
         const lastUpdatedMatch = html.match(/Last updated:\s*([\d]{4}\/[\d]{2}\/[\d]{2})/)
         const lastUpdated = lastUpdatedMatch?.[1] ?? null
 
         if (items.length === 0) {
             console.warn("KWORB: parsed 0 tracks — HTML structure may have changed")
-            console.warn("KWORB: HTML snippet:", html.slice(0, 500))
-            return null
+            logDebug("KWORB: HTML snippet:", html.slice(0, 500))
+            return kworbCache?.data ?? null
         }
 
+        logDebug(`KWORB: parsed ${items.length} tracks`)
 
-        console.log(`KWORB: parsed ${items.length} tracks`)
-
-        return {
+        const payload: PlatformPerformance = {
             name: "Spotify",
             totalValue: items.reduce((s, i) => s + (i.total ?? 0), 0),
             dailyValue: items.reduce((s, i) => s + (i.daily ?? 0), 0),
-            dailyChange: null,
+            dailyChange: null, // tính bởi computeRolling24h() từ h2h_item_snapshots
             highlights: [],
             items,
             note: lastUpdated ? `Kworb • Updated ${lastUpdated}` : "Kworb",
             viewAllHref: "/charts",
         }
+
+        kworbCache = { fetchedAt: Date.now(), data: payload }
+
+        return payload
     } catch (err: any) {
         console.warn("KWORB: error", err?.message)
-        return null
+        return kworbCache?.data ?? null
     }
 }

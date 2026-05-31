@@ -1,4 +1,6 @@
 import Image from "next/image"
+
+export const dynamic = "force-dynamic"
 import Link from "next/link"
 import { requireUser } from "@/lib/auth"
 
