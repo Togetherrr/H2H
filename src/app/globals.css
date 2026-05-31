@@ -79,10 +79,13 @@
     background-position: center center;
     background-attachment: fixed;
     background-repeat: no-repeat;
-    @media (pointer: coarse) {
+    position: relative;
+  }
+
+  @media (pointer: coarse) {
+    body {
       background-attachment: scroll;
     }
-    position: relative;
   }
 
   /* Global dark overlay on body so content is always readable */
@@ -95,11 +98,14 @@
         rgba(15, 23, 42, 0.12) 50%,
         rgba(20, 40, 100, 0.22) 100%);
     backdrop-filter: blur(10px);
-    @media (pointer: coarse) {
-      backdrop-filter: none;
-    }
     pointer-events: none;
     z-index: 0;
+  }
+
+  @media (pointer: coarse) {
+    body::before {
+      backdrop-filter: none;
+    }
   }
 
   /* All page content sits above the overlay */

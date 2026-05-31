@@ -14,7 +14,7 @@ import type { PopulatedAwardEvent, PopulatedEventApp } from "@/lib/supabase/voti
 import type { MappedAwardEvent, MappedEventApp } from "@/hooks/useAwardEvents"
 import { ALL_NOTICES, mapNoticeRow } from "@/lib/notices"
 
-export const revalidate = 60 // Enable ISR: Revalidate every 60 seconds
+export const dynamic = "force-dynamic"
 
 async function safeSupabaseResult<T>(work: () => PromiseLike<T>, fallback: T): Promise<T> {
   try {
