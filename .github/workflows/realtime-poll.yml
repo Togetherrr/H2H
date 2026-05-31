@@ -7,6 +7,10 @@ on:
 jobs:
   poll:
     runs-on: ubuntu-latest
+    concurrency:
+      group: realtime-poll
+      cancel-in-progress: false
+    timeout-minutes: 15
 
     steps:
       - name: Call realtime poll endpoint

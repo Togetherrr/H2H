@@ -3,15 +3,14 @@ import { getTrackPerformanceSnapshot } from "@/lib/track-performance";
 import { getSocialStatsSnapshotFromDb, refreshSocialStatsSnapshot } from "@/lib/realtime/social-stats";
 import { createServiceClient } from "@/lib/supabase/service";
 import { floorToMinutes, parseSpotifyTrackId } from "@/lib/realtime/utils";
+import { fetchKworbYoutubeDaily } from "@/lib/realtime/kworb-youtube";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
 
 const isDebug = process.env.NODE_ENV !== "production";
 const logDebug = (...args: unknown[]) => {
-  if (isDebug) {
-    console.log(...args);
-  }
+  if (isDebug) console.log(...args);
 };
 
 function requireCronSecret(req: Request) {
@@ -21,7 +20,6 @@ function requireCronSecret(req: Request) {
   const url = new URL(req.url);
   const querySecret = url.searchParams.get("secret");
   const headerSecret = req.headers.get("x-cron-secret");
-  // Vercel Cron gửi header này tự động
   const vercelCronSecret = req.headers.get("authorization")?.replace("Bearer ", "");
 
   return (
@@ -30,7 +28,6 @@ function requireCronSecret(req: Request) {
     vercelCronSecret === configured
   );
 }
-
 export async function GET(req: Request) {
   try {
     if (!requireCronSecret(req)) {
@@ -40,7 +37,6 @@ export async function GET(req: Request) {
     logDebug("POLL ROUTE HIT");
 
     const url = new URL(req.url);
-
     const dryRun =
       url.searchParams.get("dryRun") === "1" ||
       url.searchParams.get("dryRun") === "true";
@@ -95,7 +91,6 @@ export async function GET(req: Request) {
         daily: number | null;
       }>;
 
-    // Keep Spotify stable by reusing the last stored totals when a fresh snapshot cannot be built.
     const needsSpotifyFallback =
       spotifyRows.length === 0 &&
       typeof spotifySource === "string" &&
@@ -110,7 +105,6 @@ export async function GET(req: Request) {
     const youtubeRows = snapshot.youtube.items
       .map((item) => {
         const platformId = item.id;
-
         const total = typeof item.total === "number" ? item.total : null;
 
         if (!platformId || total === null) {
@@ -136,6 +130,15 @@ export async function GET(req: Request) {
         total: number;
       }>;
 
+    // ── Fetch daily views từ Kworb cho YouTube ───────────────────────────────
+    // Map: platform_id (video ID) → daily views ngày mới nhất
+    const youtubeVideoIds = youtubeRows.map((r) => r.platform_id);
+    const youtubeDailyMap = youtubeVideoIds.length > 0
+      ? await fetchKworbYoutubeDaily(youtubeVideoIds)
+      : new Map<string, number>();
+
+    logDebug("YOUTUBE DAILY MAP FROM KWORB:", Object.fromEntries(youtubeDailyMap));
+
     logDebug("SPOTIFY ROWS:", spotifyRows);
     logDebug("YOUTUBE ROWS:", youtubeRows);
 
@@ -158,9 +161,7 @@ export async function GET(req: Request) {
           .map((row) => row.id)
           .filter(Boolean) as string[];
         if (itemIds.length > 0) {
-          const oldestIso = new Date(
-            Date.now() - 7 * 24 * 60 * 60_000,
-          ).toISOString();
+          const oldestIso = new Date(Date.now() - 7 * 24 * 60 * 60_000).toISOString();
           const { data: snapshotRows } = await supabase
             .from("h2h_item_snapshots")
             .select("item_id,ts,total")
@@ -188,6 +189,7 @@ export async function GET(req: Request) {
                 cover_url: (row.cover_url as string | null) ?? null,
                 is_active: true,
                 total,
+                daily: null,
               };
             })
             .filter(Boolean) as typeof spotifyRows;
@@ -220,14 +222,7 @@ export async function GET(req: Request) {
     logDebug("ITEMS TO UPSERT:", itemsToUpsert);
 
     if (itemsToUpsert.length === 0) {
-      return NextResponse.json(
-        {
-          ok: false,
-          bucketTs,
-          reason: "no_items",
-        },
-        { status: 424 },
-      );
+      return NextResponse.json({ ok: false, bucketTs, reason: "no_items" }, { status: 424 });
     }
 
     if (dryRun) {
@@ -235,23 +230,20 @@ export async function GET(req: Request) {
         ok: true,
         dryRun: true,
         bucketTs,
-        counts: {
-          items: itemsToUpsert.length,
-          snapshots: snapshotRows.length,
-        },
+        counts: { items: itemsToUpsert.length, snapshots: snapshotRows.length },
         updatedAt: snapshot.updatedAt,
         sources: snapshot.sources,
         socialStatsUpdatedAt: socialStatsSnapshot?.updatedAt ?? null,
         sampleItems: itemsToUpsert.slice(0, 3),
+        youtubeDailySample: Object.fromEntries(
+          [...youtubeDailyMap.entries()].slice(0, 3)
+        ),
       });
     }
 
     const { data: upsertedItems, error: upsertError } = await supabase
       .from("h2h_items")
-      // ✅ cast as any[] để bypass Supabase generated type chưa cập nhật
-      .upsert(itemsToUpsert as any[], {
-        onConflict: "type,platform_id",
-      })
+      .upsert(itemsToUpsert as any[], { onConflict: "type,platform_id" })
       .select("id,type,platform_id");
 
     logDebug("UPSERTED ITEMS:", upsertedItems);
@@ -259,12 +251,7 @@ export async function GET(req: Request) {
 
     if (upsertError) {
       return NextResponse.json(
-        {
-          ok: false,
-          bucketTs,
-          step: "upsert_items",
-          error: upsertError.message,
-        },
+        { ok: false, bucketTs, step: "upsert_items", error: upsertError.message },
         { status: 502 },
       );
     }
@@ -274,7 +261,6 @@ export async function GET(req: Request) {
     // =========================
 
     const idByKey = new Map<string, string>();
-
     for (const row of upsertedItems ?? []) {
       idByKey.set(`${row.type}:${row.platform_id}`, row.id);
     }
@@ -283,7 +269,7 @@ export async function GET(req: Request) {
     // SNAPSHOTS
     // =========================
 
-    // ✅ Lấy daily_kworb cuối cùng từ DB để fallback
+    // Spotify: fallback daily_kworb từ DB nếu null
     const spotifyItemIds = finalSpotifyRows
       .map((row) => idByKey.get(`spotify_track:${row.platform_id}`))
       .filter(Boolean) as string[];
@@ -311,11 +297,17 @@ export async function GET(req: Request) {
         const itemId = idByKey.get(`${row.type}:${row.platform_id}`);
         if (!itemId) return null;
 
-        // ✅ Nếu daily null, dùng giá trị cuối cùng từ DB
-        const dailyKworb =
-          row.type === "spotify_track"
-            ? (row.daily ?? lastKworbByItemId.get(itemId) ?? null)
-            : null;
+        let dailyKworb: number | null = null;
+
+        if (row.type === "spotify_track") {
+          // Spotify: lấy từ kworb scrape, fallback DB
+          dailyKworb =
+            (row as any).daily ?? lastKworbByItemId.get(itemId) ?? null;
+        } else if (row.type === "youtube_video") {
+          // ── YouTube: lấy từ Kworb scrape ──────────────────────────────
+          dailyKworb = youtubeDailyMap.get(row.platform_id) ?? null;
+          logDebug(`YT daily_kworb [${row.platform_id}]:`, dailyKworb);
+        }
 
         return {
           item_id: itemId,
@@ -328,26 +320,20 @@ export async function GET(req: Request) {
         item_id: string;
         ts: string;
         total: number;
+        daily_kworb: number | null;
       }>;
 
     logDebug("SNAPSHOTS TO UPSERT:", snapshotsToUpsert);
 
     const { error: snapshotError } = await supabase
       .from("h2h_item_snapshots")
-      .upsert(snapshotsToUpsert, {
-        onConflict: "item_id,ts",
-      });
+      .upsert(snapshotsToUpsert, { onConflict: "item_id,ts" });
 
     logDebug("SNAPSHOT ERROR:", snapshotError);
 
     if (snapshotError) {
       return NextResponse.json(
-        {
-          ok: false,
-          bucketTs,
-          step: "upsert_snapshots",
-          error: snapshotError.message,
-        },
+        { ok: false, bucketTs, step: "upsert_snapshots", error: snapshotError.message },
         { status: 502 },
       );
     }
@@ -358,18 +344,15 @@ export async function GET(req: Request) {
       counts: {
         items: itemsToUpsert.length,
         snapshots: snapshotsToUpsert.length,
+        youtubeDailyFetched: youtubeDailyMap.size,
       },
       updatedAt: snapshot.updatedAt,
       socialStatsUpdatedAt: socialStatsSnapshot?.updatedAt ?? null,
     });
   } catch (error) {
     console.error("POLL ROUTE ERROR:", error);
-
     return NextResponse.json(
-      {
-        ok: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
+      { ok: false, error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 },
     );
   }
