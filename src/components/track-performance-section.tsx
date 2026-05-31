@@ -62,9 +62,9 @@ export function PerformanceItemRow({
   platform?: "spotify" | "youtube"
 }) {
   const colors = PLATFORM_COLORS[platform]
-  const hasDailyChange = item.dailyChange !== null
+  const hasTrendValue = item.dailyChange !== null && item.dailyChange !== undefined && item.daily !== null
   const isChangePositive = (item.dailyChange ?? 0) >= 0
-  const changeDisplay = !hasDailyChange
+  const changeDisplay = !hasTrendValue
     ? null
     : item.dailyChangeFormat === "percent"
       ? `${isChangePositive ? "+" : ""}${(item.dailyChange ?? 0).toFixed(2)}%`

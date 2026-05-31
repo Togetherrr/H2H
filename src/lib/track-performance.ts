@@ -6,7 +6,7 @@
 
 import { createClient } from "@supabase/supabase-js"
 import { fetchKworbSpotify } from "@/lib/realtime/kworb"
-import { getSocialStatsSnapshotFromDb, mergeSocialStats } from "@/lib/realtime/social-stats"
+import { getSocialStatsSnapshotFromDb, mergeSocialStats, refreshSocialStatsSnapshot } from "@/lib/realtime/social-stats"
 
 /* =========================================================
    TYPES
@@ -360,15 +360,17 @@ export function getTrackPerformancePlaceholderSnapshot(): TrackPerformanceSnapsh
    MAIN SNAPSHOT
 ========================================================= */
 
-export async function getTrackPerformanceSnapshot(): Promise<TrackPerformanceSnapshot> {
+export async function getTrackPerformanceSnapshot(options?: { liveSocialStats?: boolean }): Promise<TrackPerformanceSnapshot> {
   if (process.env.NEXT_PHASE === "phase-production-build") {
     return getTrackPerformancePlaceholderSnapshot()
   }
 
+  const useLiveSocialStats = options?.liveSocialStats ?? false
+
   const [spotify, youtube, socialStats] = await Promise.all([
     fetchKworbSpotify(),
     fetchYouTubeVideos(),
-    getSocialStatsSnapshotFromDb(),
+    useLiveSocialStats ? refreshSocialStatsSnapshot() : getSocialStatsSnapshotFromDb(),
   ])
 
   const spotifyWithSocialStats = mergeSocialStats(spotify ?? DEFAULT_SPOTIFY, socialStats?.spotify)

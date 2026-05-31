@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { TrendingUp, TrendingDown, ExternalLink } from "lucide-react"
@@ -143,10 +143,10 @@ function FullChartsItemRow({
   platform?: "spotify" | "youtube"
 }) {
   const colors = PLATFORM_COLORS[platform]
-  const hasDailyChange = item.dailyChange !== null
+  const hasTrendValue = item.dailyChange !== null && item.dailyChange !== undefined && item.daily !== null
   const isChangePositive = (item.dailyChange ?? 0) >= 0
   const Icon = isChangePositive ? TrendingUp : TrendingDown
-  const changeDisplay = !hasDailyChange
+  const changeDisplay = !hasTrendValue
     ? null
     : item.dailyChangeFormat === "percent"
       ? `${isChangePositive ? "+" : ""}${(item.dailyChange ?? 0).toFixed(2)}%`
@@ -201,6 +201,10 @@ function FullChartsItemRow({
 export function ChartsPlatformSwitcher({ snapshot, initialPlatform }: { snapshot: TrackPerformanceSnapshot; initialPlatform: "spotify" | "youtube" }) {
   const router = useRouter()
   const [activePlatform, setActivePlatform] = useState<"spotify" | "youtube">(initialPlatform)
+
+  useEffect(() => {
+    setActivePlatform(initialPlatform)
+  }, [initialPlatform])
 
   const platformData = useMemo(
     () => ({
