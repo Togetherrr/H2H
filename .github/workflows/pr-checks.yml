@@ -49,7 +49,9 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Audit production dependencies
-        run: bun audit --prod --audit-level=high
+        run: |
+          npm install --package-lock-only --ignore-scripts --no-fund --no-audit
+          npm audit --omit=dev --audit-level=high
 
       - name: Run lint
         run: bun run lint

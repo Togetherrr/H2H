@@ -282,6 +282,42 @@ export type Database = {
           },
         ]
       }
+      h2h_social_stats_snapshots: {
+        Row: {
+          created_at: string
+          followers: number | null
+          fetched_at: string
+          monthly_listeners: number | null
+          platform: string
+          source: string
+          subscribers: number | null
+          updated_at: string
+          video_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          followers?: number | null
+          fetched_at?: string
+          monthly_listeners?: number | null
+          platform: string
+          source?: string
+          subscribers?: number | null
+          updated_at?: string
+          video_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          followers?: number | null
+          fetched_at?: string
+          monthly_listeners?: number | null
+          platform?: string
+          source?: string
+          subscribers?: number | null
+          updated_at?: string
+          video_count?: number | null
+        }
+        Relationships: []
+      }
       h2h_items: {
         Row: {
           cover_url: string | null

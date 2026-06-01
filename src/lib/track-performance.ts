@@ -88,6 +88,10 @@ let youtubeCache:
     }
   | null = null
 
+export function invalidateTrackPerformanceCache() {
+  youtubeCache = null
+}
+
 /* =========================================================
    PLACEHOLDER (dùng khi chưa load xong)
 ========================================================= */

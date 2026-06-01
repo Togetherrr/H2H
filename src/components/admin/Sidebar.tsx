@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { name: "Award Events", value: "award-events", icon: Trophy },
   { name: "Lineup Reveal", value: "lineup-reveal", icon: ImageIcon },
   { name: "Career Records", value: "career-records", icon: Film },
+  { name: "YouTube MV", value: "youtube-items", icon: Film },
   { name: "Themes", value: "themes", icon: Sparkles },
   { name: "Comeback", value: "comeback", icon: CalendarClock },
   { name: "Notices", value: "notices", icon: Megaphone },

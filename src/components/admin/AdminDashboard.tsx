@@ -31,6 +31,7 @@ type AdminTabData = {
   stats?: AdminStats
   feedbackMessages?: any[]
   notices?: NoticeRow[]
+  youtubeItems?: any[]
 }
 
 type AdminDashboardProps = {
@@ -38,7 +39,7 @@ type AdminDashboardProps = {
   profile: any
 }
 
-const VALID_TABS = new Set(["overview", "sync", "users", "members", "themes", "socials", "settings", "media", "voting", "award-events", "lineup-reveal", "career-records", "comeback", "notices", "feedback"])
+const VALID_TABS = new Set(["overview", "sync", "users", "members", "themes", "socials", "settings", "media", "voting", "award-events", "lineup-reveal", "career-records", "youtube-items", "comeback", "notices", "feedback"])
 
 function normalizeTab(tab: string) {
   return VALID_TABS.has(tab) ? tab : "overview"
@@ -120,6 +121,11 @@ const LineupRevealManager = dynamic(
 const CareerRecordsManager = dynamic(
   () => import("@/components/admin/CareerRecordsManager").then((mod) => mod.CareerRecordsManager),
   { loading: () => <TabLoadingState title="Loading career records..." /> },
+)
+
+const YoutubeItemsTab = dynamic(
+  () => import("@/components/admin/YoutubeItemsTab").then((mod) => mod.YoutubeItemsTab),
+  { loading: () => <TabLoadingState title="Loading YouTube items..." /> },
 )
 
 const ComebackWatchManager = dynamic(
@@ -516,6 +522,14 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
           <CareerRecordsManager initialSettings={settingsData.siteSettings} />
         ) : (
           <TabLoadingState title="Loading career records..." />
+        )
+      }
+      case "youtube-items": {
+        const youtubeItems = dataByTab["youtube-items"]?.youtubeItems
+        return youtubeItems ? (
+          <YoutubeItemsTab items={youtubeItems as any} />
+        ) : (
+          <TabLoadingState title="Loading YouTube items..." />
         )
       }
       case "comeback": {
