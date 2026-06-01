@@ -1,6 +1,7 @@
 # Local scheduling (no Vercel needed)
 
-This repo has background-sync endpoints meant to be called by a scheduler (Windows Task Scheduler, Linux cron, CI, or Vercel Cron later).
+This repo has background-sync endpoints meant to be called by a scheduler (Windows Task Scheduler, Linux cron, or CI).
+On Vercel Hobby, keep scheduling outside Vercel Cron and use GitHub Actions instead.
 
 ## Environment variables
 
