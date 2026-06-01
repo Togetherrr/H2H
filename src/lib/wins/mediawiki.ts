@@ -34,28 +34,22 @@ async function fetchJsonWithTimeout(url: string, timeoutMs: number) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
 
-  try {
-    const response = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        Accept: "application/json",
-        // Wikipedia APIs may throttle/deny generic serverless traffic without a UA.
-        "User-Agent": "H2H-Wins/1.0 (Next.js; contact: local-project)",
-      },
-      // Wins tables can update frequently; keep cache short so "latest trophies" show up quickly.
-      next: { revalidate: 60 * 10 },
-    })
+  const response = await fetch(url, {
+    signal: controller.signal,
+    headers: {
+      Accept: "application/json",
+      // Wikipedia APIs may throttle/deny generic serverless traffic without a UA.
+      "User-Agent": "H2H-Wins/1.0 (Next.js; contact: local-project)",
+    },
+    // Wins tables can update frequently; keep cache short so "latest trophies" show up quickly.
+    next: { revalidate: 60 * 10 },
+  }).finally(() => clearTimeout(timeout))
 
-    if (!response.ok) {
-      return null
-    }
-
-    return response.json()
-  } catch {
-    return null
-  } finally {
-    clearTimeout(timeout)
+  if (!response.ok) {
+    throw new Error(`Request failed (${response.status}) for ${url}`)
   }
+
+  return response.json()
 }
 
 export const fetchMediaWikiSections = cache(async (apiBaseUrl: string, page: string, timeoutMs = 1500) => {
@@ -63,8 +57,7 @@ export const fetchMediaWikiSections = cache(async (apiBaseUrl: string, page: str
     `${apiBaseUrl}?action=parse&prop=sections&format=json&origin=*` +
     `&page=${encodeURIComponent(page)}`
 
-  const payload = (await fetchJsonWithTimeout(url, timeoutMs)) as MediaWikiWikitextResponse | null
-  if (!payload) return []
+  const payload = (await fetchJsonWithTimeout(url, timeoutMs)) as MediaWikiWikitextResponse
   const sections = payload.parse?.sections ?? []
   return sections
 })
@@ -79,8 +72,7 @@ export const fetchMediaWikiWikitext = cache(async (options: FetchWikitextOptions
     `&page=${encodeURIComponent(options.page)}` +
     sectionParam
 
-  const payload = (await fetchJsonWithTimeout(url, timeoutMs)) as MediaWikiWikitextResponse | null
-  if (!payload) return ""
+  const payload = (await fetchJsonWithTimeout(url, timeoutMs)) as MediaWikiWikitextResponse
   const text = payload.parse?.wikitext?.["*"] ?? ""
 
   if (!text) {
@@ -103,8 +95,7 @@ export const fetchMediaWikiSectionHtml = cache(async (options: FetchHtmlOptions)
     `&page=${encodeURIComponent(options.page)}` +
     sectionParam
 
-  const payload = (await fetchJsonWithTimeout(url, timeoutMs)) as MediaWikiWikitextResponse | null
-  if (!payload) return ""
+  const payload = (await fetchJsonWithTimeout(url, timeoutMs)) as MediaWikiWikitextResponse
   const html = payload.parse?.text?.["*"] ?? ""
 
   if (!html) {

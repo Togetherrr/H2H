@@ -44,14 +44,6 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "ibb.co",
       },
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-      {
-        protocol: "https",
-        hostname: "upload.wikimedia.org",
-      },
     ],
   },
 }

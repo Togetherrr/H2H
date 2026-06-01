@@ -1,10 +1,18 @@
 import type { Metadata } from "next"
+import { Nunito } from "next/font/google"
 import { Toaster } from "@/components/ui/sonner"
 import { ClientProvider } from "@/components/client-provider"
 import { AmbientLayer } from "@/components/ambient-layer"
 import { ConditionalSiteFooter } from "@/components/conditional-site-footer"
 import { getActiveTheme, generateThemeStyle } from "@/lib/theme-service"
 import "./globals.css"
+
+const nunito = Nunito({
+  subsets: ["latin", "vietnamese"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-nunito",
+  display: "swap",
+})
 
 export const metadata: Metadata = {
   title: "S2U HUB",
@@ -18,11 +26,7 @@ export default async function RootLayout({
   const themeCss = generateThemeStyle(activeTheme)
 
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      style={{ "--font-nunito": "ui-sans-serif, system-ui, sans-serif" } as React.CSSProperties}
-    >
+    <html lang="en" suppressHydrationWarning className={nunito.variable}>
       <head>
         {themeCss && <style suppressHydrationWarning dangerouslySetInnerHTML={{ __html: themeCss }} />}
       </head>

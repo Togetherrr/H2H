@@ -6,10 +6,17 @@ const KWORB_URL =
 const KWORB_CACHE_TTL_MS = 5 * 60 * 1000
 const isDebug = process.env.NODE_ENV !== "production"
 const logDebug = (...args: unknown[]) => {
-    if (isDebug) console.log(...args)
+    if (isDebug) {
+        console.log(...args)
+    }
 }
 
-let kworbCache: { fetchedAt: number; data: PlatformPerformance } | null = null
+let kworbCache:
+    | {
+          fetchedAt: number
+          data: PlatformPerformance
+      }
+    | null = null
 
 export async function fetchKworbSpotify(): Promise<PlatformPerformance | null> {
     try {
@@ -25,6 +32,7 @@ export async function fetchKworbSpotify(): Promise<PlatformPerformance | null> {
                 "Accept-Language": "en-US,en;q=0.9",
             },
             signal: AbortSignal.timeout(10000),
+            // Không cache — luôn lấy data mới nhất
             cache: "no-store",
         })
 
@@ -35,6 +43,10 @@ export async function fetchKworbSpotify(): Promise<PlatformPerformance | null> {
 
         const html = await res.text()
 
+        // Kworb HTML structure:
+        // <td><a href="https://open.spotify.com/track/TRACK_ID">Song Title</a></td>
+        // <td>108,618,925</td>   ← total streams
+        // <td>196,565</td>       ← daily streams
         const rowRegex =
             /href="(https:\/\/open\.spotify\.com\/track\/([A-Za-z0-9]+))"[^>]*>([\s\S]*?)<\/a>[\s\S]*?<td[^>]*>([\d,]+)<\/td>[\s\S]*?<td[^>]*>([\d,]+)<\/td>/g
 
@@ -57,12 +69,12 @@ export async function fetchKworbSpotify(): Promise<PlatformPerformance | null> {
                 imageUrl: "/group.png",
                 daily,
                 total,
-                dailyChange: null, // poll route tính từ DB snapshot
+                dailyChange: null,
                 href,
                 meta: trackId,
             })
         }
-
+        // Parse "Last updated: 2026/05/04"
         const lastUpdatedMatch = html.match(/Last updated:\s*([\d]{4}\/[\d]{2}\/[\d]{2})/)
         const lastUpdated = lastUpdatedMatch?.[1] ?? null
 
@@ -73,19 +85,21 @@ export async function fetchKworbSpotify(): Promise<PlatformPerformance | null> {
         }
 
         logDebug(`KWORB: parsed ${items.length} tracks`)
-
         const payload: PlatformPerformance = {
             name: "Spotify",
             totalValue: items.reduce((s, i) => s + (i.total ?? 0), 0),
             dailyValue: items.reduce((s, i) => s + (i.daily ?? 0), 0),
-            dailyChange: null, // tính bởi computeRolling24h() từ h2h_item_snapshots
+            dailyChange: null,
             highlights: [],
             items,
             note: lastUpdated ? `Kworb • Updated ${lastUpdated}` : "Kworb",
             viewAllHref: "/charts",
         }
 
-        kworbCache = { fetchedAt: Date.now(), data: payload }
+        kworbCache = {
+            fetchedAt: Date.now(),
+            data: payload,
+        }
 
         return payload
     } catch (err: any) {

@@ -127,6 +127,7 @@ const YoutubeItemsTab = dynamic(
   () => import("@/components/admin/YoutubeItemsTab").then((mod) => mod.YoutubeItemsTab),
   { loading: () => <TabLoadingState title="Loading YouTube items..." /> },
 )
+
 const ComebackWatchManager = dynamic(
   () => import("@/components/admin/ComebackWatchManager").then((mod) => mod.ComebackWatchManager),
   { loading: () => <TabLoadingState title="Loading comeback settings..." /> },
@@ -523,6 +524,14 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
           <TabLoadingState title="Loading career records..." />
         )
       }
+      case "youtube-items": {
+        const youtubeItems = dataByTab["youtube-items"]?.youtubeItems
+        return youtubeItems ? (
+          <YoutubeItemsTab items={youtubeItems as any} />
+        ) : (
+          <TabLoadingState title="Loading YouTube items..." />
+        )
+      }
       case "comeback": {
         const settingsData = dataByTab["comeback"]
         return settingsData?.siteSettings ? (
@@ -542,14 +551,6 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
       case "notices": {
         const notices = dataByTab.notices?.notices
         return notices ? <NoticesManager initialNotices={notices} /> : <TabLoadingState title="Loading notices..." />
-      }
-      case "youtube-items": {
-        const youtubeItems = dataByTab["youtube-items"]?.youtubeItems
-        return youtubeItems ? (
-          <YoutubeItemsTab items={youtubeItems as any} />
-        ) : (
-          <TabLoadingState title="Loading YouTube items..." />
-        )
       }
       case "overview":
       default:

@@ -169,10 +169,6 @@ async function getUpcomingComebackFromSupabase(): Promise<UpcomingComeback | nul
 }
 
 export async function getUpcomingComeback(): Promise<UpcomingComeback | null> {
-  if (process.env.NEXT_PHASE === "phase-production-build") {
-    return null
-  }
-
   // Default to Supabase so admin-managed settings drive the public countdown.
   const provider = (process.env.H2H_COMEBACK_PROVIDER ?? "supabase").toLowerCase() as ComebackProviderKey
 

@@ -249,10 +249,6 @@ ORDER BY ?releaseDate
 }
 
 export const getReleaseCatalog = cache(async () => {
-  if (process.env.NEXT_PHASE === "phase-production-build") {
-    return fallbackReleaseCatalog
-  }
-
   try {
     const wikiCatalog = await fetchWikidataCatalog()
     if (wikiCatalog.length > 0) {

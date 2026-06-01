@@ -70,7 +70,7 @@ export default async function VotingPage() {
                         <span className="block text-[13px] font-black uppercase tracking-wider text-slate-900">{item.label}</span>
                         {item.note && <span className="block text-[12px] text-slate-500 font-semibold italic">{item.note}</span>}
                       </div>
-                      <span className="ml-3 text-lg text-slate-400 transition group-hover:text-slate-950">→</span>
+                      <span className="ml-3 text-lg text-slate-400 transition group-hover:text-slate-950">â†’</span>
                     </a>
                   ))}
                 </div>
@@ -85,3 +85,4 @@ export default async function VotingPage() {
     </main>
   )
 }
+

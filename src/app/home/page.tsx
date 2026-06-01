@@ -14,7 +14,7 @@ import type { PopulatedAwardEvent, PopulatedEventApp } from "@/lib/supabase/voti
 import type { MappedAwardEvent, MappedEventApp } from "@/hooks/useAwardEvents"
 import { ALL_NOTICES, mapNoticeRow } from "@/lib/notices"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 60 // Enable ISR: Revalidate every 60 seconds
 
 async function safeSupabaseResult<T>(work: () => PromiseLike<T>, fallback: T): Promise<T> {
   try {
@@ -112,7 +112,7 @@ export default async function HomePage() {
     getTimelineEvents(),
     getFilmFrames(4),
     getHomeStatsSnapshot(hearts2heartsOfficialProfile.debutDate),
-    getRealtimeSnapshotFromDb({ allowLiveFallback: false }),
+    getRealtimeSnapshotFromDb(),
     // Fetch members and links in the same parallel batch if Supabase is enabled
     hasSupabaseEnv()
       ? safeSupabaseResult(

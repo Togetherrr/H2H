@@ -91,10 +91,6 @@ export function computeRolling24h(
       if (item.type === "spotify_track" && end?.daily_kworb != null) {
         return end.daily_kworb;
       }
-      // YouTube: nếu snapshot mới nhất có daily_kworb từ Kworb thì dùng luôn
-      if (item.type === "youtube_video" && end?.daily_kworb != null) {
-        return end.daily_kworb;
-      }
       // YouTube/fallback: dùng delta qua midnight KST nếu dương
       if (delta !== null && delta > 0) return delta;
       // YouTube rough: tính từ oldest → newest snapshot hiện có
@@ -117,14 +113,6 @@ export function computeRolling24h(
         oldestWithKworb !== end
       ) {
         return end.daily_kworb - oldestWithKworb.daily_kworb!;
-      }
-      // YouTube: nếu đã có daily_kworb thì dùng delta của Kworb snapshots,
-      // còn snapshot đầu tiên thì trả 0 để UI có số ngay sau khi add.
-      if (item.type === "youtube_video" && end?.daily_kworb != null) {
-        if (oldestWithKworb != null && oldestWithKworb !== end) {
-          return end.daily_kworb - oldestWithKworb.daily_kworb!;
-        }
-        return 0;
       }
       // YouTube/fallback: tính từ snapshot qua midnight KST
       if (delta !== null && prevDelta !== null) return delta - prevDelta;

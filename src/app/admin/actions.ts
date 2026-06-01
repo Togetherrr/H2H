@@ -8,9 +8,19 @@ import { createServiceClient } from "@/lib/supabase/service"
 import { getAwardCeremonyWins, getMusicShowWins } from "@/lib/supabase/wins-service"
 import { syncWinsFromSources } from "@/lib/wins/sync-wins"
 import { getReleaseCatalog } from "@/lib/release-catalog"
+import type { NoticeType } from "@/lib/notices"
 import { invalidateTrackPerformanceCache } from "@/lib/track-performance"
 import { seedYoutubeRealtimeSnapshot } from "@/lib/realtime/youtube-admin-sync"
-import type { NoticeType } from "@/lib/notices"
+
+export type YoutubeItemRow = {
+  id: string
+  platform_id: string
+  title: string | null
+  cover_url: string | null
+  is_active: boolean
+  release_date: string | null
+  source_updated_at: string | null
+}
 
 export type NoticeInput = {
   type: NoticeType
@@ -23,15 +33,7 @@ export type NoticeInput = {
   is_active: boolean
   sort_order: number
 }
-export type YoutubeItemRow = {
-  id: string
-  platform_id: string
-  title: string | null
-  cover_url: string | null
-  is_active: boolean
-  release_date: string | null
-  source_updated_at: string | null
-}
+
 function normalizeNoticeInput(input: NoticeInput) {
   const title = input.title_en.trim()
   const content = input.content_en.trim()
@@ -183,23 +185,25 @@ export async function getAdminTabData(tab: string) {
     if (settingsError) return { error: settingsError.message }
     return { siteSettings: settings, musicWins, awardWins }
   }
+
   if (tab === "youtube-items") {
     const { data, error } = await supabase
       .from("h2h_items")
       .select(`
-  id,
-  platform_id,
-      title,
-      cover_url,
-      is_active,
-      release_date,
-      source_updated_at
-`)
+        id,
+        platform_id,
+        title,
+        cover_url,
+        is_active,
+        release_date,
+        source_updated_at
+      `)
       .eq("type", "youtube_video")
       .order("release_date", { ascending: false })
     if (error) return { error: error.message }
     return { youtubeItems: data ?? [] }
   }
+
   if (tab === "comeback") {
     const { data, error } = await supabase.from("site_settings").select("*").eq("id", 1).maybeSingle()
     if (error) return { error: error.message }
@@ -1257,6 +1261,7 @@ export async function deleteAwardWin(id: string) {
     return { error: err.message }
   }
 }
+
 function extractYoutubeId(input: string): string | null {
   const patterns = [
     /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{11})/,
@@ -1310,7 +1315,7 @@ export async function addYoutubeItem(input: { url: string; release_date?: string
         title = data.title ?? ""
         cover_url = data.thumbnail_url ?? cover_url
       }
-    } catch { }
+    } catch { /* ignore YouTube oEmbed failures */ }
 
     const { error } = await supabase.from("h2h_items").insert({
       type: "youtube_video",

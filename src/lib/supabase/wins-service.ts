@@ -61,10 +61,6 @@ function canUseSupabase() {
  * Falls back to external sources when the tables are empty.
  */
 export async function getMusicShowWins() {
-  if (process.env.NEXT_PHASE === "phase-production-build") {
-    return []
-  }
-
   if (canUseSupabase()) {
     try {
       const supabase = createStaticClient()
@@ -110,10 +106,6 @@ export async function getMusicShowWins() {
 }
 
 export async function getAwardCeremonyWins() {
-  if (process.env.NEXT_PHASE === "phase-production-build") {
-    return []
-  }
-
   if (canUseSupabase()) {
     try {
       const supabase = createStaticClient()
@@ -159,10 +151,6 @@ export async function getAwardCeremonyWins() {
 }
 
 export async function getWinsCount() {
-  if (process.env.NEXT_PHASE === "phase-production-build") {
-    return { musicShowWins: 0, awardCeremonyWins: 0 }
-  }
-
   if (canUseSupabase()) {
     try {
       const supabase = createStaticClient()

@@ -1,7 +1,6 @@
 import { createStaticClient } from "@/lib/supabase/static"
 import { computeRolling24h, getKstDayStart, type RealtimeItem, type RealtimeSnapshot } from "@/lib/realtime/rolling24h"
 import type { PerformanceItem, PlatformPerformance, TrackPerformanceSnapshot } from "@/lib/track-performance"
-import { getSocialStatsSnapshotFromDb, mergeSocialStats } from "@/lib/realtime/social-stats"
 
 type RealtimeType = "spotify_track" | "youtube_video"
 
@@ -13,7 +12,6 @@ const EMPTY_PLATFORM = (name: PlatformPerformance["name"]): PlatformPerformance 
   highlights: [],
   items: [],
 })
-
 function buildPlatformPerformance(
   name: PlatformPerformance["name"],
   type: RealtimeType,
@@ -27,9 +25,10 @@ function buildPlatformPerformance(
 
   const computed = computeRolling24h(items, snapshots, now)
 
+  // ✅ FIX: Lấy source_updated_at mới nhất từ items
   const sourceUpdatedAt =
     items
-      .map((item) => item.source_updated_at)
+      .map((i) => i.source_updated_at)
       .filter(Boolean)
       .sort()
       .at(-1) ?? null
@@ -54,10 +53,10 @@ function buildPlatformPerformance(
     const subtitle =
       type === "spotify_track"
         ? formattedDate
-        ? `Hearts2Hearts • ${formattedDate}`
+          ? `Hearts2Hearts • ${formattedDate}`
           : "Hearts2Hearts"
         : formattedDate
-        ? `Official MV • ${formattedDate}`
+          ? `Official MV • ${formattedDate}`
           : "Official MV"
 
     return {
@@ -70,7 +69,7 @@ function buildPlatformPerformance(
       dailyChange: row.delta24hChange,
       dailyChangeFormat: row.delta24hChange !== null ? "number" : undefined,
       href,
-      note: type === "spotify_track" ? "Kworb" : "YouTube Data API v3",
+      note: "Supabase snapshots",
       meta: platformId,
     }
   })
@@ -82,127 +81,110 @@ function buildPlatformPerformance(
     dailyChange: computed.delta24hChange,
     highlights: [],
     items: performanceItems,
-    note: sourceUpdatedAt ? `Kworb • Updated ${sourceUpdatedAt}` : undefined,
+    note: sourceUpdatedAt
+      ? `Kworb • Updated ${sourceUpdatedAt}`
+      : "Supabase snapshots",
     viewAllHref: "/charts",
   }
 
   return { platform, updatedAt: computed.updatedAt }
 }
+export async function getRealtimeSnapshotFromDb(): Promise<TrackPerformanceSnapshot> {
+  try {
+    return await (async () => {
+  const supabase = createStaticClient()
+  const { data: items, error: itemsError } = await supabase
+    .from("h2h_items")
+    .select("id,type,platform_id,title,cover_url,release_date,is_active,source_updated_at")
+    .eq("is_active", true)
+    .order("release_date", { ascending: false })
+    .limit(100)
 
-export async function getRealtimeSnapshotFromDb(options?: {
-  allowLiveFallback?: boolean
-}): Promise<TrackPerformanceSnapshot> {
-  if (process.env.NEXT_PHASE === "phase-production-build") {
+  if (itemsError) {
     return {
       updatedAt: "",
       spotify: EMPTY_PLATFORM("Spotify"),
       youtube: EMPTY_PLATFORM("YouTube"),
       sources: {
-        spotify: "Kworb",
-        youtube: "YouTube Data API v3",
-        note: "Build-time fallback",
-      },
-      isSample: true,
-    }
-  }
-
-  try {
-    const socialStats = await getSocialStatsSnapshotFromDb({
-      allowLiveFallback: options?.allowLiveFallback ?? true,
-    })
-    const supabase = createStaticClient()
-    const { data: items, error: itemsError } = await supabase
-      .from("h2h_items")
-      .select("id,type,platform_id,title,cover_url,release_date,is_active,source_updated_at")
-      .eq("is_active", true)
-      .order("release_date", { ascending: false })
-      .limit(100)
-
-    if (itemsError) {
-      return {
-        updatedAt: "",
-        spotify: mergeSocialStats(EMPTY_PLATFORM("Spotify"), socialStats?.spotify),
-        youtube: mergeSocialStats(EMPTY_PLATFORM("YouTube"), socialStats?.youtube),
-        sources: {
-          spotify: "Kworb",
-          youtube: "YouTube Data API v3",
-          note: itemsError.message,
-        },
-        isSample: false,
-      }
-    }
-
-    const typedItems = (items ?? []) as unknown as RealtimeItem[]
-    const now = new Date()
-    const kstDayStart = getKstDayStart(now)
-    const oldestMs = kstDayStart.getTime() - 25 * 60 * 60_000
-    const oldestIso = new Date(oldestMs).toISOString()
-
-    let snapshots: RealtimeSnapshot[] = []
-    if (typedItems.length > 0) {
-      const itemIds = typedItems.map((item) => item.id)
-      const { data: snapshotRows } = await supabase
-        .from("h2h_item_snapshots")
-        .select("item_id,ts,total,daily_kworb")
-        .in("item_id", itemIds)
-        .gte("ts", oldestIso)
-        .order("ts", { ascending: false })
-        .limit(5000)
-
-      snapshots = (snapshotRows ?? []) as unknown as RealtimeSnapshot[]
-    }
-
-    const spotifyItems = typedItems.filter((item) => item.type === "spotify_track")
-    const youtubeItems = typedItems.filter((item) => item.type === "youtube_video")
-    const spotifyIds = new Set(spotifyItems.map((item) => item.id))
-    const youtubeIds = new Set(youtubeItems.map((item) => item.id))
-
-    const kworkUpdatedAt =
-      spotifyItems
-        .map((item) => item.source_updated_at)
-        .filter(Boolean)
-        .sort()
-        .at(-1) ?? null
-
-    const { platform: spotify, updatedAt: spotifyUpdatedAt } = buildPlatformPerformance(
-      "Spotify",
-      "spotify_track",
-      spotifyItems,
-      snapshots.filter((row) => spotifyIds.has(row.item_id)),
-      now,
-    )
-
-    const { platform: youtube, updatedAt: youtubeUpdatedAt } = buildPlatformPerformance(
-      "YouTube",
-      "youtube_video",
-      youtubeItems,
-      snapshots.filter((row) => youtubeIds.has(row.item_id)),
-      now,
-    )
-
-    const updatedAtCandidates = [spotifyUpdatedAt, youtubeUpdatedAt].filter(Boolean) as string[]
-    const updatedAt = updatedAtCandidates.sort().at(-1) ?? ""
-
-    return {
-      updatedAt,
-      spotify: mergeSocialStats(spotify, socialStats?.spotify),
-      youtube: mergeSocialStats(youtube, socialStats?.youtube),
-      sources: {
-        spotify: "Kworb",
-        youtube: "YouTube Data API v3",
-        note: kworkUpdatedAt ? `Kworb • Updated ${kworkUpdatedAt}` : undefined,
+        spotify: "Supabase snapshots",
+        youtube: "Supabase snapshots",
+        note: itemsError.message,
       },
       isSample: false,
     }
-  } catch (error) {
+  }
+
+  const typedItems = (items ?? []) as unknown as RealtimeItem[]
+  const now = new Date()
+  const kstDayStart = getKstDayStart(now)
+  const oldestMs = kstDayStart.getTime() - 25 * 60 * 60_000
+  const oldestIso = new Date(oldestMs).toISOString()
+
+  let snapshots: RealtimeSnapshot[] = []
+  if (typedItems.length > 0) {
+    const itemIds = typedItems.map((item) => item.id)
+    const { data: snapshotRows } = await supabase
+      .from("h2h_item_snapshots")
+      .select("item_id,ts,total,daily_kworb")
+      .in("item_id", itemIds)
+      .gte("ts", oldestIso)
+      .order("ts", { ascending: false })
+      .limit(5000)
+
+    snapshots = (snapshotRows ?? []) as unknown as RealtimeSnapshot[]
+  }
+
+  const spotifyItems = typedItems.filter((item) => item.type === "spotify_track")
+  const youtubeItems = typedItems.filter((item) => item.type === "youtube_video")
+  const spotifyIds = new Set(spotifyItems.map((item) => item.id))
+  const youtubeIds = new Set(youtubeItems.map((item) => item.id))
+
+  const kworkUpdatedAt =
+    spotifyItems
+      .map((i) => i.source_updated_at)
+      .filter(Boolean)
+      .sort()
+      .at(-1) ?? null
+  const { platform: spotify, updatedAt: spotifyUpdatedAt } = buildPlatformPerformance(
+    "Spotify",
+    "spotify_track",
+    spotifyItems,
+    snapshots.filter((row) => spotifyIds.has(row.item_id)),
+    now,
+  )
+
+  const { platform: youtube, updatedAt: youtubeUpdatedAt } = buildPlatformPerformance(
+    "YouTube",
+    "youtube_video",
+    youtubeItems,
+    snapshots.filter((row) => youtubeIds.has(row.item_id)),
+    now,
+  )
+
+  const updatedAtCandidates = [spotifyUpdatedAt, youtubeUpdatedAt].filter(Boolean) as string[]
+  const updatedAt = updatedAtCandidates.sort().at(-1) ?? ""
+
+  return {
+    updatedAt,
+    spotify,
+    youtube,
+    sources: {
+      spotify: "Supabase snapshots",
+      youtube: "Supabase snapshots",
+      note: kworkUpdatedAt ? `Kworb • Updated ${kworkUpdatedAt}` : undefined,
+    },
+    isSample: false,
+  }
+    })()
+  } catch (err) {
     return {
       updatedAt: "",
       spotify: EMPTY_PLATFORM("Spotify"),
       youtube: EMPTY_PLATFORM("YouTube"),
       sources: {
-        spotify: "Kworb",
-        youtube: "YouTube Data API v3",
-        note: (error as Error)?.message ?? "Supabase unavailable",
+        spotify: "Supabase snapshots",
+        youtube: "Supabase snapshots",
+        note: (err as Error)?.message ?? "Supabase unavailable",
       },
       isSample: false,
     }
