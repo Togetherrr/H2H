@@ -1315,7 +1315,7 @@ export async function addYoutubeItem(input: { url: string; release_date?: string
         title = data.title ?? ""
         cover_url = data.thumbnail_url ?? cover_url
       }
-    } catch { }
+    } catch { /* ignore YouTube oEmbed failures */ }
 
     const { error } = await supabase.from("h2h_items").insert({
       type: "youtube_video",

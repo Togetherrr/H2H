@@ -208,7 +208,6 @@ export async function GET(req: Request) {
       platform_id: row.platform_id,
       title: row.title,
       cover_url: row.cover_url,
-      is_active: row.is_active,
       source_updated_at:
         row.type === "spotify_track"
           ? (snapshot.spotify.note
