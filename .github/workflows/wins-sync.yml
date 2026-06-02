@@ -31,7 +31,7 @@ jobs:
             exit 1
           fi
 
-          curl --fail --silent --show-error --max-time 120 \
+          curl -i --fail --show-error --max-time 120 \
             -X POST \
             -H "Authorization: Bearer $WINS_SYNC_TOKEN" \
             "$CRON_TARGET_URL/api/wins/sync"
