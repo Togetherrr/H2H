@@ -28,6 +28,6 @@ jobs:
             exit 1
           fi
 
-          curl --fail --silent --show-error --max-time 120 \
+          curl -i --fail --show-error --max-time 120 \
             -H "x-cron-secret: $H2H_CRON_SECRET" \
             "$CRON_TARGET_URL/api/realtime/poll"
