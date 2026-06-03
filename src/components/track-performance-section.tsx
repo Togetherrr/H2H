@@ -223,10 +223,11 @@ function PlatformStatsBar({
   t: (key: string) => string
 }) {
   const colors = PLATFORM_COLORS[platform]
+  const hasDailyChange = dailyChange !== null
   const isChangePositive = (dailyChange ?? 0) >= 0
   const ChangeIcon = isChangePositive ? TrendingUp : TrendingDown
   const changeDisplay =
-    dailyChange === null
+    !hasDailyChange
       ? "—"
       : dailyChangeFormat === "percent"
         ? `${isChangePositive ? "+" : ""}${dailyChange.toFixed(2)}%`
