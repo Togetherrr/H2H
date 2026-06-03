@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createServiceClient } from "@/lib/supabase/service"
 import { seedYoutubeRealtimeSnapshot } from "@/lib/realtime/youtube-admin-sync"
+import { getReleaseYoutubeIds } from "@/lib/release-catalog"
 
 export const runtime = "nodejs"
 export const revalidate = 0
@@ -9,6 +10,7 @@ type YouTubeSearchItem = {
   id?: { videoId?: string }
   snippet?: {
     title?: string
+    description?: string
     thumbnails?: {
       high?: { url?: string }
       medium?: { url?: string }
@@ -99,6 +101,15 @@ async function discoverRecentVideos() {
   if (items.length === 0) return { videos: [] as Array<{ id: string; title: string; thumbnail: string | null }> }
 
   const videoIds = items.map((item) => item.id!.videoId!).filter(Boolean)
+  const whitelist = new Set([
+    ...(await getReleaseYoutubeIds()),
+    ...(process.env.H2H_YOUTUBE_VIDEO_IDS?.split(/[,\s]+/g).map((s) => s.trim()).filter(Boolean) ?? []),
+  ])
+
+  if (whitelist.size === 0) {
+    return { error: "No YouTube whitelist configured." as const }
+  }
+
   const detailsUrl = new URL("https://www.googleapis.com/youtube/v3/videos")
   detailsUrl.searchParams.set("part", "contentDetails")
   detailsUrl.searchParams.set("id", videoIds.join(","))
@@ -122,10 +133,12 @@ async function discoverRecentVideos() {
     .map((item) => {
       const id = item.id?.videoId
       if (!id) return null
+      if (!whitelist.has(id)) return null
       if (durationMap.size > 0 && !durationMap.has(id)) return null
+      const title = item.snippet?.title ?? id
       return {
         id,
-        title: item.snippet?.title ?? id,
+        title,
         thumbnail:
           item.snippet?.thumbnails?.high?.url ??
           item.snippet?.thumbnails?.medium?.url ??
