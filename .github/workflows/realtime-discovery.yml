@@ -1,0 +1,39 @@
+name: Realtime YouTube Discovery
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: "If true, call the discovery endpoint without writing to Supabase"
+        required: false
+        default: "false"
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: realtime-youtube-discovery
+      cancel-in-progress: true
+    timeout-minutes: 15
+
+    steps:
+      - name: Call YouTube discovery endpoint
+        env:
+          CRON_TARGET_URL: ${{ vars.H2H_APP_URL }}
+          H2H_CRON_SECRET: ${{ secrets.H2H_CRON_SECRET }}
+          DRY_RUN: ${{ inputs.dryRun }}
+        run: |
+          if [ -z "$CRON_TARGET_URL" ]; then
+            echo "Missing repository variable H2H_APP_URL"
+            exit 1
+          fi
+
+          if [ -z "$H2H_CRON_SECRET" ]; then
+            echo "Missing repository secret H2H_CRON_SECRET"
+            exit 1
+          fi
+
+          curl -i --fail --show-error --max-time 120 \
+            -H "x-cron-secret: $H2H_CRON_SECRET" \
+            "$CRON_TARGET_URL/api/realtime/discover-youtube${DRY_RUN:+?dryRun=$DRY_RUN}"

@@ -1,5 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/service"
-import { fetchKworbYoutubeDaily } from "@/lib/realtime/kworb-youtube"
+import { fetchKworbYoutubeStats } from "@/lib/realtime/kworb-youtube"
 import { floorToMinutes } from "@/lib/realtime/utils"
 
 type YoutubeVideoStats = {
@@ -62,7 +62,7 @@ export async function seedYoutubeRealtimeSnapshot(videoId: string) {
   const supabase = createServiceClient()
   const bucketTs = floorToMinutes(new Date(), 5).toISOString()
 
-  const [itemResult, statsResult, dailyMap] = await Promise.all([
+  const [itemResult, statsResult, kworbStatsMap] = await Promise.all([
     supabase
       .from("h2h_items")
       .select("id")
@@ -70,7 +70,7 @@ export async function seedYoutubeRealtimeSnapshot(videoId: string) {
       .eq("platform_id", videoId)
       .maybeSingle(),
     fetchYoutubeVideoStats(videoId),
-    fetchKworbYoutubeDaily([videoId]),
+    fetchKworbYoutubeStats([videoId]),
   ])
 
   if (itemResult.error) {
@@ -82,17 +82,23 @@ export async function seedYoutubeRealtimeSnapshot(videoId: string) {
     return { error: "YouTube item not found for snapshot seeding" }
   }
 
-  if (!statsResult) {
+  if (!statsResult && !kworbStatsMap.get(videoId)) {
     return { error: "Unable to fetch YouTube live stats" }
   }
 
-  const dailyKworb = dailyMap.get(videoId) ?? null
+  const kworbStats = kworbStatsMap.get(videoId) ?? null
+  const total = kworbStats?.total ?? statsResult?.total ?? null
+  const dailyKworb = kworbStats?.dailyKworb ?? null
+
+  if (total === null) {
+    return { error: "Unable to resolve YouTube total views" }
+  }
 
   const { error } = await supabase.from("h2h_item_snapshots").upsert(
     {
       item_id: item.id,
       ts: bucketTs,
-      total: statsResult.total,
+      total,
       daily_kworb: dailyKworb,
     },
     { onConflict: "item_id,ts" },
@@ -105,9 +111,9 @@ export async function seedYoutubeRealtimeSnapshot(videoId: string) {
   return {
     success: true,
     bucketTs,
-    total: statsResult.total,
+    total,
     dailyKworb,
-    title: statsResult.title,
-    coverUrl: statsResult.coverUrl,
+    title: statsResult?.title ?? null,
+    coverUrl: statsResult?.coverUrl ?? null,
   }
 }

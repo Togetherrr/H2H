@@ -1,10 +1,12 @@
 /**
  * track-performance.ts
- * ✅ Đã thay Chartex → Kworb cho Spotify
- * ✅ YouTube giữ nguyên (YouTube Data API v3)
+ * Spotify metrics come from Kworb.
+ * YouTube metrics now also come from Kworb, with YouTube API as metadata fallback.
  */
 
 import { fetchKworbSpotify } from "@/lib/realtime/kworb"
+import { fetchKworbYoutubeStats } from "@/lib/realtime/kworb-youtube"
+import { createStaticClient } from "@/lib/supabase/static"
 
 export type PerformanceItem = {
   id: string
@@ -93,7 +95,7 @@ export function invalidateTrackPerformanceCache() {
 }
 
 /* =========================================================
-   PLACEHOLDER (dùng khi chưa load xong)
+   PLACEHOLDER
 ========================================================= */
 
 export function getTrackPerformancePlaceholderSnapshot(): TrackPerformanceSnapshot {
@@ -101,15 +103,13 @@ export function getTrackPerformancePlaceholderSnapshot(): TrackPerformanceSnapsh
     updatedAt: "",
     spotify: DEFAULT_SPOTIFY,
     youtube: DEFAULT_YOUTUBE,
-    sources: { note: "Loading realtime stats…" },
+    sources: { note: "Loading realtime stats..." },
     isSample: true,
   }
 }
 
 /* =========================================================
-   YOUTUBE — giữ nguyên, chỉ cần set env vars:
-   H2H_YOUTUBE_API_KEY=...
-   H2H_YOUTUBE_VIDEO_IDS=id1,id2,id3,...
+   YOUTUBE
 ========================================================= */
 
 async function fetchJsonWithTimeout(url: string, timeoutMs: number) {
@@ -122,41 +122,23 @@ async function fetchJsonWithTimeout(url: string, timeoutMs: number) {
   }
 }
 
-export async function fetchYouTubeVideos(): Promise<PlatformPerformance | null> {
-  if (youtubeCache && Date.now() - youtubeCache.fetchedAt < YOUTUBE_CACHE_TTL_MS) {
-    return youtubeCache.data
-  }
-
-  const apiKey = process.env.H2H_YOUTUBE_API_KEY
-  const rawVideoIds = process.env.H2H_YOUTUBE_VIDEO_IDS
-
-  if (!apiKey || !rawVideoIds) {
-    console.warn("YOUTUBE: Missing H2H_YOUTUBE_API_KEY or H2H_YOUTUBE_VIDEO_IDS")
-    return youtubeCache?.data ?? null
-  }
-
-  const videoIds = rawVideoIds
-    .split(/[,\s]+/g)
-    .map((s) => s.trim())
-    .filter(Boolean)
-
-  if (videoIds.length === 0) return null
-
-  type YouTubeVideoRow = {
-    id?: string
-    snippet?: {
-      title?: string
-      thumbnails?: {
-        high?: { url?: string }
-        medium?: { url?: string }
-        default?: { url?: string }
-      }
+type YouTubeVideoRow = {
+  id?: string
+  snippet?: {
+    title?: string
+    thumbnails?: {
+      high?: { url?: string }
+      medium?: { url?: string }
+      default?: { url?: string }
     }
-    statistics?: { viewCount?: string }
   }
+  statistics?: { viewCount?: string }
+}
 
-  const allRows: YouTubeVideoRow[] = []
+async function fetchYouTubeMetadata(videoIds: string[], apiKey: string) {
+  if (!apiKey) return new Map<string, YouTubeVideoRow>()
 
+  const rows: YouTubeVideoRow[] = []
   for (let i = 0; i < videoIds.length; i += 50) {
     const chunk = videoIds.slice(i, i + 50)
     const url = new URL("https://www.googleapis.com/youtube/v3/videos")
@@ -165,29 +147,75 @@ export async function fetchYouTubeVideos(): Promise<PlatformPerformance | null> 
     url.searchParams.set("key", apiKey)
 
     const payload = await fetchJsonWithTimeout(url.toString(), 8000)
-    if (!payload) {
-      return youtubeCache?.data ?? null
-    }
-    const rows = (payload?.items ?? []) as YouTubeVideoRow[]
-    allRows.push(...rows)
+    if (!payload) return null
+
+    const chunkRows = (payload?.items ?? []) as YouTubeVideoRow[]
+    rows.push(...chunkRows)
   }
 
-  if (allRows.length === 0) return youtubeCache?.data ?? null
+  const map = new Map<string, YouTubeVideoRow>()
+  for (const row of rows) {
+    if (row.id) map.set(row.id, row)
+  }
+  return map
+}
 
-  const items: PerformanceItem[] = allRows
-    .map((row) => {
-      const id = row.id
-      if (!id) return null
+async function fetchTrackedYouTubeVideoIds() {
+  const supabase = createStaticClient()
+  const { data } = await supabase
+    .from("h2h_items")
+    .select("platform_id")
+    .eq("type", "youtube_video")
+    .eq("is_active", true)
+    .limit(100)
 
-      const totalRaw = row.statistics?.viewCount ?? null
-      const total = totalRaw ? Number(totalRaw) : null
+  return (data ?? [])
+    .map((row) => row.platform_id)
+    .filter((value): value is string => typeof value === "string" && value.length > 0)
+}
+
+export async function fetchYouTubeVideos(): Promise<PlatformPerformance | null> {
+  if (youtubeCache && Date.now() - youtubeCache.fetchedAt < YOUTUBE_CACHE_TTL_MS) {
+    return youtubeCache.data
+  }
+
+  const apiKey = process.env.H2H_YOUTUBE_API_KEY?.trim() ?? ""
+  const trackedVideoIds = await fetchTrackedYouTubeVideoIds()
+  const envVideoIds = (process.env.H2H_YOUTUBE_VIDEO_IDS?.trim() ?? "")
+    .split(/[,\s]+/g)
+    .map((s) => s.trim())
+    .filter(Boolean)
+  const videoIds = Array.from(new Set([...trackedVideoIds, ...envVideoIds]))
+
+  if (videoIds.length === 0) {
+    console.warn("YOUTUBE: Missing tracked YouTube items and H2H_YOUTUBE_VIDEO_IDS")
+    return youtubeCache?.data ?? null
+  }
+
+  const [metadataMap, kworbStats] = await Promise.all([
+    fetchYouTubeMetadata(videoIds, apiKey),
+    fetchKworbYoutubeStats(videoIds),
+  ])
+
+  if ((!metadataMap || metadataMap.size === 0) && kworbStats.size === 0) {
+    return youtubeCache?.data ?? null
+  }
+
+  const items: PerformanceItem[] = videoIds
+    .map((id) => {
+      const metadata = metadataMap?.get(id)
+      const kworb = kworbStats.get(id) ?? null
+      const apiTotalRaw = metadata?.statistics?.viewCount ?? null
+      const apiTotal = apiTotalRaw ? Number(apiTotalRaw) : null
+      const total = kworb?.total ?? apiTotal
+
       if (total === null || Number.isNaN(total)) return null
 
-      const title = row.snippet?.title ?? ""
+      const title = metadata?.snippet?.title ?? id
       const imageUrl =
-        row.snippet?.thumbnails?.high?.url ??
-        row.snippet?.thumbnails?.medium?.url ??
-        row.snippet?.thumbnails?.default?.url ??
+        metadata?.snippet?.thumbnails?.high?.url ??
+        metadata?.snippet?.thumbnails?.medium?.url ??
+        metadata?.snippet?.thumbnails?.default?.url ??
         "/group.png"
 
       return {
@@ -195,7 +223,7 @@ export async function fetchYouTubeVideos(): Promise<PlatformPerformance | null> 
         title,
         subtitle: "Official MV",
         imageUrl,
-        daily: null, // YouTube API không trả daily — sẽ tính từ DB snapshots
+        daily: kworb?.dailyKworb ?? null,
         total,
         dailyChange: null,
         href: `https://www.youtube.com/watch?v=${id}`,
@@ -209,11 +237,11 @@ export async function fetchYouTubeVideos(): Promise<PlatformPerformance | null> 
   const payload: PlatformPerformance = {
     name: "YouTube",
     totalValue: items.reduce((sum, item) => sum + (item.total || 0), 0),
-    dailyValue: null,
+    dailyValue: items.reduce((sum, item) => sum + (item.daily || 0), 0),
     dailyChange: null,
     highlights: [],
     items,
-    note: "YouTube API",
+    note: apiKey ? "Kworb + YouTube API metadata" : "Kworb",
   }
 
   youtubeCache = {
@@ -227,13 +255,13 @@ export async function fetchYouTubeVideos(): Promise<PlatformPerformance | null> 
 }
 
 /* =========================================================
-   MAIN SNAPSHOT — gọi song song Kworb + YouTube
+   MAIN SNAPSHOT
 ========================================================= */
 
 export async function getTrackPerformanceSnapshot(): Promise<TrackPerformanceSnapshot> {
   const [spotify, youtube] = await Promise.all([
-    fetchKworbSpotify(),   // ← Kworb thay cho Chartex
-    fetchYouTubeVideos(),  // ← YouTube Data API v3
+    fetchKworbSpotify(),
+    fetchYouTubeVideos(),
   ])
 
   return {
@@ -242,7 +270,7 @@ export async function getTrackPerformanceSnapshot(): Promise<TrackPerformanceSna
     youtube: youtube ?? DEFAULT_YOUTUBE,
     sources: {
       spotify: spotify ? "Kworb" : "No data",
-      youtube: youtube ? "YouTube API" : "No data",
+      youtube: youtube ? "Kworb" : "No data",
     },
     isSample: false,
   }

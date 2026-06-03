@@ -24,19 +24,16 @@ const PLATFORM_COLORS = {
   spotify: {
     daily: "text-[#1DB954]",
     dailyBg: "bg-[#1DB954]/15",
-    change: {
-      pos: "bg-[#1DB954]/20 text-[#1DB954]",
-      neg: "bg-rose-500/20 text-rose-400",
-    },
   },
   youtube: {
     daily: "text-[#FF0000]",
     dailyBg: "bg-[#FF0000]/10",
-    change: {
-      pos: "bg-[#FF0000]/20 text-[#FF4444]",
-      neg: "bg-rose-500/20 text-rose-400",
-    },
   },
+} as const
+
+const TREND_COLORS = {
+  pos: "bg-emerald-100 text-emerald-700",
+  neg: "bg-rose-100 text-rose-600",
 } as const
 
 function FullChartsItemRow({ item, index, platform = "spotify" }: { item: PerformanceItem; index: number; platform?: "spotify" | "youtube" }) {
@@ -95,7 +92,7 @@ function FullChartsItemRow({ item, index, platform = "spotify" }: { item: Perfor
           <div
             className={cn(
               "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black",
-              isChangePositive ? colors.change.pos : colors.change.neg
+              isChangePositive ? TREND_COLORS.pos : TREND_COLORS.neg
             )}
           >
             <Icon className="size-3" />

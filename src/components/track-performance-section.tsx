@@ -16,19 +16,18 @@ const PLATFORM_COLORS = {
   spotify: {
     daily: "text-[#1DB954]",
     dailyBg: "bg-[#1DB954]/15",
-    change: {
-      pos: "bg-[#1DB954]/20 text-[#1DB954]",
-      neg: "bg-rose-500/20 text-rose-400",
-    },
   },
   youtube: {
     daily: "text-[#FF0000]",
     dailyBg: "bg-[#FF0000]/10",
-    change: {
-      pos: "bg-[#FF0000]/20 text-[#FF4444]",
-      neg: "bg-rose-500/20 text-rose-400",
-    },
   },
+} as const
+
+const TREND_COLORS = {
+  pos: "bg-emerald-100 text-emerald-700",
+  neg: "bg-rose-100 text-rose-600",
+  posBadge: "bg-emerald-100/80 text-emerald-700 border-emerald-200",
+  negBadge: "bg-rose-100/80 text-rose-600 border-rose-200",
 } as const
 
 // ─── MetricBadge ────────────────────────────────────────────────────────────
@@ -43,7 +42,7 @@ function MetricBadge({ value, format }: { value: number | null; format?: "number
   return (
     <div className={cn(
       "flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-tighter",
-      isPositive ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-600"
+      isPositive ? TREND_COLORS.pos : TREND_COLORS.neg
     )}>
       <Icon className="size-3" />
       {displayValue}
@@ -112,7 +111,7 @@ export function PerformanceItemRow({
           <div
             className={cn(
               "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black",
-              isChangePositive ? colors.change.pos : colors.change.neg
+              isChangePositive ? TREND_COLORS.posBadge : TREND_COLORS.negBadge
             )}
             suppressHydrationWarning
           >
