@@ -7,6 +7,7 @@ Do not keep a Vercel Cron job for the same endpoints on Hobby, because it can bl
 ## What should run
 
 - `Realtime Poll` every 5 minutes
+- `Realtime YouTube Discovery` every 6 hours
 - `Wins Sync` once daily
 
 These workflows should be the only scheduled runners for these sync jobs unless you are intentionally moving off Vercel Hobby.
@@ -36,6 +37,11 @@ Create these **repository secrets**:
   - Calls `POST /api/realtime/poll` on your deployed app
   - Sends `x-cron-secret: $H2H_CRON_SECRET`
 
+- `/.github/workflows/realtime-discovery.yml`
+  - Calls `GET /api/realtime/discover-youtube` on your deployed app
+  - Sends `x-cron-secret: $H2H_CRON_SECRET`
+  - Supports a manual `dryRun` input for safe testing
+
 - `/.github/workflows/wins-sync.yml`
   - Calls `POST /api/wins/sync` on your deployed app
   - Sends `Authorization: Bearer $H2H_WINS_SYNC_TOKEN`
@@ -51,6 +57,18 @@ After pushing the repo changes:
 5. Do the same for `Wins Sync`
 
 If your Vercel project still has an old Cron job configured for `/api/realtime/poll`, remove it in the Vercel dashboard before relying on these workflows.
+
+## How to test discovery safely
+
+Before letting the discovery workflow write to Supabase, run it in dry-run mode:
+
+1. Open `Actions`
+2. Select `Realtime YouTube Discovery`
+3. Click `Run workflow`
+4. Set `dryRun` to `true`
+5. Run it and inspect the response
+
+If the response looks correct, run it again with `dryRun` set to `false` or let the scheduled job run normally.
 
 ## Common failure points
 
