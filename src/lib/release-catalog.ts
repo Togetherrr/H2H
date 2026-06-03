@@ -262,6 +262,13 @@ export const getReleaseCatalog = cache(async () => {
   return lastGoodCatalog?.length ? lastGoodCatalog : fallbackReleaseCatalog
 })
 
+export async function getReleaseYoutubeIds(): Promise<string[]> {
+  const catalog = await getReleaseCatalog()
+  return catalog
+    .map((release) => release.youtubeId?.trim())
+    .filter((value): value is string => Boolean(value && value.length > 0))
+}
+
 export async function getReleaseBySlug(slug: string) {
   const catalog = await getReleaseCatalog()
   const release = catalog.find((r) => r.slug === slug)
