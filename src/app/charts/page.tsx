@@ -9,6 +9,7 @@ import { Navbar } from "@/components/navbar"
 import { cn } from "@/lib/utils"
 import type { PerformanceItem } from "@/lib/track-performance"
 import { SocialStatsCards } from "@/components/charts/social-stats-cards"
+import { PlatformTabs } from "@/components/charts/platform-tabs"
 import { t } from "@/i18n/translations"
 
 export async function generateMetadata() {
@@ -176,14 +177,16 @@ function MetricCard({
 }
 
 export default async function ChartsPage({ searchParams }: ChartsPageProps) {
-  const { platform } = await searchParams
+  const params = await searchParams
+  const validPlatforms = ["spotify", "youtube", "korea"]
+  let platform = typeof params?.platform === "string" && validPlatforms.includes(params.platform)
+    ? params.platform
+    : "spotify"
 
   const snapshot = await getRealtimeSnapshotFromDb()
   const socialSnapshot = await getSocialStatsSnapshotFromDb({ allowLiveFallback: false })
 
-  const activePlatforms = platform
-    ? [platform]
-    : ["spotify", "youtube", "korea"]
+  const activePlatforms = [platform]
 
   const platformConfigs: Record<string, {
     title: string;
@@ -273,18 +276,21 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                   )}
                 </div>
               )}
-              <div className="flex flex-col gap-2">
-                <h1 className={cn(
-                  "font-sans text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tight leading-[0.9] drop-shadow-md transition-colors duration-500",
-                  platform === "spotify" ? "text-[#1DB954]" : platform === "youtube" ? "text-[#FF0000]" : platform === "korea" ? "text-emerald-500" : "text-slate-900"
-                )}>
-                  {platform ? (platform === "korea" ? "SOUTH KOREA" : platformConfigs[platform].title) : "HEARTS2HEARTS"}
-                </h1>
-                {platform && (
-                  <p className="font-sans text-xs md:text-sm font-black uppercase tracking-[0.3em] text-slate-500/80">
-                    Analytics & Performance
-                  </p>
-                )}
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                  <h1 className={cn(
+                    "font-sans text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tight leading-[0.9] drop-shadow-md transition-colors duration-500",
+                    platform === "spotify" ? "text-[#1DB954]" : platform === "youtube" ? "text-[#FF0000]" : platform === "korea" ? "text-emerald-500" : "text-slate-900"
+                  )}>
+                    {platform ? (platform === "korea" ? "SOUTH KOREA" : platformConfigs[platform].title) : "HEARTS2HEARTS"}
+                  </h1>
+                  {platform && (
+                    <p className="font-sans text-xs md:text-sm font-black uppercase tracking-[0.3em] text-slate-500/80">
+                      Analytics & Performance
+                    </p>
+                  )}
+                </div>
+                <PlatformTabs platform={platform} />
               </div>
             </div>
             {snapshot.sources.note ? (

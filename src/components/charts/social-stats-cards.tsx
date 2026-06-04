@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils"
 
 type Platform = "spotify" | "youtube"
 
+const REFRESH_INTERVAL_MS = 60_000
+
 type SocialStatsState = {
   spotify: {
     followers?: number | null
@@ -89,31 +91,42 @@ export function SocialStatsCards({
 
   useEffect(() => {
     let cancelled = false
+    let inFlight = false
 
     async function loadLiveStats() {
+      if (inFlight) return
+
+      inFlight = true
+
       try {
         const response = await fetch("/api/realtime/social-stats", {
           cache: "no-store",
         })
+
+        if (!response.ok) {
+          throw new Error(`Failed to load live social stats: ${response.status}`)
+        }
+
         const data = (await response.json()) as { ok?: boolean; snapshot?: SocialStatsState }
 
         if (!cancelled && data?.snapshot) {
           setLiveStats(data.snapshot)
         }
-      } catch {
-        // keep server snapshot fallback
+      } catch (error) {
+        console.error("SocialStatsCards live refresh failed:", error)
       } finally {
+        inFlight = false
         if (!cancelled) {
           setIsLoading(false)
         }
       }
     }
 
-    loadLiveStats()
+    void loadLiveStats()
 
     const interval = window.setInterval(() => {
-      loadLiveStats()
-    }, 60_000)
+      void loadLiveStats()
+    }, REFRESH_INTERVAL_MS)
 
     return () => {
       cancelled = true

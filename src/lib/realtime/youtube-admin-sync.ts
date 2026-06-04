@@ -88,10 +88,30 @@ export async function seedYoutubeRealtimeSnapshot(videoId: string) {
 
   const kworbStats = kworbStatsMap.get(videoId) ?? null
   const total = kworbStats?.total ?? statsResult?.total ?? null
-  const dailyKworb = kworbStats?.dailyKworb ?? null
+  let dailyKworb = kworbStats?.dailyKworb ?? null
 
   if (total === null) {
     return { error: "Unable to resolve YouTube total views" }
+  }
+
+  if (dailyKworb == null) {
+    const { data: previousSnapshot, error: previousSnapshotError } = await supabase
+      .from("h2h_item_snapshots")
+      .select("total")
+      .eq("item_id", item.id)
+      .lt("ts", bucketTs)
+      .order("ts", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (previousSnapshotError) {
+      return { error: previousSnapshotError.message }
+    }
+
+    if (previousSnapshot?.total != null) {
+      const computed = total - Number(previousSnapshot.total)
+      dailyKworb = computed > 0 ? computed : 0
+    }
   }
 
   const { error } = await supabase.from("h2h_item_snapshots").upsert(

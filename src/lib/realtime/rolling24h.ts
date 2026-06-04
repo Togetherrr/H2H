@@ -119,9 +119,11 @@ export function computeRolling24h(
         const newest = list[0]
         const oldest = list[list.length - 1]
         const rough = newest.total - oldest.total
-        return rough > 0 ? rough : null
+        return rough > 0 ? rough : 0
       }
-      return null
+      // Keep public tables populated even when the source daily metric is missing.
+      // This is a display fallback, not a source-of-truth replacement.
+      return 0
     })()
 
     const deltaChange = (() => {
@@ -130,9 +132,13 @@ export function computeRolling24h(
         oldestWithKworb != null &&
         oldestWithKworb !== end
       ) {
-        return end.daily_kworb - oldestWithKworb.daily_kworb!
+        const computed = end.daily_kworb - oldestWithKworb.daily_kworb!
+        if (computed !== 0) return computed
       }
-      if (delta !== null && prevDelta !== null) return delta - prevDelta
+      if (delta !== null && prevDelta !== null) {
+        const computed = delta - prevDelta
+        if (computed !== 0) return computed
+      }
       if (list.length >= 2) {
         const newest = list[0]
         const previous = findNearestDistinctSnapshot(list, newest) ?? list[1]
