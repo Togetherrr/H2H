@@ -172,8 +172,8 @@ export function YoutubeItemsTab({
 
                                 <span
                                     className={`rounded-full px-3 py-1 text-xs ${item.is_active
-                                            ? "bg-emerald-500/20 text-emerald-400"
-                                            : "bg-red-500/20 text-red-400"
+                                        ? "bg-emerald-500/20 text-emerald-400"
+                                        : "bg-red-500/20 text-red-400"
                                         }`}
                                 >
                                     {item.is_active ? "Active" : "Inactive"}

@@ -21,6 +21,7 @@ create table if not exists public.h2h_item_snapshots (
   item_id uuid not null references public.h2h_items(id) on delete cascade,
   ts timestamptz not null,
   total bigint not null check (total >= 0),
+  source_daily_kworb bigint,
   created_at timestamptz not null default now(),
   unique (item_id, ts)
 );

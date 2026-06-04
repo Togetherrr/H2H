@@ -6,6 +6,7 @@
 
 import { fetchKworbSpotify } from "@/lib/realtime/kworb"
 import { fetchKworbYoutubeStats } from "@/lib/realtime/kworb-youtube"
+import { computeRolling24h, getKstDayStart, type RealtimeItem, type RealtimeSnapshot } from "@/lib/realtime/rolling24h"
 import { createStaticClient } from "@/lib/supabase/static"
 
 export type PerformanceItem = {
@@ -201,10 +202,50 @@ export async function fetchYouTubeVideos(): Promise<PlatformPerformance | null> 
     return youtubeCache?.data ?? null
   }
 
+  const supabase = createStaticClient()
+  const { data: dbItems } = await supabase
+    .from("h2h_items")
+    .select("id,type,platform_id,title,cover_url,release_date,is_active,source_updated_at")
+    .eq("type", "youtube_video")
+    .eq("is_active", true)
+    .in("platform_id", videoIds)
+    .limit(100)
+
+  const dbTypedItems = (dbItems ?? []) as unknown as RealtimeItem[]
+  const now = new Date()
+  const oldestIso = new Date(
+    getKstDayStart(now).getTime() - 14 * 24 * 60 * 60_000,
+  ).toISOString()
+
+  const itemIds = dbTypedItems.map((item) => item.id)
+  let dbSnapshots: RealtimeSnapshot[] = []
+  if (itemIds.length > 0) {
+    const { data } = await supabase
+      .from("h2h_item_snapshots")
+      .select("item_id,ts,total,daily_kworb")
+      .in("item_id", itemIds)
+      .gte("ts", oldestIso)
+      .order("ts", { ascending: false })
+      .limit(5000)
+
+    dbSnapshots = (data ?? []) as unknown as RealtimeSnapshot[]
+  }
+
+  const computed = computeRolling24h(
+    dbTypedItems,
+    dbSnapshots,
+    now,
+  )
+
+  const computedByPlatformId = new Map(
+    computed.rows.map((row) => [row.item.platform_id, row]),
+  )
+
   const items: PerformanceItem[] = videoIds
     .map((id) => {
       const metadata = metadataMap?.get(id)
       const kworb = kworbStats.get(id) ?? null
+      const computedRow = computedByPlatformId.get(id)
       const apiTotalRaw = metadata?.statistics?.viewCount ?? null
       const apiTotal = apiTotalRaw ? Number(apiTotalRaw) : null
       const total = kworb?.total ?? apiTotal
@@ -223,9 +264,9 @@ export async function fetchYouTubeVideos(): Promise<PlatformPerformance | null> 
         title,
         subtitle: "Official MV",
         imageUrl,
-        daily: kworb?.dailyKworb ?? null,
+        daily: kworb?.dailyKworb ?? computedRow?.delta24h ?? null,
         total,
-        dailyChange: null,
+        dailyChange: computedRow?.delta24hChange ?? null,
         href: `https://www.youtube.com/watch?v=${id}`,
         meta: id,
       } satisfies PerformanceItem
@@ -238,7 +279,7 @@ export async function fetchYouTubeVideos(): Promise<PlatformPerformance | null> 
     name: "YouTube",
     totalValue: items.reduce((sum, item) => sum + (item.total || 0), 0),
     dailyValue: items.reduce((sum, item) => sum + (item.daily || 0), 0),
-    dailyChange: null,
+    dailyChange: computed.delta24hChange,
     highlights: [],
     items,
     note: apiKey ? "Kworb + YouTube API metadata" : "Kworb",

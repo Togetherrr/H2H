@@ -44,7 +44,7 @@ export async function GET(req: Request) {
 
   const now = new Date()
   const kstDayStart = getKstDayStart(now)
-  const oldestMs = kstDayStart.getTime() - 25 * 60 * 60_000 // buffer hôm qua
+  const oldestMs = kstDayStart.getTime() - 14 * 24 * 60 * 60_000 // wider buffer for stable fallback history
   const oldestIso = new Date(oldestMs).toISOString()
 
   const itemIds = filteredItems.map((i) => i.id)

@@ -72,7 +72,8 @@ jobs:
 
           const MAX_FILE_DIFF_CHARS = 50000;
           const MAX_FILES = 20;
-          const CONCURRENCY = 3;
+          const CONCURRENCY = 1;
+          const BATCH_DELAY_MS = 5000;
 
           if (!apiKey) {
             fs.writeFileSync(
@@ -216,7 +217,7 @@ jobs:
                     Authorization: `Bearer ${apiKey}`,
                   },
                   body: JSON.stringify({
-                    model: "llama-3.3-70b-versatile",
+                    model: "meta-llama/llama-4-scout-17b-16e-instruct",
                     messages: [{ role: "user", content: prompt }],
                     temperature: 0.2,
                     max_tokens: 2048,
@@ -259,6 +260,11 @@ jobs:
                   );
                 }
               }
+
+              // Delay giữa các batch để tránh Groq rate limit
+              if (i + CONCURRENCY < files.length) {
+                await new Promise((r) => setTimeout(r, BATCH_DELAY_MS));
+              }
             }
 
             let skippedNote = "";
@@ -275,7 +281,7 @@ jobs:
               "ai-review.md",
               `## 🤖 Groq AI Review\n\n${results.join(
                 "\n---\n\n"
-              )}${skippedNote}\n\n---\n_Review tự động bằng Groq + llama-3.3-70b-versatile. Review theo từng file._`
+              )}${skippedNote}\n\n---\n_Review tự động bằng Groq + meta-llama/llama-4-scout-17b-16e-instruct. Review theo từng file._`
             );
           }
 
