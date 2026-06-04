@@ -3,7 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { TrendingUp, TrendingDown, Activity, ExternalLink, Globe } from "lucide-react"
+import { TrendingUp, TrendingDown, Activity, ExternalLink, Globe, Clock3 } from "lucide-react"
 import { useTranslation } from "@/hooks/useTranslation"
 import { cn } from "@/lib/utils"
 import type { TrackPerformanceSnapshot, PerformanceItem } from "@/lib/track-performance"
@@ -223,10 +223,11 @@ function PlatformStatsBar({
   t: (key: string) => string
 }) {
   const colors = PLATFORM_COLORS[platform]
+  const hasDailyChange = dailyChange !== null
   const isChangePositive = (dailyChange ?? 0) >= 0
   const ChangeIcon = isChangePositive ? TrendingUp : TrendingDown
   const changeDisplay =
-    dailyChange === null
+    !hasDailyChange
       ? "—"
       : dailyChangeFormat === "percent"
         ? `${isChangePositive ? "+" : ""}${dailyChange.toFixed(2)}%`
@@ -468,13 +469,20 @@ export function TrackPerformanceSection({ snapshot }: TrackPerformanceSectionPro
                 <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-slate-900">
                   {t("home.performance.liveTracking").trim()}
                 </h2>
-                {formattedUpdatedAt ? (
-                  <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400" suppressHydrationWarning>
-                    {t("performance.updatedAt")} {formattedUpdatedAt}
-                  </p>
-                ) : null}
+
               </div>
             </div>
+
+            {activePlatform === "youtube" ? (
+              <div className="mb-6 max-w-4xl px-1">
+                <div className="inline-flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 shadow-sm backdrop-blur-sm">
+                  <Clock3 className="mt-0.5 size-4 shrink-0 text-amber-600" />
+                  <p className="text-[12px] font-medium leading-6 text-amber-800">
+                    Data is being updated. Some values may briefly reflect the latest processed snapshot.
+                  </p>
+                </div>
+              </div>
+            ) : null}
 
             {/* Platform Tabs */}
             <div className="mb-8 flex flex-wrap gap-3">

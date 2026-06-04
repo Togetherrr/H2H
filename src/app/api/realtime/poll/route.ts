@@ -143,6 +143,45 @@ export async function GET(req: Request) {
     logDebug("YOUTUBE ROWS:", youtubeRows);
 
     const supabase = createServiceClient();
+    const previousYoutubeSnapshotByItemId = new Map<string, { total: number }>();
+    if (youtubeVideoIds.length > 0) {
+      const { data: existingYoutubeItems, error: existingYoutubeItemsError } = await supabase
+        .from("h2h_items")
+        .select("id,platform_id")
+        .eq("type", "youtube_video")
+        .in("platform_id", youtubeVideoIds)
+        .limit(100);
+
+      if (existingYoutubeItemsError) {
+        logDebug("YOUTUBE PREVIOUS ITEM LOOKUP ERROR:", existingYoutubeItemsError);
+      }
+
+      const youtubeItemIds = (existingYoutubeItems ?? [])
+        .map((row) => row.id)
+        .filter(Boolean) as string[];
+
+      if (youtubeItemIds.length > 0) {
+        const { data: previousYoutubeSnapshots, error: previousYoutubeSnapshotsError } = await supabase
+          .from("h2h_item_snapshots")
+          .select("item_id,total,ts")
+          .in("item_id", youtubeItemIds)
+          .lt("ts", bucketTs)
+          .order("ts", { ascending: false })
+          .limit(2000);
+
+        if (previousYoutubeSnapshotsError) {
+          logDebug("YOUTUBE PREVIOUS SNAPSHOTS ERROR:", previousYoutubeSnapshotsError);
+        } else {
+          for (const row of previousYoutubeSnapshots ?? []) {
+            if (!previousYoutubeSnapshotByItemId.has(row.item_id)) {
+              previousYoutubeSnapshotByItemId.set(row.item_id, {
+                total: Number(row.total),
+              });
+            }
+          }
+        }
+      }
+    }
 
     let finalSpotifyRows = spotifyRows;
 
@@ -305,6 +344,13 @@ export async function GET(req: Request) {
         } else if (row.type === "youtube_video") {
           // ── YouTube: lấy từ Kworb scrape ──────────────────────────────
           dailyKworb = youtubeDailyMap.get(row.platform_id) ?? null;
+          if (dailyKworb == null) {
+            const previous = previousYoutubeSnapshotByItemId.get(itemId);
+            if (previous) {
+              const computed = row.total - previous.total;
+              dailyKworb = computed > 0 ? computed : 0;
+            }
+          }
           logDebug(`YT daily_kworb [${row.platform_id}]:`, dailyKworb);
         }
 

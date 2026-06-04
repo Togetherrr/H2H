@@ -4,9 +4,12 @@ import { Music2, Youtube, ArrowLeft, TrendingUp, TrendingDown, Clock, Activity, 
 import Link from "next/link"
 import Image from "next/image"
 import { getRealtimeSnapshotFromDb } from "@/lib/realtime/db-snapshot"
+import { getSocialStatsSnapshotFromDb } from "@/lib/realtime/social-stats"
 import { Navbar } from "@/components/navbar"
 import { cn } from "@/lib/utils"
 import type { PerformanceItem } from "@/lib/track-performance"
+import { SocialStatsCards } from "@/components/charts/social-stats-cards"
+import { PlatformTabs } from "@/components/charts/platform-tabs"
 import { t } from "@/i18n/translations"
 
 export async function generateMetadata() {
@@ -174,13 +177,16 @@ function MetricCard({
 }
 
 export default async function ChartsPage({ searchParams }: ChartsPageProps) {
-  const { platform } = await searchParams
+  const params = await searchParams
+  const validPlatforms = ["spotify", "youtube", "korea"]
+  let platform = typeof params?.platform === "string" && validPlatforms.includes(params.platform)
+    ? params.platform
+    : "spotify"
 
   const snapshot = await getRealtimeSnapshotFromDb()
+  const socialSnapshot = await getSocialStatsSnapshotFromDb({ allowLiveFallback: false })
 
-  const activePlatforms = platform
-    ? [platform]
-    : ["spotify", "youtube", "korea"]
+  const activePlatforms = [platform]
 
   const platformConfigs: Record<string, {
     title: string;
@@ -195,7 +201,7 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
     monthlyListeners?: number | null;
     subscribers?: number | null;
     videoCount?: number | null;
-    dailyChange?: number | null;
+    dailyValue?: number | null;
   }> = {
     spotify: {
       title: t("charts.spotify.title") as string,
@@ -208,7 +214,7 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
       totalValue: snapshot.spotify.totalValue,
       followers: snapshot.spotify.followers,
       monthlyListeners: snapshot.spotify.monthlyListeners,
-      dailyChange: snapshot.spotify.dailyChange,
+      dailyValue: snapshot.spotify.dailyValue,
     },
     youtube: {
       title: t("charts.youtube.title") as string,
@@ -221,7 +227,7 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
       totalValue: snapshot.youtube.totalValue,
       subscribers: snapshot.youtube.subscribers,
       videoCount: snapshot.youtube.videoCount,
-      dailyChange: snapshot.youtube.dailyChange,
+      dailyValue: snapshot.youtube.dailyValue,
     },
     korea: {
       title: t("performance.korea") as string,
@@ -238,7 +244,7 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
   return (
     <main className="min-h-screen selection:bg-[#A2D2FF]/30">
       <Navbar />
-      <div className="pointer-events-none absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white/70 to-transparent z-0" />
+      <div className="pointer-events-none fixed top-0 left-0 w-full h-32 bg-gradient-to-b from-white/90 via-white/50 to-transparent z-40" />
       <div className="section-shell pt-40 md:pt-44">
         {/* ── Page header ── */}
         <div className="mb-24 flex flex-col gap-12 px-4">
@@ -270,18 +276,21 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                   )}
                 </div>
               )}
-              <div className="flex flex-col gap-2">
-                <h1 className={cn(
-                  "font-sans text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tight leading-[0.9] drop-shadow-md transition-colors duration-500",
-                  platform === "spotify" ? "text-[#1DB954]" : platform === "youtube" ? "text-[#FF0000]" : platform === "korea" ? "text-emerald-500" : "text-slate-900"
-                )}>
-                  {platform ? (platform === "korea" ? "SOUTH KOREA" : platformConfigs[platform].title) : "HEARTS2HEARTS"}
-                </h1>
-                {platform && (
-                  <p className="font-sans text-xs md:text-sm font-black uppercase tracking-[0.3em] text-slate-500/80">
-                    Analytics & Performance
-                  </p>
-                )}
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                  <h1 className={cn(
+                    "font-sans text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tight leading-[0.9] drop-shadow-md transition-colors duration-500",
+                    platform === "spotify" ? "text-[#1DB954]" : platform === "youtube" ? "text-[#FF0000]" : platform === "korea" ? "text-emerald-500" : "text-slate-900"
+                  )}>
+                    {platform ? (platform === "korea" ? "SOUTH KOREA" : platformConfigs[platform].title) : "HEARTS2HEARTS"}
+                  </h1>
+                  {platform && (
+                    <p className="font-sans text-xs md:text-sm font-black uppercase tracking-[0.3em] text-slate-500/80">
+                      Analytics & Performance
+                    </p>
+                  )}
+                </div>
+                <PlatformTabs platform={platform} />
               </div>
             </div>
             {snapshot.sources.note ? (
@@ -456,44 +465,14 @@ export default async function ChartsPage({ searchParams }: ChartsPageProps) {
                   )}
 
                   {/* METRIC CARDS ROW */}
-                  <div className="flex flex-wrap gap-5">
-                    <MetricCard
-                      label={config.totalLabel}
-                      value={config.totalValue}
-                      change={config.dailyChange && typeof config.dailyChange === "number" ? config.dailyChange : undefined}
-                      platform={pKey as "spotify" | "youtube"}
-                    />
-
-                    {pKey === "spotify" && (
-                      <>
-                        <MetricCard
-                          label="Spotify Follower"
-                          value={config.followers ?? null}
-                          platform="spotify"
-                        />
-                        <MetricCard
-                          label="Spotify Monthly Listener"
-                          value={config.monthlyListeners ?? null}
-                          platform="spotify"
-                        />
-                      </>
-                    )}
-
-                    {pKey === "youtube" && (
-                      <>
-                        <MetricCard
-                          label="YouTube Subscriber"
-                          value={config.subscribers ?? null}
-                          platform="youtube"
-                        />
-                        <MetricCard
-                          label="YouTube Videos"
-                          value={config.videoCount ?? null}
-                          platform="youtube"
-                        />
-                      </>
-                    )}
-                  </div>
+                  <SocialStatsCards
+                    platform={pKey as "spotify" | "youtube"}
+                    totalLabel={config.totalLabel}
+                    totalValue={config.totalValue}
+                    totalChange={config.dailyValue ?? null}
+                    spotify={socialSnapshot?.spotify}
+                    youtube={socialSnapshot?.youtube}
+                  />
                 </div>
 
                 <div className="px-4 lg:px-6">

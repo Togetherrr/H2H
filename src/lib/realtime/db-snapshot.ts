@@ -117,7 +117,7 @@ export async function getRealtimeSnapshotFromDb(): Promise<TrackPerformanceSnaps
   const typedItems = (items ?? []) as unknown as RealtimeItem[]
   const now = new Date()
   const kstDayStart = getKstDayStart(now)
-  const oldestMs = kstDayStart.getTime() - 25 * 60 * 60_000
+  const oldestMs = kstDayStart.getTime() - 14 * 24 * 60 * 60_000
   const oldestIso = new Date(oldestMs).toISOString()
 
   let snapshots: RealtimeSnapshot[] = []

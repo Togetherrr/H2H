@@ -253,6 +253,7 @@ export type Database = {
           daily_kworb: number | null
           id: string
           item_id: string
+          source_daily_kworb: number | null
           total: number
           ts: string
         }
@@ -261,6 +262,7 @@ export type Database = {
           daily_kworb?: number | null
           id?: string
           item_id: string
+          source_daily_kworb?: number | null
           total: number
           ts: string
         }
@@ -269,6 +271,7 @@ export type Database = {
           daily_kworb?: number | null
           id?: string
           item_id?: string
+          source_daily_kworb?: number | null
           total?: number
           ts?: string
         }

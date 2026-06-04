@@ -60,16 +60,16 @@ const logDebug = (...args: unknown[]) => {
 
 let readCache:
   | {
-      fetchedAt: number
-      data: SocialStatsSnapshot | null
-    }
+    fetchedAt: number
+    data: SocialStatsSnapshot | null
+  }
   | null = null
 
 let liveCache:
   | {
-      fetchedAt: number
-      data: LiveSocialStatsSnapshot
-    }
+    fetchedAt: number
+    data: LiveSocialStatsSnapshot
+  }
   | null = null
 
 function isValidNumber(value: unknown): value is number {
@@ -339,8 +339,8 @@ function normalizeSocialSnapshot(
   }
 }
 
-async function fetchLiveSocialSnapshot(): Promise<LiveSocialStatsSnapshot> {
-  if (liveCache && Date.now() - liveCache.fetchedAt < LIVE_CACHE_TTL_MS) {
+async function fetchLiveSocialSnapshot(options?: { forceRefresh?: boolean }): Promise<LiveSocialStatsSnapshot> {
+  if (!options?.forceRefresh && liveCache && Date.now() - liveCache.fetchedAt < LIVE_CACHE_TTL_MS) {
     return liveCache.data
   }
 
@@ -365,8 +365,8 @@ async function fetchLiveSocialSnapshot(): Promise<LiveSocialStatsSnapshot> {
   return data
 }
 
-export async function refreshSocialStatsSnapshot(): Promise<SocialStatsSnapshot | null> {
-  const live = await fetchLiveSocialSnapshot()
+export async function refreshSocialStatsSnapshot(options?: { forceRefresh?: boolean }): Promise<SocialStatsSnapshot | null> {
+  const live = await fetchLiveSocialSnapshot(options)
   const snapshot = normalizeSocialSnapshot(live.spotify, live.youtube)
 
   try {

@@ -27,7 +27,7 @@ function parseKworbYtPage(html: string): KworbYoutubeStats {
   const totalMatch = html.match(/Total views:\s*([\d,]+)/)
   const total = totalMatch ? Number(totalMatch[1].replace(/,/g, "")) : null
 
-  const rowRegex = /\|\s*(20\d{2}\/\d{2}\/\d{2})\s*\|\s*([\d,]+)\s*\|/g
+  const rowRegex = /<tr><td>(20\d{2}\/\d{2}\/\d{2})<\/td><td>([\d,]+)<\/td><\/tr>/g
   let lastViews: number | null = null
   let match: RegExpExecArray | null
   while ((match = rowRegex.exec(html)) !== null) {

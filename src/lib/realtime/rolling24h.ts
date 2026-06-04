@@ -59,6 +59,34 @@ export function computeRolling24h(
     list.sort((a, b) => Date.parse(b.ts) - Date.parse(a.ts))
   }
 
+  function findNearestDistinctSnapshot(list: RealtimeSnapshot[], base: RealtimeSnapshot) {
+    for (const snapshot of list.slice(1)) {
+      const hasDistinctTotal = snapshot.total !== base.total
+      const hasDistinctKworb = snapshot.daily_kworb != null && base.daily_kworb != null && snapshot.daily_kworb !== base.daily_kworb
+      if (hasDistinctTotal || hasDistinctKworb) {
+        return snapshot
+      }
+    }
+    return null
+  }
+
+  function findLastNonZeroChange(list: RealtimeSnapshot[]) {
+    for (let i = 0; i < list.length - 1; i += 1) {
+      const newer = list[i]
+      const older = list[i + 1]
+
+      if (newer.daily_kworb != null && older.daily_kworb != null) {
+        const delta = newer.daily_kworb - older.daily_kworb
+        if (delta !== 0) return delta
+      }
+
+      const delta = newer.total - older.total
+      if (delta !== 0) return delta
+    }
+
+    return null
+  }
+
   const rows = items.map((item) => {
     const list = snapshotsByItem.get(item.id) ?? []
 
@@ -91,9 +119,11 @@ export function computeRolling24h(
         const newest = list[0]
         const oldest = list[list.length - 1]
         const rough = newest.total - oldest.total
-        return rough > 0 ? rough : null
+        return rough > 0 ? rough : 0
       }
-      return null
+      // Keep public tables populated even when the source daily metric is missing.
+      // This is a display fallback, not a source-of-truth replacement.
+      return 0
     })()
 
     const deltaChange = (() => {
@@ -102,20 +132,27 @@ export function computeRolling24h(
         oldestWithKworb != null &&
         oldestWithKworb !== end
       ) {
-        return end.daily_kworb - oldestWithKworb.daily_kworb!
+        const computed = end.daily_kworb - oldestWithKworb.daily_kworb!
+        if (computed !== 0) return computed
       }
-      if (delta !== null && prevDelta !== null) return delta - prevDelta
-      if (item.type === "youtube_video" && list.length >= 2) {
+      if (delta !== null && prevDelta !== null) {
+        const computed = delta - prevDelta
+        if (computed !== 0) return computed
+      }
+      if (list.length >= 2) {
         const newest = list[0]
-        const previous = list[1]
+        const previous = findNearestDistinctSnapshot(list, newest) ?? list[1]
 
         if (newest.daily_kworb != null && previous.daily_kworb != null) {
-          return newest.daily_kworb - previous.daily_kworb
+          const computed = newest.daily_kworb - previous.daily_kworb
+          if (computed !== 0) return computed
         }
 
-        return newest.total - previous.total
+        const computed = newest.total - previous.total
+        if (computed !== 0) return computed
       }
-      return null
+
+      return findLastNonZeroChange(list)
     })()
 
     return {
