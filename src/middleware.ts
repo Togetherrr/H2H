@@ -4,8 +4,15 @@ import { updateSession } from "@/lib/supabase/middleware"
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Only protect /account and /admin with Supabase session checks (avoid calling Supabase for every route).
-  if (pathname.startsWith("/account") || pathname.startsWith("/admin")) {
+  if (request.method !== "GET") {
+    return NextResponse.next()
+  }
+
+  if (
+    pathname.startsWith("/account") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/api/admin/")
+  ) {
     return updateSession(request)
   }
 
@@ -13,5 +20,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/account/:path*", "/admin/:path*"],
+  matcher: ["/account/:path*", "/admin/:path*", "/api/admin/:path*"],
 }

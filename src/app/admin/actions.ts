@@ -117,9 +117,38 @@ export async function uploadImage(formData: FormData) {
   }
 }
 
-export async function getAdminTabData(tab: string) {
-  const { profile } = await requireAdmin()
+type AdminTabUser = {
+  id: string
+  email?: string | null
+}
+
+export async function getAdminTabData(tab: string, authenticatedUser: AdminTabUser) {
+  const user = authenticatedUser
   const supabase = createServiceClient()
+
+  if (!user?.id) {
+    return { error: "Unauthorized" }
+  }
+
+  let { data: profile } = await supabase
+    .from("profiles")
+    .select("id, email, full_name, avatar_url, role")
+    .eq("id", user.id)
+    .maybeSingle()
+
+  if (!profile && user.email) {
+    const { data: profileByEmail } = await supabase
+      .from("profiles")
+      .select("id, email, full_name, avatar_url, role")
+      .eq("email", user.email)
+      .maybeSingle()
+
+    profile = profileByEmail
+  }
+
+  if (profile?.role !== "admin") {
+    return { error: "Admin only" }
+  }
 
   if (tab === "sync") {
     const [{ data: settings, error: settingsError }, { count: timelineCount, error: timelineError }] = await Promise.all([

@@ -1,8 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useState } from "react"
 import dynamic from "next/dynamic"
-import { getAdminTabData } from "@/app/admin/actions"
 import { Sidebar } from "@/components/admin/Sidebar"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Sparkles, Users, Link as LinkIcon, Database, Palette, BadgeCheck } from "lucide-react"
@@ -11,12 +10,12 @@ import { MessageSquare } from "lucide-react"
 import type { NoticeRow } from "@/lib/notices"
 
 type AdminStats = {
-  users: number
-  members: number
-  socials: number
-  timeline: number
-  themes: number
-  feedbacks: number
+  users?: number
+  members?: number
+  socials?: number
+  timeline?: number
+  themes?: number
+  feedbacks?: number
 }
 
 type AdminTabData = {
@@ -36,6 +35,7 @@ type AdminTabData = {
 
 type AdminDashboardProps = {
   initialTab: string
+  initialData: AdminTabData & { error?: string }
   profile: any
 }
 
@@ -166,59 +166,15 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
   )
 }
 
-export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
-  const [tab, setTab] = useState(() => normalizeTab(initialTab))
-  const [dataByTab, setDataByTab] = useState<Record<string, AdminTabData>>({})
-  const [loadingTabs, setLoadingTabs] = useState<Record<string, boolean>>({})
-  const [errors, setErrors] = useState<Record<string, string | undefined>>({})
-
-  const loadTab = useCallback(async (targetTab: string, force = false) => {
-    const normalizedTab = normalizeTab(targetTab)
-
-    if (!force && dataByTab[normalizedTab]) {
-      return
-    }
-
-    setLoadingTabs((current) => ({ ...current, [normalizedTab]: true }))
-    setErrors((current) => ({ ...current, [normalizedTab]: undefined }))
-
-    const result = await getAdminTabData(normalizedTab) as AdminTabData & { error?: string }
-
-    if (result?.error) {
-      setErrors((current) => ({ ...current, [normalizedTab]: result.error }))
-    } else {
-      setDataByTab((current) => ({ ...current, [normalizedTab]: result }))
-    }
-
-    setLoadingTabs((current) => ({ ...current, [normalizedTab]: false }))
-  }, [dataByTab])
-
-  useEffect(() => {
-    loadTab(tab)
-  }, [loadTab, tab])
-
-  useEffect(() => {
-    const handlePopState = () => {
-      const params = new URLSearchParams(window.location.search)
-      setTab(normalizeTab(params.get("tab") || "overview"))
-    }
-
-    window.addEventListener("popstate", handlePopState)
-    return () => window.removeEventListener("popstate", handlePopState)
-  }, [])
-
-  const handleTabChange = (nextTab: string) => {
-    const normalizedTab = normalizeTab(nextTab)
-    setTab(normalizedTab)
-
-    const url = new URL(window.location.href)
-    if (normalizedTab === "overview") {
-      url.searchParams.delete("tab")
-    } else {
-      url.searchParams.set("tab", normalizedTab)
-    }
-    window.history.pushState(null, "", `${url.pathname}${url.search}${url.hash}`)
-  }
+export function AdminDashboard({ initialTab, initialData, profile }: AdminDashboardProps) {
+  const normalizedInitialTab = normalizeTab(initialTab)
+  const [tab] = useState(() => normalizedInitialTab)
+  const [dataByTab] = useState<Record<string, AdminTabData>>(() => ({
+    [normalizedInitialTab]: initialData,
+  }))
+  const [errors] = useState<Record<string, string | undefined>>(() => ({
+    [normalizedInitialTab]: initialData?.error,
+  }))
 
   const renderOverview = () => {
     const overviewData = dataByTab.overview
@@ -345,9 +301,8 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
-              <button
-                type="button"
-                onClick={() => handleTabChange("users")}
+              <a
+                href="/admin?tab=users"
                 className="group flex items-center justify-between rounded-xl border border-slate-800 bg-slate-800/50 p-4 text-left transition-colors hover:bg-slate-800 hover:border-slate-700"
               >
                 <div>
@@ -355,10 +310,9 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
                   <p className="text-sm text-slate-400">Promote or revoke admin access</p>
                 </div>
                 <Users className="size-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTabChange("members")}
+              </a>
+              <a
+                href="/admin?tab=members"
                 className="group flex items-center justify-between rounded-xl border border-slate-800 bg-slate-800/50 p-4 text-left transition-colors hover:bg-slate-800 hover:border-slate-700"
               >
                 <div>
@@ -366,10 +320,9 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
                   <p className="text-sm text-slate-400">Add new members or update profiles</p>
                 </div>
                 <Users className="size-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTabChange("socials")}
+              </a>
+              <a
+                href="/admin?tab=socials"
                 className="group flex items-center justify-between rounded-xl border border-slate-800 bg-slate-800/50 p-4 text-left transition-colors hover:bg-slate-800 hover:border-slate-700"
               >
                 <div>
@@ -377,10 +330,9 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
                   <p className="text-sm text-slate-400">Add new channels like YouTube or TikTok</p>
                 </div>
                 <LinkIcon className="size-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTabChange("media")}
+              </a>
+              <a
+                href="/admin?tab=media"
                 className="group flex items-center justify-between rounded-xl border border-slate-800 bg-slate-800/50 p-4 text-left transition-colors hover:bg-slate-800 hover:border-slate-700"
               >
                 <div>
@@ -388,10 +340,9 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
                   <p className="text-sm text-slate-400">Upload and organize images in your library</p>
                 </div>
                 <ImageIcon className="size-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTabChange("comeback")}
+              </a>
+              <a
+                href="/admin?tab=comeback"
                 className="group flex items-center justify-between rounded-xl border border-slate-800 bg-slate-800/50 p-4 text-left transition-colors hover:bg-slate-800 hover:border-slate-700"
               >
                 <div>
@@ -399,10 +350,9 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
                   <p className="text-sm text-slate-400">Set the album title, countdown, and release links</p>
                 </div>
                 <BadgeCheck className="size-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTabChange("feedback")}
+              </a>
+              <a
+                href="/admin?tab=feedback"
                 className="group flex items-center justify-between rounded-xl border border-slate-800 bg-slate-800/50 p-4 text-left transition-colors hover:bg-slate-800 hover:border-slate-700"
               >
                 <div>
@@ -410,7 +360,7 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
                   <p className="text-sm text-slate-400">Review user messages and mark their status</p>
                 </div>
                 <MessageSquare className="size-4 text-slate-500 group-hover:text-slate-300 transition-colors" />
-              </button>
+              </a>
             </CardContent>
           </Card>
 
@@ -440,13 +390,12 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
                 <p className="text-sm text-slate-400">
                   You can now manage these core settings directly within the dashboard.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => handleTabChange("settings")}
+                <a
+                  href="/admin?tab=settings"
                   className="mt-3 inline-flex items-center text-sm font-medium text-sky-400 hover:text-sky-300"
                 >
                   Go to Settings <LinkIcon className="ml-1 size-3" />
-                </button>
+                </a>
               </div>
             </CardContent>
           </Card>
@@ -457,7 +406,7 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
 
   const renderContent = () => {
     if (errors[tab]) {
-      return <ErrorState message={errors[tab] || "Unknown error"} onRetry={() => loadTab(tab, true)} />
+      return <ErrorState message={errors[tab] || "Unknown error"} onRetry={() => window.location.reload()} />
     }
 
     switch (tab) {
@@ -560,7 +509,7 @@ export function AdminDashboard({ initialTab, profile }: AdminDashboardProps) {
 
   return (
     <main className="flex min-h-screen bg-[#0A0A0A]">
-      <Sidebar currentTab={tab} onTabChange={handleTabChange} />
+      <Sidebar currentTab={tab} />
       <div className="flex-1 pl-64">
         <div className="mx-auto max-w-6xl px-8 py-12">
           <div key={tab} className="animate-in fade-in duration-300">
