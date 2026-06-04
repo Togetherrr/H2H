@@ -1,0 +1,344 @@
+name: AI PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - master
+      - develop
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: ai-pr-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  ai-review:
+    name: Groq AI Review
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Get changed files
+        id: diff
+        run: |
+          git fetch origin ${{ github.base_ref }}
+
+          git diff --name-only origin/${{ github.base_ref }}...HEAD \
+            -- . \
+            ':(exclude)bun.lockb' \
+            ':(exclude)package-lock.json' \
+            ':(exclude)yarn.lock' \
+            ':(exclude)pnpm-lock.yaml' \
+            ':(exclude).next/**' \
+            ':(exclude)dist/**' \
+            ':(exclude)build/**' \
+            ':(exclude)coverage/**' \
+            > changed-files.txt
+
+          if [ ! -s changed-files.txt ]; then
+            echo "empty=true" >> $GITHUB_OUTPUT
+          else
+            echo "empty=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Review changed files with Groq
+        if: steps.diff.outputs.empty != 'true'
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          node <<'EOF'
+          const fs = require("fs");
+          const { spawnSync } = require("child_process");
+
+          const apiKey = process.env.GROQ_API_KEY;
+          const baseRef = process.env.BASE_REF;
+
+          const MAX_FILE_DIFF_CHARS = 50000;
+          const MAX_FILES = 20;
+          const CONCURRENCY = 3;
+
+          if (!apiKey) {
+            fs.writeFileSync(
+              "ai-review.md",
+              "## 🤖 Groq AI Review\n\nAI Review skipped: missing GROQ_API_KEY."
+            );
+            process.exit(0);
+          }
+
+          // FIX 1: Validate baseRef to prevent shell injection
+          if (!/^[\w\-\/\.]+$/.test(baseRef)) {
+            fs.writeFileSync(
+              "ai-review.md",
+              "## 🤖 Groq AI Review\n\nAI Review skipped: invalid BASE_REF."
+            );
+            process.exit(0);
+          }
+
+          const allFiles = fs
+            .readFileSync("changed-files.txt", "utf8")
+            .split("\n")
+            .map((f) => f.trim())
+            .filter(Boolean);
+
+          const supportedFiles = allFiles.filter((file) =>
+            /\.(ts|tsx|js|jsx|py|sql|json|yml|yaml|md)$/.test(file)
+          );
+
+          const files = supportedFiles.slice(0, MAX_FILES);
+
+          const unsupportedFiles = allFiles.length - supportedFiles.length;
+
+          const overLimitFiles =
+            supportedFiles.length > MAX_FILES
+              ? supportedFiles.length - MAX_FILES
+              : 0;
+
+          if (files.length === 0) {
+            fs.writeFileSync(
+              "ai-review.md",
+              "## 🤖 Groq AI Review\n\nKhông có file code phù hợp để review."
+            );
+            process.exit(0);
+          }
+
+          const promptBase = `
+          You are a Senior Software Engineer and Security Reviewer.
+
+          Review this Pull Request file diff as a production readiness review.
+
+          Focus only on actionable issues that may affect production.
+
+          HIGH severity:
+          - Security vulnerabilities
+          - Authentication or authorization issues
+          - Secret leakage
+          - Data loss risks
+          - Runtime crashes
+          - SQL injection, XSS, SSRF, command injection
+          - Unsafe file upload or unsafe file path handling
+
+          MEDIUM severity:
+          - Missing input validation
+          - Incorrect error handling
+          - Performance bottlenecks
+          - Race conditions
+          - Memory leaks
+          - API misuse
+          - Database query issues
+          - Cache invalidation issues
+
+          LOW severity:
+          - Maintainability issues only if they may cause future bugs
+
+          Ignore:
+          - Formatting
+          - Naming style
+          - Minor refactoring
+          - Personal coding preferences
+          - Issues unrelated to the changed code
+
+          Rules:
+          - Return the review in Vietnamese.
+          - Use Markdown.
+          - Be concise.
+          - Do not invent issues.
+          - If no important issue is found, say exactly:
+            "Không phát hiện vấn đề nghiêm trọng."
+          - For each issue, use this format:
+
+          ### [High | Medium | Low] Title
+          - Location:
+          - Issue:
+          - Risk:
+          - Suggested fix:
+          `;
+
+          async function reviewFile(file) {
+            const result = spawnSync(
+              "git",
+              ["diff", `origin/${baseRef}...HEAD`, "--", file],
+              {
+                encoding: "utf8",
+                maxBuffer: 1024 * 1024 * 10,
+              }
+            );
+
+            if (result.status !== 0) {
+              return `### ${file}\n\nKhông thể lấy diff cho file này.\n`;
+            }
+
+            const diff = result.stdout;
+
+            if (!diff.trim()) {
+              return `### ${file}\n\nKhông có diff để review.\n`;
+            }
+
+            const clippedDiff =
+              diff.length > MAX_FILE_DIFF_CHARS
+                ? diff.slice(0, MAX_FILE_DIFF_CHARS) +
+                  "\n\n[Diff của file này đã bị cắt vì quá dài.]"
+                : diff;
+
+            const prompt = `
+          ${promptBase}
+
+          File path:
+          ${file}
+
+          File diff:
+          ${clippedDiff}
+            `;
+
+            try {
+              const res = await fetch(
+                "https://api.groq.com/openai/v1/chat/completions",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${apiKey}`,
+                  },
+                  body: JSON.stringify({
+                    model: "llama-3.3-70b-versatile",
+                    messages: [{ role: "user", content: prompt }],
+                    temperature: 0.2,
+                    max_tokens: 2048,
+                  }),
+                }
+              );
+
+              if (!res.ok) {
+                const errorText = await res.text();
+                return `### ${file}\n\nAI Review skipped. Groq API error ${res.status}\n\n\`\`\`\n${errorText.slice(0, 500)}\n\`\`\`\n`;
+              }
+
+              const data = await res.json();
+              const text =
+                data?.choices?.[0]?.message?.content?.trim() ||
+                "Không có phản hồi từ Groq.";
+
+              return `### ${file}\n\n${text}\n`;
+            } catch (error) {
+              return `### ${file}\n\nAI Review skipped.\n\nReason: ${error.message}\n`;
+            }
+          }
+
+          async function main() {
+            const results = [];
+
+            for (let i = 0; i < files.length; i += CONCURRENCY) {
+              const batch = files.slice(i, i + CONCURRENCY);
+
+              const batchResults = await Promise.allSettled(
+                batch.map((file) => reviewFile(file))
+              );
+
+              for (const result of batchResults) {
+                if (result.status === "fulfilled") {
+                  results.push(result.value);
+                } else {
+                  results.push(
+                    `### Unknown File\n\nReview thất bại: ${result.reason}`
+                  );
+                }
+              }
+            }
+
+            let skippedNote = "";
+
+            if (unsupportedFiles > 0) {
+              skippedNote += `\n> ${unsupportedFiles} file không thuộc loại file được hỗ trợ review.`;
+            }
+
+            if (overLimitFiles > 0) {
+              skippedNote += `\n> ${overLimitFiles} file không được review do vượt giới hạn ${MAX_FILES} file.`;
+            }
+
+            fs.writeFileSync(
+              "ai-review.md",
+              `## 🤖 Groq AI Review\n\n${results.join(
+                "\n---\n\n"
+              )}${skippedNote}\n\n---\n_Review tự động bằng Groq + llama-3.3-70b-versatile. Review theo từng file._`
+            );
+          }
+
+          main();
+          EOF
+
+      - name: Create empty review message
+        if: steps.diff.outputs.empty == 'true'
+        run: |
+          echo "## 🤖 Groq AI Review" > ai-review.md
+          echo "" >> ai-review.md
+          echo "Không có thay đổi code phù hợp để review." >> ai-review.md
+
+      - name: Comment or update review on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+            const body = fs.readFileSync("ai-review.md", "utf8");
+
+            const marker = "<!-- ai-pr-review-groq -->";
+            const finalBody = `${marker}\n${body}`;
+
+            // FIX 2: Paginate through all comments to find the existing bot comment
+            let existingComment = null;
+            let page = 1;
+
+            while (true) {
+              const comments = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                per_page: 100,
+                page,
+              });
+
+              const found = comments.data.find(
+                (comment) => comment.body && comment.body.includes(marker)
+              );
+
+              if (found) {
+                existingComment = found;
+                break;
+              }
+
+              // No more pages
+              if (comments.data.length < 100) break;
+
+              page++;
+            }
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: finalBody,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: finalBody,
+              });
+            }
