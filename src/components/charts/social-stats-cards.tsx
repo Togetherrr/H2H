@@ -32,7 +32,7 @@ function MetricCard({
   const hasChange = typeof change === "number"
 
   return (
-    <div className="group flex h-[200px] w-full flex-col justify-between rounded-[2.5rem] border border-white bg-white/50 p-8 shadow-xl backdrop-blur-xl transition-all hover:bg-white/60 hover:scale-[1.01]">
+    <div className="group flex min-h-[200px] w-full flex-col justify-between rounded-[2.5rem] border border-white bg-white/50 p-8 shadow-xl backdrop-blur-xl transition-all hover:bg-white/60 hover:scale-[1.01]">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-4">
           <div
@@ -64,8 +64,10 @@ function MetricCard({
         ) : null}
       </div>
 
-      <div className="text-5xl font-black tracking-tighter tabular-nums text-black drop-shadow-sm">
-        {value?.toLocaleString("en-US") ?? "—"}
+      <div className="text-5xl font-black tracking-tighter tabular-nums text-black drop-shadow-sm" title={value != null ? value.toLocaleString("en-US") : undefined}>
+        {value != null 
+          ? (value > 10000 && value % 10000 === 0 ? `~${value.toLocaleString("en-US")}` : value.toLocaleString("en-US")) 
+          : "—"}
       </div>
     </div>
   )
