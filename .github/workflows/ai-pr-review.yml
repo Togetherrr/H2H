@@ -50,6 +50,7 @@ jobs:
             ':(exclude)dist/**' \
             ':(exclude)build/**' \
             ':(exclude)coverage/**' \
+            ':(exclude).github/**' \
             > changed-files.txt
 
           if [ ! -s changed-files.txt ]; then
@@ -64,7 +65,7 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           BASE_REF: ${{ github.base_ref }}
         run: |
-          node <<'EOF'
+          node - << 'NODEJS'
           const fs = require("fs");
           const { spawnSync } = require("child_process");
 
@@ -77,19 +78,12 @@ jobs:
           const BATCH_DELAY_MS = 5000;
 
           if (!apiKey) {
-            fs.writeFileSync(
-              "ai-review.md",
-              "## 🤖 Groq AI Review\n\nAI Review skipped: missing GROQ_API_KEY."
-            );
+            fs.writeFileSync("ai-review.md", "## 🤖 Groq AI Review\n\nAI Review skipped: missing GROQ_API_KEY.");
             process.exit(0);
           }
 
-          // FIX 1: Validate baseRef to prevent shell injection
           if (!/^[\w\-\/\.]+$/.test(baseRef)) {
-            fs.writeFileSync(
-              "ai-review.md",
-              "## 🤖 Groq AI Review\n\nAI Review skipped: invalid BASE_REF."
-            );
+            fs.writeFileSync("ai-review.md", "## 🤖 Groq AI Review\n\nAI Review skipped: invalid BASE_REF.");
             process.exit(0);
           }
 
@@ -104,142 +98,104 @@ jobs:
           );
 
           const files = supportedFiles.slice(0, MAX_FILES);
-
           const unsupportedFiles = allFiles.length - supportedFiles.length;
-
-          const overLimitFiles =
-            supportedFiles.length > MAX_FILES
-              ? supportedFiles.length - MAX_FILES
-              : 0;
+          const overLimitFiles = supportedFiles.length > MAX_FILES ? supportedFiles.length - MAX_FILES : 0;
 
           if (files.length === 0) {
-            fs.writeFileSync(
-              "ai-review.md",
-              "## 🤖 Groq AI Review\n\nKhông có file code phù hợp để review."
-            );
+            fs.writeFileSync("ai-review.md", "## 🤖 Groq AI Review\n\nKhông có file code phù hợp để review.");
             process.exit(0);
           }
 
-          const promptBase = `
-          You are a Senior Software Engineer and Security Reviewer.
-
-          Review this Pull Request file diff as a production readiness review.
-
-          Focus only on actionable issues that may affect production.
-
-          HIGH severity:
-          - Security vulnerabilities
-          - Authentication or authorization issues
-          - Secret leakage
-          - Data loss risks
-          - Runtime crashes
-          - SQL injection, XSS, SSRF, command injection
-          - Unsafe file upload or unsafe file path handling
-
-          MEDIUM severity:
-          - Missing input validation
-          - Incorrect error handling
-          - Performance bottlenecks
-          - Race conditions
-          - Memory leaks
-          - API misuse
-          - Database query issues
-          - Cache invalidation issues
-
-          LOW severity:
-          - Maintainability issues only if they may cause future bugs
-
-          Ignore:
-          - Formatting
-          - Naming style
-          - Minor refactoring
-          - Personal coding preferences
-          - Issues unrelated to the changed code
-
-          Rules:
-          - Return the review in Vietnamese.
-          - Use Markdown.
-          - Be concise.
-          - Do not invent issues.
-          - If no important issue is found, say exactly:
-            "Không phát hiện vấn đề nghiêm trọng."
-          - For each issue, use this format:
-
-          ### [High | Medium | Low] Title
-          - Location:
-          - Issue:
-          - Risk:
-          - Suggested fix:
-          `;
+          const PROMPT_SYSTEM = [
+            "You are a Senior Software Engineer doing a production readiness review.",
+            "",
+            "Review ONLY the changed lines in the diff (lines starting with + or -).",
+            "Do NOT comment on code outside the diff.",
+            "Do NOT invent issues. Only flag what you can clearly see in the diff.",
+            "Only flag issues you are highly confident about.",
+            "",
+            "Severity levels:",
+            "- HIGH: Security vulnerabilities, secret leakage, SQL injection, XSS, SSRF, command injection, auth bypass, data loss, runtime crash",
+            "- MEDIUM: Missing input validation on user-supplied data, incorrect error handling that swallows exceptions, clear performance bottleneck, race condition, memory leak",
+            "- LOW: Maintainability issue that will likely cause a future bug",
+            "",
+            "Ignore completely:",
+            "- Code style, formatting, naming",
+            "- Refactoring suggestions",
+            "- Hypothetical issues not visible in the diff",
+            "- Issues already handled elsewhere in the file",
+            "",
+            "If no issue is found, respond with exactly the word: LGTM",
+            "",
+            "If issues are found, use this format for each:",
+            "### 🔴 High: Title",
+            "### 🟡 Medium: Title",
+            "### 🔵 Low: Title",
+            "",
+            "Each issue must include:",
+            "- Location: file and line number if available",
+            "- Issue: what is wrong",
+            "- Risk: what can go wrong",
+            "- Fix: concrete suggestion",
+            "",
+            "Respond in Vietnamese.",
+          ].join("\n");
 
           async function reviewFile(file) {
             const result = spawnSync(
               "git",
-              ["diff", `origin/${baseRef}...HEAD`, "--", file],
-              {
-                encoding: "utf8",
-                maxBuffer: 1024 * 1024 * 10,
-              }
+              ["diff", "origin/" + baseRef + "...HEAD", "--", file],
+              { encoding: "utf8", maxBuffer: 1024 * 1024 * 10 }
             );
 
-            if (result.status !== 0) {
-              return `### ${file}\n\nKhông thể lấy diff cho file này.\n`;
-            }
+            if (result.status !== 0) return null;
 
             const diff = result.stdout;
+            if (!diff.trim()) return null;
 
-            if (!diff.trim()) {
-              return `### ${file}\n\nKhông có diff để review.\n`;
-            }
+            const clippedDiff = diff.length > MAX_FILE_DIFF_CHARS
+              ? diff.slice(0, MAX_FILE_DIFF_CHARS) + "\n\n[Diff bị cắt vì quá dài.]"
+              : diff;
 
-            const clippedDiff =
-              diff.length > MAX_FILE_DIFF_CHARS
-                ? diff.slice(0, MAX_FILE_DIFF_CHARS) +
-                  "\n\n[Diff của file này đã bị cắt vì quá dài.]"
-                : diff;
-
-            const prompt = `
-          ${promptBase}
-
-          File path:
-          ${file}
-
-          File diff:
-          ${clippedDiff}
-            `;
+            const userMessage = "File: " + file + "\n\nDiff:\n" + clippedDiff;
 
             try {
-              const res = await fetch(
-                "https://api.groq.com/openai/v1/chat/completions",
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${apiKey}`,
-                  },
-                  body: JSON.stringify({
-                    model: "meta-llama/llama-4-scout-17b-16e-instruct",
-                    messages: [{ role: "user", content: prompt }],
-                    temperature: 0.2,
-                    max_tokens: 2048,
-                  }),
-                }
-              );
+              const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": "Bearer " + apiKey,
+                },
+                body: JSON.stringify({
+                  model: "meta-llama/llama-4-scout-17b-16e-instruct",
+                  messages: [
+                    { role: "system", content: PROMPT_SYSTEM },
+                    { role: "user", content: userMessage },
+                  ],
+                  temperature: 0.1,
+                  max_tokens: 2048,
+                }),
+              });
 
               if (!res.ok) {
                 const errorText = await res.text();
-                return `### ${file}\n\nAI Review skipped. Groq API error ${res.status}\n\n\`\`\`\n${errorText.slice(0, 500)}\n\`\`\`\n`;
+                return { file, text: null, error: "Groq API error " + res.status };
               }
 
               const data = await res.json();
-              const text =
-                data?.choices?.[0]?.message?.content?.trim() ||
-                "Không có phản hồi từ Groq.";
+              const text = (data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || "").trim();
 
-              return `### ${file}\n\n${text}\n`;
+              if (!text || text === "LGTM") return null;
+
+              return { file, text };
             } catch (error) {
-              return `### ${file}\n\nAI Review skipped.\n\nReason: ${error.message}\n`;
+              return null;
             }
+          }
+
+          function parseIssueTitles(commentBody) {
+            const matches = commentBody.match(/### [🔴🟡🔵].+/g) || [];
+            return matches.map((m) => m.trim());
           }
 
           async function main() {
@@ -253,60 +209,94 @@ jobs:
               );
 
               for (const result of batchResults) {
-                if (result.status === "fulfilled") {
+                if (result.status === "fulfilled" && result.value) {
                   results.push(result.value);
-                } else {
-                  results.push(
-                    `### Unknown File\n\nReview thất bại: ${result.reason}`
-                  );
                 }
               }
 
-              // Delay giữa các batch để tránh Groq rate limit
               if (i + CONCURRENCY < files.length) {
                 await new Promise((r) => setTimeout(r, BATCH_DELAY_MS));
               }
             }
 
+            let highCount = 0;
+            let mediumCount = 0;
+            let lowCount = 0;
+
+            for (const r of results) {
+              if (r.text) {
+                highCount += (r.text.match(/### 🔴/g) || []).length;
+                mediumCount += (r.text.match(/### 🟡/g) || []).length;
+                lowCount += (r.text.match(/### 🔵/g) || []).length;
+              }
+            }
+
+            // Lấy danh sách issue titles của lần review này
+            const currentIssues = results
+              .filter((r) => r.text)
+              .flatMap((r) => parseIssueTitles(r.text));
+
+            // Ghi ra file để bước github-script đọc
+            fs.writeFileSync("current-issues.json", JSON.stringify(currentIssues));
+
+            const timestamp = new Date().toISOString().replace("T", " ").slice(0, 16) + " UTC";
+
+            let body = "## 🤖 Groq AI Review\n\n";
+
+            if (results.length === 0) {
+              body += "✅ Không phát hiện vấn đề nghiêm trọng.\n";
+            } else {
+              const summaryParts = [];
+              if (highCount > 0) summaryParts.push("🔴 " + highCount + " High");
+              if (mediumCount > 0) summaryParts.push("🟡 " + mediumCount + " Medium");
+              if (lowCount > 0) summaryParts.push("🔵 " + lowCount + " Low");
+              body += "**Tổng:** " + summaryParts.join(" · ") + "\n\n---\n\n";
+
+              for (const r of results) {
+                if (r.error) {
+                  body += "#### `" + r.file + "`\n\n> ⚠️ " + r.error + "\n\n---\n\n";
+                } else {
+                  body += "#### `" + r.file + "`\n\n" + r.text + "\n\n---\n\n";
+                }
+              }
+            }
+
             let skippedNote = "";
+            if (unsupportedFiles > 0) skippedNote += "\n> " + unsupportedFiles + " file không thuộc loại được hỗ trợ.";
+            if (overLimitFiles > 0) skippedNote += "\n> " + overLimitFiles + " file bị bỏ qua do vượt giới hạn " + MAX_FILES + " file.";
 
-            if (unsupportedFiles > 0) {
-              skippedNote += `\n> ${unsupportedFiles} file không thuộc loại file được hỗ trợ review.`;
-            }
+            body += skippedNote + "\n_🕐 " + timestamp + " · Groq + llama-4-scout-17b_";
 
-            if (overLimitFiles > 0) {
-              skippedNote += `\n> ${overLimitFiles} file không được review do vượt giới hạn ${MAX_FILES} file.`;
-            }
-
-            fs.writeFileSync(
-              "ai-review.md",
-              `## 🤖 Groq AI Review\n\n${results.join(
-                "\n---\n\n"
-              )}${skippedNote}\n\n---\n_Review tự động bằng Groq + meta-llama/llama-4-scout-17b-16e-instruct. Review theo từng file._`
-            );
+            fs.writeFileSync("ai-review.md", body);
           }
 
           main();
-          EOF
+          NODEJS
 
       - name: Create empty review message
         if: steps.diff.outputs.empty == 'true'
         run: |
           echo "## 🤖 Groq AI Review" > ai-review.md
           echo "" >> ai-review.md
-          echo "Không có thay đổi code phù hợp để review." >> ai-review.md
+          echo "✅ Không có thay đổi code phù hợp để review." >> ai-review.md
+          echo "[]" > current-issues.json
 
       - name: Comment or update review on PR
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require("fs");
-            const body = fs.readFileSync("ai-review.md", "utf8");
+            let body = fs.readFileSync("ai-review.md", "utf8");
 
             const marker = "<!-- ai-pr-review-groq -->";
-            const finalBody = `${marker}\n${body}`;
 
-            // FIX 2: Paginate through all comments to find the existing bot comment
+            // Đọc issue titles lần này
+            let currentIssues = [];
+            try {
+              currentIssues = JSON.parse(fs.readFileSync("current-issues.json", "utf8"));
+            } catch (e) {}
+
+            // Tìm comment cũ (lần review trước)
             let existingComment = null;
             let page = 1;
 
@@ -328,11 +318,43 @@ jobs:
                 break;
               }
 
-              // No more pages
               if (comments.data.length < 100) break;
-
               page++;
             }
+
+            // So sánh với lần review trước để tính issue đã fix
+            if (existingComment) {
+              const prevBody = existingComment.body || "";
+              const prevIssues = (prevBody.match(/### [🔴🟡🔵].+/g) || []).map((m) => m.trim());
+
+              if (prevIssues.length > 0) {
+                const fixedIssues = prevIssues.filter((issue) => !currentIssues.includes(issue));
+                const newIssues = currentIssues.filter((issue) => !prevIssues.includes(issue));
+
+                if (fixedIssues.length > 0 || newIssues.length > 0) {
+                  let progressNote = "\n\n### 📊 So với lần review trước\n";
+
+                  if (fixedIssues.length > 0) {
+                    progressNote += "\n**✅ Đã fix (" + fixedIssues.length + "):**\n";
+                    for (const issue of fixedIssues) {
+                      progressNote += "- ~~" + issue.replace(/^### /, "") + "~~\n";
+                    }
+                  }
+
+                  if (newIssues.length > 0) {
+                    progressNote += "\n**🆕 Mới phát hiện (" + newIssues.length + "):**\n";
+                    for (const issue of newIssues) {
+                      progressNote += "- " + issue.replace(/^### /, "") + "\n";
+                    }
+                  }
+
+                  // Chèn progress note vào trước timestamp ở cuối
+                  body = body.replace(/\n_🕐/, progressNote + "\n_🕐");
+                }
+              }
+            }
+
+            const finalBody = marker + "\n" + body;
 
             if (existingComment) {
               await github.rest.issues.updateComment({
