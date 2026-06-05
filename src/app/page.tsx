@@ -160,7 +160,11 @@ export default function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="fixed inset-0 z-[1000] bg-[#1a2238] bg-[url('/background.jpg')] bg-cover bg-center bg-fixed bg-no-repeat"
+            className="fixed inset-0 z-[1000] bg-cover bg-center bg-fixed bg-no-repeat"
+            style={{
+              backgroundColor: "hsl(var(--background-fallback, 222 47% 11%))",
+              backgroundImage: "var(--bg-album-art, var(--background-image, url('/background.jpg')))",
+            }}
           />
         )}
       </AnimatePresence>

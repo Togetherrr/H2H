@@ -27,7 +27,7 @@ export function LineupReveal({ onComplete, memberImages }: LineupRevealProps) {
       } else {
         setIndex(prev => prev + 1)
       }
-    }, 1300)
+    }, 1600)
     return () => clearTimeout(timer)
   }, [index, onComplete])
 
@@ -55,10 +55,10 @@ export function LineupReveal({ onComplete, memberImages }: LineupRevealProps) {
       <AnimatePresence mode="wait">
         <motion.div
           key={index}
-          initial={{ opacity: 0 }}
+          initial={false}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          exit={{ opacity: 1 }}
+          transition={{ duration: 0.01 }}
           className="relative w-full h-full grid grid-cols-2"
         >
           {/* Cạnh trái */}
@@ -68,7 +68,7 @@ export function LineupReveal({ onComplete, memberImages }: LineupRevealProps) {
               initial="initial"
               animate="animate"
               transition={transitionConfig}
-              className="absolute inset-0 bg-sky-50/40 flex items-center justify-center"
+              className="absolute inset-0 bg-sky-50/20 flex items-center justify-center"
             >
               {leftImage ? (
                 <img
@@ -77,7 +77,7 @@ export function LineupReveal({ onComplete, memberImages }: LineupRevealProps) {
                   className="absolute inset-0 w-full h-full object-cover"
                 />
               ) : null}
-              <div className="absolute inset-0 bg-white/30" />
+              <div className="absolute inset-0 bg-white/10" />
               {!leftImage ? (
                 <span className="text-sky-200/50 text-9xl font-display font-black italic select-none">
                   {current.left.tag}
@@ -104,7 +104,7 @@ export function LineupReveal({ onComplete, memberImages }: LineupRevealProps) {
               initial="initial"
               animate="animate"
               transition={transitionConfig}
-              className="absolute inset-0 bg-pink-50/40 flex items-center justify-center"
+              className="absolute inset-0 bg-pink-50/20 flex items-center justify-center"
             >
               {rightImage ? (
                 <img
@@ -113,7 +113,7 @@ export function LineupReveal({ onComplete, memberImages }: LineupRevealProps) {
                   className="absolute inset-0 w-full h-full object-cover"
                 />
               ) : null}
-              <div className="absolute inset-0 bg-white/30" />
+              <div className="absolute inset-0 bg-white/10" />
               {!rightImage ? (
                 <span className="text-pink-200/50 text-9xl font-display font-black italic select-none">
                   {current.right.tag}
@@ -149,7 +149,7 @@ export function LineupReveal({ onComplete, memberImages }: LineupRevealProps) {
           key={index}
           initial={{ width: 0 }}
           animate={{ width: "100%" }}
-          transition={{ duration: 1.0, ease: "linear" }}
+          transition={{ duration: 1.3, ease: "linear" }}
           className="h-full bg-gradient-to-r from-sky-300 to-pink-300"
         />
       </div>

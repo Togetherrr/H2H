@@ -118,8 +118,10 @@ export function ThemesManager({ initialThemes }: ThemesManagerProps) {
     }
     const assets = editFormData.config?.assets
     if (assets && assets.background_image) {
+      root.style.setProperty('--bg-album-art', `url('${assets.background_image}')`)
       root.style.setProperty('--background-image', `url('${assets.background_image}')`)
     } else {
+      root.style.removeProperty('--bg-album-art')
       root.style.removeProperty('--background-image')
     }
   }

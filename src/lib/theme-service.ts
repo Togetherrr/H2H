@@ -27,29 +27,34 @@ export interface Theme {
 }
 
 export async function getActiveTheme(): Promise<Theme | null> {
-  const supabase = await createClient()
-  
-  const { data, error } = await (supabase as any)
-    .from("themes")
-    .select("*")
-    .eq("is_active", true)
-    .maybeSingle()
+  try {
+    const supabase = await createClient()
 
-  if (error || !data) {
-    if (error) console.error("Error fetching active theme:", error)
+    const { data, error } = await (supabase as any)
+      .from("themes")
+      .select("*")
+      .eq("is_active", true)
+      .maybeSingle()
+
+    if (error || !data) {
+      return null
+    }
+
+    return data as unknown as Theme
+  } catch {
     return null
   }
-
-  return data as unknown as Theme
 }
 
 export function generateThemeStyle(theme: Theme | null): string {
   if (!theme || !theme.config || !theme.config.colors) return ""
 
   const { colors, assets } = theme.config
-  
-  const bgImageVar = assets?.background_image ? `--background-image: url('${assets.background_image}');` : '';
-  
+
+  const bgImageVar = assets?.background_image
+    ? `--bg-album-art: url('${assets.background_image}'); --background-image: url('${assets.background_image}');`
+    : ""
+
   return `
     :root {
       --primary: ${colors.primary};

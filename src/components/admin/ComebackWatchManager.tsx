@@ -24,6 +24,7 @@ type ComebackWatchSettings = {
   streamUrl: string
   sourceLabel: string
   sourceUrl: string
+  themeImageUrl: string
   note: string
 }
 
@@ -111,6 +112,7 @@ function normalizeInitialSettings(initialSettings: any): ComebackWatchSettings {
     streamUrl: typeof comeback.streamUrl === "string" ? comeback.streamUrl.trim() : "",
     sourceLabel: typeof comeback.source?.label === "string" && comeback.source.label.trim() ? comeback.source.label.trim() : "Official announcement",
     sourceUrl: typeof comeback.source?.href === "string" ? comeback.source.href.trim() : "https://www.youtube.com",
+    themeImageUrl: typeof comeback.themeImageUrl === "string" ? comeback.themeImageUrl.trim() : "",
     note: typeof comeback.note === "string" ? comeback.note.trim() : "",
   }
 }
@@ -120,6 +122,12 @@ function buildMetadataPayload(initialSettings: any, comebackWatch: Record<string
     ...(initialSettings?.metadata || {}),
     comeback_watch: comebackWatch,
   }
+}
+
+function buildBackgroundImage(value: string) {
+  const trimmed = value.trim()
+  if (!/^https?:\/\//i.test(trimmed)) return null
+  return `url("${trimmed.replace(/"/g, '\\"')}")`
 }
 
 export function ComebackWatchManager({ initialSettings }: { initialSettings: any }) {
@@ -146,6 +154,8 @@ export function ComebackWatchManager({ initialSettings }: { initialSettings: any
     })} ${formData.timeZone}`
   }, [formData.timeZone, releaseAtPreview])
 
+  const themeBackgroundImage = useMemo(() => buildBackgroundImage(formData.themeImageUrl), [formData.themeImageUrl])
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     setIsSaving(true)
@@ -165,6 +175,7 @@ export function ComebackWatchManager({ initialSettings }: { initialSettings: any
           streamUrl: formData.streamUrl.trim(),
           sourceLabel: formData.sourceLabel.trim(),
           sourceUrl: formData.sourceUrl.trim(),
+          themeImageUrl: formData.themeImageUrl.trim(),
         }),
       }
 
@@ -326,6 +337,16 @@ export function ComebackWatchManager({ initialSettings }: { initialSettings: any
               </div>
 
               <div className="space-y-2 md:col-span-2">
+                <Label className="text-sm font-medium text-slate-300">Theme Background Image URL (Optional)</Label>
+                <Input
+                  value={formData.themeImageUrl}
+                  onChange={(event) => setFormData((current) => ({ ...current, themeImageUrl: event.target.value }))}
+                  className="h-11 rounded-xl border-slate-700 bg-slate-950 text-white placeholder:text-slate-600"
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
                 <Label className="text-sm font-medium text-slate-300">Note</Label>
                 <Textarea
                   value={formData.note}
@@ -354,22 +375,53 @@ export function ComebackWatchManager({ initialSettings }: { initialSettings: any
                 <p className="mt-1 text-xs text-slate-500">Saved as ISO with timezone attached</p>
               </div>
 
+              <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950">
+                <div className="relative aspect-[16/10]">
+                  {themeBackgroundImage ? (
+                    <div
+                      className="absolute inset-0 bg-cover bg-center"
+                      style={{ backgroundImage: themeBackgroundImage }}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-800" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/30 to-transparent" />
+                  <div className="absolute inset-0 flex items-end p-4">
+                    <div className="w-full rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
+                      <p className="text-[10px] uppercase tracking-[0.35em] text-sky-300">Theme background</p>
+                      <p className="mt-2 text-sm font-semibold text-white">
+                        {formData.themeImageUrl || "No background image yet"}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-200/70">
+                        When set, the comeback card on the homepage uses this image as an extra background layer.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4 space-y-3">
                 <div className="flex items-center gap-2 text-sm text-slate-300">
                   <ShoppingCart className="size-4 text-sky-400" />
                   <span>{formData.shoppingLabel || "Pre-order"}</span>
                 </div>
-                <div className="truncate text-xs text-slate-500">{formData.shoppingUrl || "No shopping URL yet"}</div>
+                <div className="max-h-20 overflow-y-auto rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2 text-xs leading-relaxed text-slate-500 [overflow-wrap:anywhere] break-words">
+                  {formData.shoppingUrl || "No shopping URL yet"}
+                </div>
                 <div className="flex items-center gap-2 text-sm text-slate-300">
                   <Youtube className="size-4 text-rose-400" />
                   <span>{formData.streamLabel || "Stream"}</span>
                 </div>
-                <div className="truncate text-xs text-slate-500">{formData.streamUrl || "No stream URL yet"}</div>
+                <div className="max-h-20 overflow-y-auto rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2 text-xs leading-relaxed text-slate-500 [overflow-wrap:anywhere] break-words">
+                  {formData.streamUrl || "No stream URL yet"}
+                </div>
                 <div className="flex items-center gap-2 text-sm text-slate-300">
                   <LinkIcon className="size-4 text-emerald-400" />
                   <span>{formData.sourceLabel || "Official announcement"}</span>
                 </div>
-                <div className="truncate text-xs text-slate-500">{formData.sourceUrl || "No source URL yet"}</div>
+                <div className="max-h-20 overflow-y-auto rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2 text-xs leading-relaxed text-slate-500 [overflow-wrap:anywhere] break-words">
+                  {formData.sourceUrl || "No source URL yet"}
+                </div>
               </div>
 
               <div className="flex flex-col gap-3">
