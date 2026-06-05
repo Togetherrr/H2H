@@ -130,7 +130,7 @@ const YoutubeItemsTab = dynamic(
 
 const ComebackWatchManager = dynamic(
   () => import("@/components/admin/ComebackWatchManager").then((mod) => mod.ComebackWatchManager),
-  { loading: () => <TabLoadingState title="Loading comeback settings..." /> },
+  { loading: () => <TabLoadingState title="Loading comeback settings..." />, ssr: false },
 )
 
 const FeedbackManager = dynamic(

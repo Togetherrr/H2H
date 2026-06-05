@@ -61,7 +61,7 @@
     min-height: 100vh;
     /* Album art full-page background */
     background-color: #1a2238;
-    background-image: var(--bg-album-art, url('/background.jpg'));
+    background-image: var(--bg-album-art, var(--background-image, url('/background.jpg')));
     background-size: cover;
     background-position: center center;
     background-attachment: fixed;

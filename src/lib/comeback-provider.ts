@@ -16,6 +16,7 @@ export type UpcomingComeback = {
   shoppingLabel?: string | null
   streamUrl?: string | null
   streamLabel?: string | null
+  themeImageUrl?: string | null
 }
 
 export type ComebackProviderKey = "env" | "supabase"
@@ -40,6 +41,8 @@ type ComebackWatchMetadata = {
   source_label?: string
   sourceUrl?: string
   source_url?: string
+  themeImageUrl?: string
+  theme_image_url?: string
 }
 
 function normalizeTimeZone(value: unknown): TimeZone {
@@ -107,6 +110,7 @@ function normalizeComebackWatch(metadata: ComebackWatchMetadata | null | undefin
     shoppingLabel: (metadata.shoppingLabel ?? metadata.shopping_label ?? "").trim() || null,
     streamUrl: (metadata.streamUrl ?? metadata.stream_url ?? "").trim() || null,
     streamLabel: (metadata.streamLabel ?? metadata.stream_label ?? "").trim() || null,
+    themeImageUrl: (metadata.themeImageUrl ?? metadata.theme_image_url ?? "").trim() || null,
   }
 }
 
@@ -149,6 +153,7 @@ function getUpcomingComebackFromEnv(): UpcomingComeback | null {
     shoppingLabel: process.env.H2H_COMEBACK_SHOPPING_LABEL?.trim() || null,
     streamUrl: process.env.H2H_COMEBACK_STREAM_URL?.trim() || null,
     streamLabel: process.env.H2H_COMEBACK_STREAM_LABEL?.trim() || null,
+    themeImageUrl: process.env.H2H_COMEBACK_THEME_IMAGE_URL?.trim() || null,
   }
 }
 

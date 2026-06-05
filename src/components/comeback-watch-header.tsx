@@ -94,10 +94,10 @@ export function ComebackWatchHeader({
 
   const formattedDate = snapshot.upcomingComeback
     ? (() => {
-        const parsed = parseIsoDate(releaseAt)
-        if (!parsed) return releaseAt
-        return formatReleaseWindow(parsed, timeZoneToIana(timeZone), timeZone)
-      })()
+      const parsed = parseIsoDate(releaseAt)
+      if (!parsed) return releaseAt
+      return formatReleaseWindow(parsed, timeZoneToIana(timeZone), timeZone)
+    })()
     : null
 
   const countdownItems = [
@@ -108,135 +108,160 @@ export function ComebackWatchHeader({
   ]
 
   return (
-    /* Hero: just provides vertical spacing + centering — body::before handles the global overlay */
-    <section className="relative min-h-[75vh] flex flex-col justify-center items-center pt-32 pb-12 px-6">
-      <div className="w-full max-w-6xl flex flex-col items-center text-center">
+    <section className="relative flex flex-col justify-center items-center pt-28 pb-8 px-4 sm:px-6">
+      <div className="w-full max-w-[80rem] mx-auto">
+        <div className="relative isolate overflow-hidden rounded-[2rem] border border-slate-200 shadow-[0_20px_60px_rgba(2,6,23,0.12)] group transition-all duration-700">
 
-        {/* Status Badge */}
-        <div className="mb-10 flex items-center gap-2 rounded-full border border-white/60 bg-white/40 px-6 py-2.5 shadow-xl backdrop-blur-md animate-glow-sky">
-          <span className="relative flex h-2 w-2">
-            <span className={cn(
-              "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
-              hasConfiguredComeback ? "bg-[#FF708A]" : "bg-slate-400"
-            )} />
-            <span className={cn(
-              "relative inline-flex h-2 w-2 rounded-full",
-              hasConfiguredComeback ? "bg-[#FF708A]" : "bg-slate-400"
-            )} />
-          </span>
-          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-700">
-            {hasConfiguredComeback ? "ACTIVE COMEBACK" : "STANDBY MODE"}
-          </span>
-        </div>
+          {/* Ảnh nền gốc sắc nét 100%, ĐÃ BỎ hiệu ứng chói sáng trắng */}
+          <div
+            className="absolute inset-0 bg-cover bg-center pointer-events-none"
+            style={{ backgroundImage: "var(--bg-album-art, var(--background-image, none))" }}
+          />
 
-        {/* Album Title */}
-        <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
-          <p
-            className={cn(
-              "max-w-[46rem] px-5 py-2.5 rounded-2xl bg-white/25 backdrop-blur-md border border-white/35 shadow-lg",
-              "text-base sm:text-lg md:text-xl font-black tracking-[0.12em] sm:tracking-[0.16em]",
-              "break-words",
-            )}
-            style={{ color: hasConfiguredComeback ? "#FF708A" : "#475569" }}
-          >
-            {hasConfiguredComeback ? albumTitle : t("home.comeback.preparing")}
-          </p>
-        </div>
+          {/* Noise texture giữ lại một chút để trông mộc mạc (cinematic) */}
+          <div className="absolute inset-0 opacity-[0.06] mix-blend-overlay pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
 
-        {/* Main Date Display */}
-        <h2 className={cn(
-          "font-black tracking-tighter text-5xl leading-none sm:text-7xl lg:text-8xl xl:text-9xl uppercase drop-shadow-[0_4px_16px_rgba(0,0,0,0.18)]",
-          hasComeback
-            ? "text-black drop-shadow-[0_10px_25px_rgba(255,255,255,0.4)]"
-            : "italic text-slate-600/60"
-        )}>
-          {hasComeback ? formattedDate : t("voting.comingSoon")}
-        </h2>
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] xl:grid-cols-[1.5fr_1fr] gap-8 lg:gap-12 p-8 sm:p-10 md:p-12 items-center">
 
-        {/* Countdown - Individual Floating Cards */}
-        <div className="mt-16 grid grid-cols-2 md:flex items-center justify-center gap-4 sm:gap-6">
-          {countdownItems.map((item, index) => (
-            <div
-              key={index}
-              className={[
-                "flex flex-col items-center",
-                index === 0 ? "animate-float" :
-                index === 1 ? "animate-float-delay-1" :
-                index === 2 ? "animate-float-delay-2" :
-                              "animate-float-delay-3"
-              ].join(" ")}
-            >
-              <div className="flex size-24 sm:size-32 lg:size-40 flex-col items-center justify-center rounded-[2rem] bg-gradient-to-br from-[#FFF0F5] to-[#FFD1DC] border border-white shadow-2xl shadow-pink-500/5">
-                <span className="font-mono font-black text-4xl sm:text-5xl lg:text-7xl tracking-tighter text-black">
-                  {pad2(item.value)}
-                </span>
-                <span className="mt-1 text-[9px] font-black tracking-[0.3em] text-[#FF708A] uppercase">
-                  {item.label}
+            {/* Phần trái: thông tin */}
+            <div className="flex flex-col items-start justify-center space-y-7">
+              {/* Status badge */}
+              <div className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-white px-4 py-1.5 shadow-sm">
+                {hasConfiguredComeback ? (
+                  <div className="flex items-end gap-[2px] h-2.5">
+                    <span className="w-1 bg-[#FF708A] rounded-full animate-[bounce_1s_infinite] h-full" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1 bg-[#FF708A] rounded-full animate-[bounce_1s_infinite] h-[60%]" style={{ animationDelay: '200ms' }} />
+                    <span className="w-1 bg-[#FF708A] rounded-full animate-[bounce_1s_infinite] h-[80%]" style={{ animationDelay: '400ms' }} />
+                    <span className="w-1 bg-[#FF708A] rounded-full animate-[bounce_1s_infinite] h-[40%]" style={{ animationDelay: '600ms' }} />
+                  </div>
+                ) : (
+                  <span className="relative flex size-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-slate-400 opacity-75" />
+                    <span className="relative inline-flex size-2 rounded-full bg-slate-400" />
+                  </span>
+                )}
+                <span className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-slate-800">
+                  {hasConfiguredComeback ? "ACTIVE COMEBACK" : "STANDBY MODE"}
                 </span>
               </div>
+
+              {/* Nội dung text */}
+              <div className="space-y-4">
+                <div className="inline-flex max-w-full rounded-full border border-slate-200 bg-white/95 px-5 py-2 shadow-sm backdrop-blur-sm">
+                  <p
+                    className={cn(
+                      "text-sm sm:text-base font-black tracking-[0.15em] uppercase bg-clip-text text-transparent bg-gradient-to-r whitespace-normal sm:whitespace-nowrap",
+                      hasConfiguredComeback ? "from-rose-600 via-pink-500 to-rose-400" : "from-slate-600 to-slate-400"
+                    )}
+                  >
+                    {hasConfiguredComeback ? albumTitle : t("home.comeback.preparing")}
+                  </p>
+                </div>
+                <h2 className={cn(
+                  "font-black tracking-tight text-4xl sm:text-5xl lg:text-[3.5rem] leading-[1.1] uppercase drop-shadow-sm",
+                  hasComeback
+                    ? "text-slate-900 drop-shadow-[0_2px_12px_rgba(255,255,255,1)]"
+                    : "italic text-slate-500"
+                )}>
+                  {hasComeback ? formattedDate : t("voting.comingSoon")}
+                </h2>
+              </div>
+
+              {/* Nút bấm hành động */}
+              {hasComeback && (
+                <div className="flex flex-wrap items-center gap-3 pt-2">
+                  {shoppingUrl ? (
+                    <a
+                      href={shoppingUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group relative flex max-w-full min-w-0 items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-[11px] font-bold uppercase tracking-[0.15em] text-white shadow-lg transition-all hover:-translate-y-0.5 overflow-hidden"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:animate-[shimmer_1.5s_infinite]" />
+                      <ShoppingCart className="size-4 relative z-10" />
+                      <span className="relative z-10 whitespace-normal text-left leading-tight">{t("home.comeback.preOrder")}</span>
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      className="flex max-w-full min-w-0 items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-[11px] font-bold uppercase tracking-[0.15em] text-white shadow-md opacity-50 cursor-not-allowed"
+                    >
+                      <ShoppingCart className="size-4" />
+                      <span className="whitespace-normal text-left leading-tight">{t("home.comeback.preOrder")}</span>
+                    </button>
+                  )}
+
+                  {sourceUrl ? (
+                    <a
+                      href={sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex max-w-full min-w-0 items-center gap-2 rounded-full border border-slate-300 bg-white/90 px-6 py-3 text-[11px] font-bold uppercase tracking-[0.15em] text-slate-900 shadow-sm transition-all hover:bg-white hover:-translate-y-0.5"
+                    >
+                      <Link2 className="size-4" />
+                      <span className="whitespace-normal text-left leading-tight">{t("home.comeback.preSave")}</span>
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      className="flex max-w-full min-w-0 items-center gap-2 rounded-full border border-slate-300 bg-white/90 px-6 py-3 text-[11px] font-bold uppercase tracking-[0.15em] text-slate-900 shadow-sm opacity-50 cursor-not-allowed"
+                    >
+                      <Music className="size-4" />
+                      <span className="whitespace-normal text-left leading-tight">{t("home.comeback.preSave")}</span>
+                    </button>
+                  )}
+
+                  {countdown?.isLive && streamUrl && (
+                    <a
+                      href={streamUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex max-w-full min-w-0 items-center gap-2 rounded-full bg-gradient-to-r from-red-500 to-rose-600 px-6 py-3 text-[11px] font-bold uppercase tracking-[0.15em] text-white shadow-lg transition-all hover:scale-105"
+                    >
+                      <Youtube className="size-4" />
+                      <span className="whitespace-normal text-left leading-tight">Stream</span>
+                      <Play className="size-4 fill-white" />
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
-          ))}
-        </div>
 
-        {/* Action Buttons */}
-        {hasComeback && (
-          <div className="mt-16 flex flex-wrap items-center justify-center gap-6">
-            {shoppingUrl ? (
-              <a
-                href={shoppingUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#FF99AC] to-[#FF708A] px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white shadow-xl shadow-pink-500/25 transition-all hover:scale-105 hover:shadow-2xl"
-              >
-                <ShoppingCart className="size-4" />
-                <span>{t("home.comeback.preOrder")}</span>
-              </a>
-            ) : (
-              <button
-                type="button"
-                disabled
-                className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#FF99AC] to-[#FF708A] px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white shadow-xl shadow-pink-500/25 opacity-60 cursor-not-allowed"
-              >
-                <ShoppingCart className="size-4" />
-                <span>{t("home.comeback.preOrder")}</span>
-              </button>
-            )}
+            {/* Phần phải: đếm ngược được làm đặc lại */}
+            <div className="flex items-center justify-center w-full mt-6 lg:mt-0">
+              <div className="relative w-full max-w-md overflow-hidden rounded-[24px] border border-white bg-white/95 p-6 shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-transform duration-500 hover:-translate-y-1 sm:p-8 backdrop-blur-md">
 
-            {sourceUrl ? (
-              <a
-                href={sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white transition-all hover:bg-white/25 hover:scale-105"
-              >
-                <Link2 className="size-4" />
-                {t("home.comeback.preSave")}
-              </a>
-            ) : (
-              <button
-                type="button"
-                disabled
-                className="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white opacity-60 cursor-not-allowed"
-              >
-                <Music className="size-4" />
-                {t("home.comeback.preSave")}
-              </button>
-            )}
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+                    <p className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-500 text-center">
+                      Time Remaining
+                    </p>
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+                  </div>
 
-            {countdown?.isLive && streamUrl && (
-              <a
-                href={streamUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-rose-500 to-red-500 px-12 py-5 text-[11px] font-black uppercase tracking-[0.3em] text-white shadow-xl shadow-rose-500/25 transition-all hover:scale-105 hover:shadow-2xl"
-              >
-                <Youtube className="size-4" />
-                <span>Stream</span>
-                <Play className="size-4" />
-              </a>
-            )}
+                  <div className="flex justify-between items-center gap-2 sm:gap-4">
+                    {countdownItems.map((item, index) => (
+                      <div key={index} className="flex flex-col items-center flex-1">
+                        <div className="relative mb-3 flex w-full items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white py-3 shadow-sm transition-all duration-300 group/digit hover:-translate-y-1 hover:border-sky-300 hover:shadow-md sm:py-4">
+                          <span className="relative z-10 font-mono text-2xl font-black tracking-tighter text-slate-800 transition-colors group-hover/digit:text-sky-500 sm:text-3xl lg:text-4xl">
+                            {pad2(item.value)}
+                          </span>
+                        </div>
+                        <span className="text-center text-[9px] font-black uppercase tracking-[0.15em] text-[#FF708A] sm:text-[10px]">
+                          {item.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
-        )}
+        </div>
       </div>
     </section>
   )
